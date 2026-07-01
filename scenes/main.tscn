@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://b6cwmx4lhjm7t"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_3ceyx"]
+[ext_resource type="Script" path="res://scripts/mercury.gd" id="2_3ceyz"]
+[ext_resource type="Script" path="res://scripts/venus.gd" id="3_bfxyz"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_3ceyx")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+enabled = true
+current = true
+
+[node name="StarField" type="Node2D" parent="."]
+
+[node name="Sun" type="Sprite2D" parent="."]
+centered = true
+
+[node name="Mercury" type="Node2D" parent="."]
+script = ExtResource("2_3ceyz")
+
+[node name="Sprite" type="Sprite2D" parent="Mercury"]
+centered = true
+
+[node name="Venus" type="Node2D" parent="."]
+script = ExtResource("3_bfxyz")
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="MassLabel" type="Label" parent="UI"]
+offset_left = 16
+offset_top = 16
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+text = "M☉ = 1.000"
