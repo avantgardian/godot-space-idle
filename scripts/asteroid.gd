@@ -4,7 +4,7 @@ const GM_UNIT: float = 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (30.0 * 30.0)
 
 var sun_mass: float = 1.0
 var mass: float = 0.0
-var collision_radius: float = 6.0
+var collision_radius: float = 18.0
 var _pos: Vector2
 var _vel: Vector2
 var _trail: PackedVector2Array

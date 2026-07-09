@@ -783,9 +783,11 @@ func _check_body_collisions():
 				if a.mass >= b.mass:
 					a.mass += b.mass
 					_disable_body(b)
+					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass)
 				else:
 					b.mass += a.mass
 					_disable_body(a)
+					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass)
 
 func _is_body_alive(body: Node2D) -> bool:
 	if body.get_script() == _ASTEROID_SCRIPT:
@@ -799,3 +801,20 @@ func _disable_body(body: Node2D):
 	else:
 		body._dead = true
 		body._respawn_timer = 0.0
+
+func _spawn_collision_effect(pos: Vector2, mass: float):
+	var t := clampf(mass * 3.0, 0.1, 1.0)
+	_collision_flash = max(_collision_flash, t)
+	var ring := Line2D.new()
+	ring.default_color = Color(1.0, 0.9, 0.5, t)
+	ring.width = 3.0 + t * 8.0
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := int(lerpf(32, 96, t))
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.position = pos
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 0.6 + t * 2.0 })
