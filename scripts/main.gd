@@ -503,10 +503,15 @@ func _process(delta):
 	for i in range(_impact_rings.size() - 1, -1, -1):
 		var rd := _impact_rings[i]
 		rd.timer -= delta
-		var t: float = rd.timer / 0.8
-		var s := 1.0 + (1.0 - t) * 2.5
+		var total: float = rd.get("initial", 0.8)
+		var t: float = rd.timer / total
+		var base: float = rd.get("base_scale", 1.0)
+		var s := base * (1.0 + (1.0 - t) * 3.0)
 		rd.ring.scale = Vector2(s, s)
-		rd.ring.default_color.a = t * 0.5
+		if "is_glow" in rd:
+			rd.ring.modulate.a = t * t
+		else:
+			rd.ring.default_color.a = t * 0.6
 		if rd.timer <= 0.0:
 			rd.ring.queue_free()
 			_impact_rings.remove_at(i)
@@ -780,14 +785,15 @@ func _check_body_collisions():
 				continue
 			var dist := a.position.distance_to(b.position)
 			if dist < a.collision_radius + b.collision_radius:
+				var contact_r: float = a.collision_radius + b.collision_radius
 				if a.mass >= b.mass:
 					a.mass += b.mass
 					_disable_body(b)
-					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass)
+					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
 				else:
 					b.mass += a.mass
 					_disable_body(a)
-					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass)
+					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
 
 func _is_body_alive(body: Node2D) -> bool:
 	if body.get_script() == _ASTEROID_SCRIPT:
@@ -802,19 +808,33 @@ func _disable_body(body: Node2D):
 		body._dead = true
 		body._respawn_timer = 0.0
 
-func _spawn_collision_effect(pos: Vector2, mass: float):
-	var t := clampf(mass * 3.0, 0.1, 1.0)
+func _spawn_collision_effect(pos: Vector2, mass: float, contact_radius: float = 1.0):
+	var t := clampf(mass * 10.0, 0.2, 1.0)
 	_collision_flash = max(_collision_flash, t)
-	var ring := Line2D.new()
-	ring.default_color = Color(1.0, 0.9, 0.5, t)
-	ring.width = 3.0 + t * 8.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := int(lerpf(32, 96, t))
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.position = pos
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 0.6 + t * 2.0 })
+
+	var tex_size := 64
+	var image := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	var half := tex_size / 2.0
+	var max_r := half - 1.0
+	for x in range(tex_size):
+		for y in range(tex_size):
+			var dx := x - half
+			var dy := y - half
+			var dist := sqrt(dx * dx + dy * dy)
+			if dist <= max_r:
+				var nt := dist / max_r
+				var alpha := (1.0 - nt * nt) * t * 0.8
+				image.set_pixel(x, y, Color(1.0, 0.85, 0.3, alpha))
+
+	var glow := Sprite2D.new()
+	glow.texture = ImageTexture.create_from_image(image)
+	glow.centered = true
+	glow.position = pos
+	glow.modulate = Color(1, 1, 1, 1)
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	glow.material = mat
+	add_child(glow)
+	var duration := 0.5 + t * 1.0
+	_impact_rings.append({ ring = glow, timer = duration, initial = duration, base_scale = contact_radius / 32.0, is_glow = true })

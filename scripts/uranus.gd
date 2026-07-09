@@ -8,7 +8,7 @@ const G: float = 1.0
 
 var sun_mass: float = 1.0
 var mass: float = 14.5
-var collision_radius: float = 56.0
+var collision_radius: float = 28.0
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
