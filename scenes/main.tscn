@@ -1,8 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://b6cwmx4lhjm7t"]
+[gd_scene load_steps=4 format=3 uid="uid://b6cwmx4lhjm7t"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_3ceyx"]
 [ext_resource type="Script" path="res://scripts/mercury.gd" id="2_3ceyz"]
 [ext_resource type="Script" path="res://scripts/venus.gd" id="3_bfxyz"]
+[ext_resource type="Script" path="res://scripts/earth.gd" id="4_3cexz"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_3ceyx")
@@ -24,6 +25,9 @@ centered = true
 
 [node name="Venus" type="Node2D" parent="."]
 script = ExtResource("3_bfxyz")
+
+[node name="Earth" type="Node2D" parent="."]
+script = ExtResource("4_3cexz")
 
 [node name="UI" type="CanvasLayer" parent="."]
 layer = 1

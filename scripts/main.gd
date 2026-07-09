@@ -49,8 +49,10 @@ func _ready():
 	_setup_camera()
 	$Mercury.collided_with_sun.connect(_on_mercury_collided)
 	$Venus.collided_with_sun.connect(_on_venus_collided)
+	$Earth.collided_with_sun.connect(_on_earth_collided)
 	_mass_label = $UI/MassLabel as Label
 	_create_venus_orbit_line()
+	_create_earth_orbit_line()
 
 func _generate_star_layers():
 	var rng := RandomNumberGenerator.new()
@@ -320,6 +322,18 @@ func _create_venus_orbit_line():
 	add_child(line)
 	move_child(line, $Venus.get_index())
 
+func _create_earth_orbit_line():
+	var line := Line2D.new()
+	line.name = "EarthOrbit"
+	line.width = 1.5
+	line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.3, 0.6, 1.0, 0.0))
+	grad.set_color(1, Color(0.3, 0.6, 1.0, 0.4))
+	line.gradient = grad
+	add_child(line)
+	move_child(line, $Earth.get_index())
+
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
 	camera.zoom = Vector2(1, 1)
@@ -348,6 +362,11 @@ func _process(delta):
 	if venus_line:
 		venus_line.points = $Venus.get_trail()
 	$Venus.sun_mass = sun_mass
+
+	var earth_line := $EarthOrbit as Line2D
+	if earth_line:
+		earth_line.points = $Earth.get_trail()
+	$Earth.sun_mass = sun_mass
 
 	for i in range(_asteroids.size() - 1, -1, -1):
 		var a := _asteroids[i] as Node2D
@@ -469,6 +488,21 @@ func _on_venus_collided():
 	add_child(ring)
 	_impact_rings.append({ ring = ring, timer = 1.2 })
 
+func _on_earth_collided():
+	_collision_flash = max(_collision_flash, 1.0)
+	var ring := Line2D.new()
+	ring.default_color = Color(0.3, 0.7, 1.0, 0.7)
+	ring.width = 3.5
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := 72
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 1.5 })
+
 func _spawn_asteroid():
 	var a := Node2D.new()
 	a.set_script(_ASTEROID_SCRIPT)
@@ -478,7 +512,8 @@ func _spawn_asteroid():
 	add_child(a)
 	_asteroids.append(a)
 
-func _on_asteroid_collided(_a: Node2D):
+func _on_asteroid_collided(ast: Node2D):
+	sun_mass += ast.mass
 	_collision_flash = max(_collision_flash, 0.2)
 	var ring := Line2D.new()
 	ring.default_color = Color(1, 0.7, 0.3, 0.3)
@@ -487,8 +522,8 @@ func _on_asteroid_collided(_a: Node2D):
 	var pts := PackedVector2Array()
 	var seg := 24
 	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
+		var angle := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(angle), sin(angle)))
 	ring.points = pts
 	add_child(ring)
 	_impact_rings.append({ ring = ring, timer = 0.4 })
@@ -532,7 +567,7 @@ func _unhandled_input(event):
 		var sun_screen: Vector2 = camera.get_canvas_transform() * $Sun.position
 		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
 		if event.button_index == MOUSE_BUTTON_LEFT and on_sun:
-			sun_mass += 0.5
+			sun_mass += 0.01
 			return
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
 			_dragging = true

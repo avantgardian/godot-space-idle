@@ -3,6 +3,7 @@ extends Node2D
 const GM_UNIT: float = 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (30.0 * 30.0)
 
 var sun_mass: float = 1.0
+var mass: float = 0.0
 var _pos: Vector2
 var _vel: Vector2
 var _trail: PackedVector2Array
@@ -54,6 +55,7 @@ func _generate_texture():
 	add_child(_sprite)
 
 func spawn():
+	mass = randf_range(0.005, 0.02)
 	var spawn_r := randf_range(900.0, 1200.0)
 	var entry_angle := randf_range(0.0, TAU)
 	_pos = Vector2(cos(entry_angle), sin(entry_angle)) * spawn_r
