@@ -50,9 +50,19 @@ func _ready():
 	$Mercury.collided_with_sun.connect(_on_mercury_collided)
 	$Venus.collided_with_sun.connect(_on_venus_collided)
 	$Earth.collided_with_sun.connect(_on_earth_collided)
+	$Mars.collided_with_sun.connect(_on_mars_collided)
+	$Jupiter.collided_with_sun.connect(_on_jupiter_collided)
+	$Saturn.collided_with_sun.connect(_on_saturn_collided)
+	$Uranus.collided_with_sun.connect(_on_uranus_collided)
+	$Neptune.collided_with_sun.connect(_on_neptune_collided)
 	_mass_label = $UI/MassLabel as Label
 	_create_venus_orbit_line()
 	_create_earth_orbit_line()
+	_create_mars_orbit_line()
+	_create_jupiter_orbit_line()
+	_create_saturn_orbit_line()
+	_create_uranus_orbit_line()
+	_create_neptune_orbit_line()
 
 func _generate_star_layers():
 	var rng := RandomNumberGenerator.new()
@@ -334,6 +344,66 @@ func _create_earth_orbit_line():
 	add_child(line)
 	move_child(line, $Earth.get_index())
 
+func _create_mars_orbit_line():
+	var line := Line2D.new()
+	line.name = "MarsOrbit"
+	line.width = 1.5
+	line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.0))
+	grad.set_color(1, Color(1.0, 0.6, 0.1, 0.4))
+	line.gradient = grad
+	add_child(line)
+	move_child(line, $Mars.get_index())
+
+func _create_jupiter_orbit_line():
+	var line := Line2D.new()
+	line.name = "JupiterOrbit"
+	line.width = 1.5
+	line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.85, 0.6, 0.3, 0.0))
+	grad.set_color(1, Color(0.85, 0.6, 0.3, 0.4))
+	line.gradient = grad
+	add_child(line)
+	move_child(line, $Jupiter.get_index())
+
+func _create_saturn_orbit_line():
+	var line := Line2D.new()
+	line.name = "SaturnOrbit"
+	line.width = 1.5
+	line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.8, 0.7, 0.4, 0.0))
+	grad.set_color(1, Color(0.8, 0.7, 0.4, 0.4))
+	line.gradient = grad
+	add_child(line)
+	move_child(line, $Saturn.get_index())
+
+func _create_uranus_orbit_line():
+	var line := Line2D.new()
+	line.name = "UranusOrbit"
+	line.width = 1.5
+	line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.4, 0.7, 0.9, 0.0))
+	grad.set_color(1, Color(0.4, 0.7, 0.9, 0.4))
+	line.gradient = grad
+	add_child(line)
+	move_child(line, $Uranus.get_index())
+
+func _create_neptune_orbit_line():
+	var line := Line2D.new()
+	line.name = "NeptuneOrbit"
+	line.width = 1.5
+	line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.2, 0.3, 0.85, 0.0))
+	grad.set_color(1, Color(0.2, 0.3, 0.85, 0.4))
+	line.gradient = grad
+	add_child(line)
+	move_child(line, $Neptune.get_index())
+
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
 	camera.zoom = Vector2(1, 1)
@@ -367,6 +437,33 @@ func _process(delta):
 	if earth_line:
 		earth_line.points = $Earth.get_trail()
 	$Earth.sun_mass = sun_mass
+
+	var mars_line := $MarsOrbit as Line2D
+	if mars_line:
+		mars_line.points = $Mars.get_trail()
+	$Mars.sun_mass = sun_mass
+
+	var jupiter_line := $JupiterOrbit as Line2D
+	if jupiter_line:
+		jupiter_line.points = $Jupiter.get_trail()
+	$Jupiter.sun_mass = sun_mass
+
+	var saturn_line := $SaturnOrbit as Line2D
+	if saturn_line:
+		saturn_line.points = $Saturn.get_trail()
+	$Saturn.sun_mass = sun_mass
+
+	var uranus_line := $UranusOrbit as Line2D
+	if uranus_line:
+		uranus_line.points = $Uranus.get_trail()
+	$Uranus.sun_mass = sun_mass
+
+	var neptune_line := $NeptuneOrbit as Line2D
+	if neptune_line:
+		neptune_line.points = $Neptune.get_trail()
+	$Neptune.sun_mass = sun_mass
+
+	_check_body_collisions()
 
 	for i in range(_asteroids.size() - 1, -1, -1):
 		var a := _asteroids[i] as Node2D
@@ -503,6 +600,81 @@ func _on_earth_collided():
 	add_child(ring)
 	_impact_rings.append({ ring = ring, timer = 1.5 })
 
+func _on_mars_collided():
+	_collision_flash = max(_collision_flash, 0.7)
+	var ring := Line2D.new()
+	ring.default_color = Color(0.9, 0.4, 0.15, 0.5)
+	ring.width = 2.0
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := 40
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 0.9 })
+
+func _on_jupiter_collided():
+	_collision_flash = max(_collision_flash, 2.0)
+	var ring := Line2D.new()
+	ring.default_color = Color(0.85, 0.6, 0.3, 0.9)
+	ring.width = 6.0
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := 96
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 2.5 })
+
+func _on_saturn_collided():
+	_collision_flash = max(_collision_flash, 1.8)
+	var ring := Line2D.new()
+	ring.default_color = Color(0.8, 0.7, 0.4, 0.8)
+	ring.width = 5.0
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := 88
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 2.2 })
+
+func _on_uranus_collided():
+	_collision_flash = max(_collision_flash, 1.2)
+	var ring := Line2D.new()
+	ring.default_color = Color(0.4, 0.7, 0.9, 0.6)
+	ring.width = 3.0
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := 64
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 1.6 })
+
+func _on_neptune_collided():
+	_collision_flash = max(_collision_flash, 1.3)
+	var ring := Line2D.new()
+	ring.default_color = Color(0.2, 0.3, 0.85, 0.6)
+	ring.width = 3.0
+	ring.antialiased = true
+	var pts := PackedVector2Array()
+	var seg := 66
+	for i in range(seg + 1):
+		var a := (float(i) / seg) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
+	ring.points = pts
+	add_child(ring)
+	_impact_rings.append({ ring = ring, timer = 1.7 })
+
 func _spawn_asteroid():
 	var a := Node2D.new()
 	a.set_script(_ASTEROID_SCRIPT)
@@ -587,3 +759,43 @@ func _unhandled_input(event):
 			_zoom_in()
 		elif event.keycode == KEY_MINUS:
 			_zoom_out()
+
+func _check_body_collisions():
+	var planets := [$Mercury, $Venus, $Earth, $Mars, $Jupiter, $Saturn, $Uranus, $Neptune]
+	var all_bodies: Array[Node2D] = []
+
+	for p in planets:
+		if not p._dead:
+			all_bodies.append(p)
+
+	for a in _asteroids:
+		if a.is_alive():
+			all_bodies.append(a)
+
+	for i in all_bodies.size():
+		for j in range(i + 1, all_bodies.size()):
+			var a := all_bodies[i]
+			var b := all_bodies[j]
+			if not _is_body_alive(a) or not _is_body_alive(b):
+				continue
+			var dist := a.position.distance_to(b.position)
+			if dist < a.collision_radius + b.collision_radius:
+				if a.mass >= b.mass:
+					a.mass += b.mass
+					_disable_body(b)
+				else:
+					b.mass += a.mass
+					_disable_body(a)
+
+func _is_body_alive(body: Node2D) -> bool:
+	if body.get_script() == _ASTEROID_SCRIPT:
+		return body._alive
+	return not body._dead
+
+func _disable_body(body: Node2D):
+	body.visible = false
+	if body.get_script() == _ASTEROID_SCRIPT:
+		body._alive = false
+	else:
+		body._dead = true
+		body._respawn_timer = 0.0

@@ -1,9 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://b6cwmx4lhjm7t"]
+[gd_scene load_steps=9 format=3 uid="uid://b6cwmx4lhjm7t"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_3ceyx"]
 [ext_resource type="Script" path="res://scripts/mercury.gd" id="2_3ceyz"]
 [ext_resource type="Script" path="res://scripts/venus.gd" id="3_bfxyz"]
 [ext_resource type="Script" path="res://scripts/earth.gd" id="4_3cexz"]
+[ext_resource type="Script" path="res://scripts/mars.gd" id="5_3ceyx"]
+[ext_resource type="Script" path="res://scripts/jupiter.gd" id="6_3ceyz"]
+[ext_resource type="Script" path="res://scripts/saturn.gd" id="7_3cexz"]
+[ext_resource type="Script" path="res://scripts/uranus.gd" id="8_3ceyx"]
+[ext_resource type="Script" path="res://scripts/neptune.gd" id="9_3ceyz"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_3ceyx")
@@ -28,6 +33,21 @@ script = ExtResource("3_bfxyz")
 
 [node name="Earth" type="Node2D" parent="."]
 script = ExtResource("4_3cexz")
+
+[node name="Mars" type="Node2D" parent="."]
+script = ExtResource("5_3ceyx")
+
+[node name="Jupiter" type="Node2D" parent="."]
+script = ExtResource("6_3ceyz")
+
+[node name="Saturn" type="Node2D" parent="."]
+script = ExtResource("7_3cexz")
+
+[node name="Uranus" type="Node2D" parent="."]
+script = ExtResource("8_3ceyx")
+
+[node name="Neptune" type="Node2D" parent="."]
+script = ExtResource("9_3ceyz")
 
 [node name="UI" type="CanvasLayer" parent="."]
 layer = 1

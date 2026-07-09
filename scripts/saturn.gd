@@ -1,14 +1,14 @@
 extends Node2D
 
-@export var orbit_radius: float = 700.0
-@export var orbit_period: float = 78.0
-@export var start_angle: float = 1.0
+@export var orbit_radius: float = 1800.0
+@export var orbit_period: float = 269.0
+@export var start_angle: float = 3.0
 
 const G: float = 1.0
 
 var sun_mass: float = 1.0
-var mass: float = 1.0
-var collision_radius: float = 24.0
+var mass: float = 95.2
+var collision_radius: float = 44.0
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
@@ -16,15 +16,17 @@ var _respawn_timer: float = 0.0
 var _trail: PackedVector2Array
 var _trail_tick: int = 0
 var _sprite: Sprite2D
+var _ring: Sprite2D
 
 signal collided_with_sun
 
 func _ready():
 	_generate_texture()
+	_generate_ring()
 	_reset()
 
 func _generate_texture():
-	var size := 48
+	var size := 88
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	image.fill(Color.TRANSPARENT)
 	var cx := size / 2.0
@@ -37,25 +39,49 @@ func _generate_texture():
 			var max_r := size / 2.0 - 1
 			if dist <= max_r:
 				var t := dist / max_r
-				var brightness := 0.7 + 0.3 * (1.0 - t)
-				var c: Color
-				if t < 0.3:
-					c = Color(0.3 * brightness, 0.6 * brightness, 0.4 * brightness)
-				elif t < 0.6:
-					c = Color(0.4 * brightness, 0.7 * brightness, 0.5 * brightness)
-				else:
-					c = Color(0.6 * brightness, 0.8 * brightness, 0.9 * brightness)
+				var band := sin(float(y) * 0.5) * 0.1
+				var brightness := 0.7 + 0.3 * (1.0 - t) + band
+				var r := (0.8 + band) * brightness
+				var g := (0.7 + band) * brightness
+				var b := (0.4 + band * 0.5) * brightness
 				var alpha := 1.0
 				if t > 0.85:
 					alpha = 1.0 - (t - 0.85) / 0.15
-				image.set_pixel(x, y, Color(c.r, c.g, c.b, alpha))
+				image.set_pixel(x, y, Color(clampf(r, 0, 1), clampf(g, 0, 1), clampf(b, 0, 1), alpha))
 	_sprite = Sprite2D.new()
 	_sprite.texture = ImageTexture.create_from_image(image)
 	_sprite.centered = true
 	add_child(_sprite)
 
+func _generate_ring():
+	var size := 160
+	var inner_r := 48.0
+	var outer_r := 78.0
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	var cx := size / 2.0
+	var cy := size / 2.0
+	for x in range(size):
+		for y in range(size):
+			var dx := x - cx
+			var dy := y - cy
+			var dist := sqrt(dx * dx + dy * dy)
+			if dist >= inner_r and dist <= outer_r:
+				var t: float = (dist - inner_r) / (outer_r - inner_r)
+				var alpha: float = (1.0 - absf(t - 0.5) * 2.0) * 0.5
+				var brightness: float = 0.6 + 0.3 * (1.0 - t)
+				var r: float = 0.7 * brightness
+				var g: float = 0.6 * brightness
+				var b: float = 0.3 * brightness
+				image.set_pixel(x, y, Color(r, g, b, alpha))
+	_ring = Sprite2D.new()
+	_ring.texture = ImageTexture.create_from_image(image)
+	_ring.centered = true
+	_ring.z_index = -1
+	add_child(_ring)
+
 func _reset():
-	mass = 1.0
+	mass = 95.2
 	var gm := _initial_gm()
 	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
 	var tangent := Vector2(-_pos.y, _pos.x).normalized()
@@ -85,7 +111,9 @@ func _process(delta):
 	_pos += _vel * delta
 	position = _pos
 
-	var sun_r := (128.0 + sqrt(sun_mass) * 8.0) * 0.85 + 24.0
+	_ring.rotation += delta * 0.05
+
+	var sun_r := (128.0 + sqrt(sun_mass) * 8.0) * 0.85 + collision_radius
 	if r < sun_r:
 		_dead = true
 		_respawn_timer = 0.0
@@ -95,7 +123,7 @@ func _process(delta):
 	_trail_tick += 1
 	if _trail_tick % 2 == 0:
 		_trail.append(position)
-		if _trail.size() > 1200:
+		if _trail.size() > 3000:
 			_trail.remove_at(0)
 
 func get_trail() -> PackedVector2Array:

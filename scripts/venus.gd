@@ -7,6 +7,8 @@ extends Node2D
 const G: float = 1.0
 
 var sun_mass: float = 1.0
+var mass: float = 0.815
+var collision_radius: float = 22.0
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
@@ -47,6 +49,7 @@ func _generate_texture():
 	add_child(_sprite)
 
 func _reset():
+	mass = 0.815
 	var gm := _initial_gm()
 	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
 	var tangent := Vector2(-_pos.y, _pos.x).normalized()
