@@ -56,6 +56,7 @@ func _reset():
 	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
 	var tangent := Vector2(-_pos.y, _pos.x).normalized()
 	_vel = tangent * sqrt(gm / orbit_radius)
+	position = _pos
 	_dead = false
 	visible = true
 	_trail.clear()
