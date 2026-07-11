@@ -41,6 +41,7 @@ var _planet_data: Array[Dictionary]
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const _STAR_SHADER := preload("res://shaders/star_blur.gdshader")
 const _SUN_SHADER := preload("res://shaders/sun_noise.gdshader")
+const PLANET_NAMES := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	_generate_star_layers()
@@ -63,6 +64,7 @@ func _ready():
 		p.node.collided_with_sun.connect(_on_planet_collided.bind(p))
 		_create_orbit_line(p.orbit_name, p.node, p.color0, p.color1)
 		p.initial_mass = p.node.mass
+		p.destroyed_by = ""
 	_setup_planet_mass_ui()
 
 func _setup_planet_mass_ui():
@@ -329,7 +331,6 @@ func _process(delta):
 
 	if _mass_label:
 		_mass_label.text = "M☉ = %.7f" % sun_mass
-		var planet_names := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 		for i in _planet_data.size():
 			var p := _planet_data[i]
 			var m: float = p.node.mass
@@ -341,8 +342,10 @@ func _process(delta):
 				if dot > 0 and dot + 2 < pct_str.length():
 					pct_str = pct_str.left(dot + 2)
 				change = " +%s%%" % pct_str
-			var status := " (Destroyed)" if p.node._dead else ""
-			var line: String = "%s: %s%s%s" % [planet_names[i], str(m), change, status]
+			var status := ""
+			if p.node._dead:
+				status = " (Destroyed by " + p.destroyed_by + ")" if p.destroyed_by else " (Destroyed)"
+			var line: String = "%s: %s%s%s" % [PLANET_NAMES[i], str(m), change, status]
 			_planet_mass_labels[i].text = line
 
 	var camera := $Camera2D as Camera2D
@@ -386,8 +389,15 @@ func _update_star_parallax(camera: Camera2D):
 func _align_floor(offset: float, period: float) -> float:
 	return floor(offset / period) * period
 
+func _find_planet_idx(node: Node2D) -> int:
+	for i in _planet_data.size():
+		if _planet_data[i].node == node:
+			return i
+	return -1
+
 func _on_planet_collided(p: Dictionary):
 	sun_mass += p.node.mass
+	p.destroyed_by = "Sun"
 	_collision_flash = max(_collision_flash, p.cf)
 	_spawn_impact_ring(p.cc, p.cw, p.cs, p.ct)
 
@@ -501,18 +511,26 @@ func _check_body_collisions():
 			var dist := a.position.distance_to(b.position)
 			if dist < a.collision_radius + b.collision_radius:
 				var contact_r: float = a.collision_radius + b.collision_radius
-				if a.mass >= b.mass:
-					var total: float = a.mass + b.mass
-					a._vel = (a._vel * a.mass + b._vel * b.mass) / total
-					a.mass = total
-					_disable_body(b)
-					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
-				else:
-					var total: float = a.mass + b.mass
-					b._vel = (b._vel * b.mass + a._vel * a.mass) / total
-					b.mass = total
-					_disable_body(a)
-					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
+			if a.mass >= b.mass:
+				var total: float = a.mass + b.mass
+				a._vel = (a._vel * a.mass + b._vel * b.mass) / total
+				a.mass = total
+				var b_idx := _find_planet_idx(b)
+				if b_idx >= 0:
+					var a_idx := _find_planet_idx(a)
+					_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
+				_disable_body(b)
+				_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
+			else:
+				var total: float = a.mass + b.mass
+				b._vel = (b._vel * b.mass + a._vel * a.mass) / total
+				b.mass = total
+				var a_idx := _find_planet_idx(a)
+				if a_idx >= 0:
+					var b_idx := _find_planet_idx(b)
+					_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
+				_disable_body(a)
+				_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
 
 func _is_body_alive(body: Node2D) -> bool:
 	if body.get_script() == _ASTEROID_SCRIPT:
