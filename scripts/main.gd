@@ -161,13 +161,6 @@ func _show_planet_popup(planet_node: Node2D):
 
 	var panel := Panel.new()
 	panel.name = "PlanetPopup"
-	panel.anchor_left = 1.0
-	panel.anchor_top = 0.0
-	panel.anchor_right = 1.0
-	panel.anchor_bottom = 0.0
-	panel.offset_left = -300.0
-	panel.offset_top = 20.0
-	panel.offset_right = -20.0
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var sb := StyleBoxFlat.new()
@@ -184,7 +177,7 @@ func _show_planet_popup(planet_node: Node2D):
 	sb.content_margin_left = 16
 	sb.content_margin_top = 12
 	sb.content_margin_right = 16
-	sb.content_margin_bottom = 10
+	sb.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", sb)
 
 	var vbox := VBoxContainer.new()
@@ -192,15 +185,13 @@ func _show_planet_popup(planet_node: Node2D):
 	vbox.anchor_top = 0.0
 	vbox.anchor_right = 1.0
 	vbox.anchor_bottom = 1.0
-	vbox.add_theme_constant_override("separation", 5)
+	vbox.add_theme_constant_override("separation", 4)
 	panel.add_child(vbox)
 
 	var name_label := Label.new()
 	name_label.text = PLANET_NAMES[idx]
-	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_font_size_override("font_size", 18)
 	name_label.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0, 1.0))
-	name_label.add_theme_constant_override("outline_size", 1)
-	name_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.3))
 	vbox.add_child(name_label)
 
 	var sep := ColorRect.new()
@@ -221,30 +212,26 @@ func _show_planet_popup(planet_node: Node2D):
 		hbox.add_theme_constant_override("separation", 8)
 		var lbl := Label.new()
 		lbl.text = f.label
-		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_font_size_override("font_size", 11)
 		lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7, 1.0))
-		lbl.custom_minimum_size = Vector2(52, 0)
+		lbl.custom_minimum_size = Vector2(48, 0)
 		hbox.add_child(lbl)
-
 		var val := Label.new()
-		val.add_theme_font_size_override("font_size", 12)
+		val.add_theme_font_size_override("font_size", 11)
 		val.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0, 1.0))
-		val.add_theme_constant_override("outline_size", 1)
-		val.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.2))
 		hbox.add_child(val)
 		_popup_labels[f.key] = val
 		vbox.add_child(hbox)
 
-	vbox.add_child(sep.duplicate())
-
-	var track := Label.new()
-	track.text = "● Tracking"
-	track.add_theme_font_size_override("font_size", 10)
-	track.add_theme_color_override("font_color", color)
-	vbox.add_child(track)
+	var tail := ColorRect.new()
+	tail.name = "Tail"
+	tail.color = Color(0.04, 0.04, 0.1, 0.88)
+	tail.custom_minimum_size = Vector2(12, 12)
+	panel.add_child(tail)
 
 	$UI.add_child(panel)
 	_planet_popup = panel
+	panel.reset_minimum_size()
 
 	panel.modulate = Color(1, 1, 1, 0)
 	var tween := create_tween()
@@ -258,6 +245,21 @@ func _update_planet_popup():
 	_popup_labels.speed.text = "%.2f  u/s" % node._vel.length()
 	_popup_labels.radius.text = "%.0f  u" % node.orbit_radius
 	_popup_labels.period.text = "%.0f  s" % node.orbit_period
+
+	var camera := $Camera2D as Camera2D
+	var screen_pos: Vector2 = camera.get_canvas_transform() * node.position
+	var panel: Panel = _planet_popup
+	var ps := panel.size
+	var tail := panel.get_node("Tail") as ColorRect
+
+	panel.position = screen_pos + Vector2(24, -ps.y - 36)
+	panel.position.x = clamp(panel.position.x, 10, SCREEN_SIZE.x - ps.x - 10)
+	panel.position.y = clamp(panel.position.y, 10, SCREEN_SIZE.y - ps.y - 10)
+
+	var tail_size := tail.size.x * 0.5
+	tail.position = Vector2(ps.x * 0.5 - tail_size, ps.y - tail_size)
+	tail.pivot_offset = Vector2(tail_size, tail_size)
+	tail.rotation = deg_to_rad(45)
 
 func _hide_planet_popup():
 	if not _planet_popup or not is_instance_valid(_planet_popup):
