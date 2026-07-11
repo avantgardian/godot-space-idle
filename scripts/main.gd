@@ -174,11 +174,18 @@ func _show_planet_popup(planet_node: Node2D):
 	sb.corner_radius_top_right = 6
 	sb.corner_radius_bottom_right = 6
 	sb.corner_radius_bottom_left = 6
-	sb.content_margin_left = 16
-	sb.content_margin_top = 12
-	sb.content_margin_right = 16
-	sb.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", sb)
+
+	var margin := MarginContainer.new()
+	margin.anchor_left = 0.0
+	margin.anchor_top = 0.0
+	margin.anchor_right = 1.0
+	margin.anchor_bottom = 1.0
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_bottom", 14)
+	panel.add_child(margin)
 
 	var vbox := VBoxContainer.new()
 	vbox.anchor_left = 0.0
@@ -186,7 +193,7 @@ func _show_planet_popup(planet_node: Node2D):
 	vbox.anchor_right = 1.0
 	vbox.anchor_bottom = 1.0
 	vbox.add_theme_constant_override("separation", 4)
-	panel.add_child(vbox)
+	margin.add_child(vbox)
 
 	var name_label := Label.new()
 	name_label.text = PLANET_NAMES[idx]
@@ -223,15 +230,9 @@ func _show_planet_popup(planet_node: Node2D):
 		_popup_labels[f.key] = val
 		vbox.add_child(hbox)
 
-	var tail := ColorRect.new()
-	tail.name = "Tail"
-	tail.color = Color(0.04, 0.04, 0.1, 0.88)
-	tail.custom_minimum_size = Vector2(12, 12)
-	panel.add_child(tail)
-
 	$UI.add_child(panel)
 	_planet_popup = panel
-	panel.size = Vector2(260, 120)
+	panel.size = Vector2(280, 150)
 
 	panel.modulate = Color(1, 1, 1, 0)
 	var tween := create_tween()
@@ -250,16 +251,10 @@ func _update_planet_popup():
 	var screen_pos: Vector2 = camera.get_canvas_transform() * node.position
 	var panel: Panel = _planet_popup
 	var ps := panel.size
-	var tail := panel.get_node("Tail") as ColorRect
 
 	panel.position = screen_pos + Vector2(24, -ps.y - 36)
 	panel.position.x = clamp(panel.position.x, 10, SCREEN_SIZE.x - ps.x - 10)
 	panel.position.y = clamp(panel.position.y, 10, SCREEN_SIZE.y - ps.y - 10)
-
-	var tail_size := tail.size.x * 0.5
-	tail.position = Vector2(ps.x * 0.5 - tail_size, ps.y - tail_size)
-	tail.pivot_offset = Vector2(tail_size, tail_size)
-	tail.rotation = deg_to_rad(45)
 
 func _hide_planet_popup():
 	if not _planet_popup or not is_instance_valid(_planet_popup):
