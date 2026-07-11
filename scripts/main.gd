@@ -32,7 +32,7 @@ var _scroll_accum: float = 0.0
 
 var sun_mass: float = 1.0
 var _mass_label: Label
-var _planet_mass_labels: Array[RichTextLabel]
+var _planet_mass_labels: Array[Label]
 var _collision_flash: float = 0.0
 var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
@@ -80,10 +80,9 @@ func _setup_planet_mass_ui():
 	container.add_child(title)
 
 	for p in _planet_data:
-		var lbl := RichTextLabel.new()
-		lbl.bbcode_enabled = true
-		lbl.add_theme_color_override("default_color", Color(0.7, 0.7, 0.75, 1))
-		lbl.add_theme_font_size_override("normal_font_size", 12)
+		var lbl := Label.new()
+		lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75, 1))
+		lbl.add_theme_font_size_override("font_size", 12)
 		container.add_child(lbl)
 		_planet_mass_labels.append(lbl)
 
@@ -337,10 +336,12 @@ func _process(delta):
 			var pct: float = (m - p.initial_mass) / p.initial_mass * 100.0
 			var change := ""
 			if pct > 0.001:
-				change = " +%.1f%% ↑" % pct
+				var pct_str: String = str(pct)
+				var dot := pct_str.find(".")
+				if dot > 0 and dot + 2 < pct_str.length():
+					pct_str = pct_str.left(dot + 2)
+				change = " +%s%%" % pct_str
 			var line: String = "%s: %s%s" % [planet_names[i], str(m), change]
-			if p.node._dead:
-				line = "[s]" + line + "[/s]"
 			_planet_mass_labels[i].text = line
 
 	var camera := $Camera2D as Camera2D
