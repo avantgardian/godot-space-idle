@@ -50,17 +50,17 @@ func _ready():
 	_setup_camera()
 	_mass_label = $UI/MassLabel as Label
 	_planet_data = [
-		{ node = $Mercury, orbit_name = "MercuryOrbit", color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), on_collide = _on_mercury_collided },
-		{ node = $Venus, orbit_name = "VenusOrbit", color0 = Color(1, 0.9, 0.6, 0.0), color1 = Color(1, 0.9, 0.6, 0.4), on_collide = _on_venus_collided },
-		{ node = $Earth, orbit_name = "EarthOrbit", color0 = Color(0.3, 0.6, 1.0, 0.0), color1 = Color(0.3, 0.6, 1.0, 0.4), on_collide = _on_earth_collided },
-		{ node = $Mars, orbit_name = "MarsOrbit", color0 = Color(0, 0, 0, 0.0), color1 = Color(1.0, 0.6, 0.1, 0.4), on_collide = _on_mars_collided },
-		{ node = $Jupiter, orbit_name = "JupiterOrbit", color0 = Color(0.85, 0.6, 0.3, 0.0), color1 = Color(0.85, 0.6, 0.3, 0.4), on_collide = _on_jupiter_collided },
-		{ node = $Saturn, orbit_name = "SaturnOrbit", color0 = Color(0.8, 0.7, 0.4, 0.0), color1 = Color(0.8, 0.7, 0.4, 0.4), on_collide = _on_saturn_collided },
-		{ node = $Uranus, orbit_name = "UranusOrbit", color0 = Color(0.4, 0.7, 0.9, 0.0), color1 = Color(0.4, 0.7, 0.9, 0.4), on_collide = _on_uranus_collided },
-		{ node = $Neptune, orbit_name = "NeptuneOrbit", color0 = Color(0.2, 0.3, 0.85, 0.0), color1 = Color(0.2, 0.3, 0.85, 0.4), on_collide = _on_neptune_collided },
+		{ node = $Mercury, orbit_name = "MercuryOrbit", color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), cf = 0.6, cc = Color(1, 0.9, 0.6, 0.5), cw = 2.0, cs = 48, ct = 0.8 },
+		{ node = $Venus, orbit_name = "VenusOrbit", color0 = Color(1, 0.9, 0.6, 0.0), color1 = Color(1, 0.9, 0.6, 0.4), cf = 0.8, cc = Color(1, 0.8, 0.4, 0.6), cw = 3.0, cs = 64, ct = 1.2 },
+		{ node = $Earth, orbit_name = "EarthOrbit", color0 = Color(0.3, 0.6, 1.0, 0.0), color1 = Color(0.3, 0.6, 1.0, 0.4), cf = 1.0, cc = Color(0.3, 0.7, 1.0, 0.7), cw = 3.5, cs = 72, ct = 1.5 },
+		{ node = $Mars, orbit_name = "MarsOrbit", color0 = Color(0, 0, 0, 0.0), color1 = Color(1.0, 0.6, 0.1, 0.4), cf = 0.7, cc = Color(0.9, 0.4, 0.15, 0.5), cw = 2.0, cs = 40, ct = 0.9 },
+		{ node = $Jupiter, orbit_name = "JupiterOrbit", color0 = Color(0.85, 0.6, 0.3, 0.0), color1 = Color(0.85, 0.6, 0.3, 0.4), cf = 2.0, cc = Color(0.85, 0.6, 0.3, 0.9), cw = 6.0, cs = 96, ct = 2.5 },
+		{ node = $Saturn, orbit_name = "SaturnOrbit", color0 = Color(0.8, 0.7, 0.4, 0.0), color1 = Color(0.8, 0.7, 0.4, 0.4), cf = 1.8, cc = Color(0.8, 0.7, 0.4, 0.8), cw = 5.0, cs = 88, ct = 2.2 },
+		{ node = $Uranus, orbit_name = "UranusOrbit", color0 = Color(0.4, 0.7, 0.9, 0.0), color1 = Color(0.4, 0.7, 0.9, 0.4), cf = 1.2, cc = Color(0.4, 0.7, 0.9, 0.6), cw = 3.0, cs = 64, ct = 1.6 },
+		{ node = $Neptune, orbit_name = "NeptuneOrbit", color0 = Color(0.2, 0.3, 0.85, 0.0), color1 = Color(0.2, 0.3, 0.85, 0.4), cf = 1.3, cc = Color(0.2, 0.3, 0.85, 0.6), cw = 3.0, cs = 66, ct = 1.7 },
 	]
 	for p in _planet_data:
-		p.node.collided_with_sun.connect(p.on_collide)
+		p.node.collided_with_sun.connect(_on_planet_collided.bind(p))
 		_create_orbit_line(p.orbit_name, p.node, p.color0, p.color1)
 
 func _generate_star_layers():
@@ -426,125 +426,20 @@ func _update_star_parallax(camera: Camera2D):
 func _align_floor(offset: float, period: float) -> float:
 	return floor(offset / period) * period
 
-func _on_mercury_collided():
-	_collision_flash = 0.6
+func _on_planet_collided(p: Dictionary):
+	_collision_flash = max(_collision_flash, p.cf)
 	var ring := Line2D.new()
-	ring.default_color = Color(1, 0.9, 0.6, 0.5)
-	ring.width = 2.0
+	ring.default_color = p.cc
+	ring.width = p.cw
 	ring.antialiased = true
 	var pts := PackedVector2Array()
-	var seg := 48
+	var seg: int = p.cs
 	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
+		var a: float = (float(i) / seg) * TAU
 		pts.append(Vector2(cos(a), sin(a)))
 	ring.points = pts
 	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 0.8 })
-
-func _on_venus_collided():
-	_collision_flash = 0.8
-	var ring := Line2D.new()
-	ring.default_color = Color(1, 0.8, 0.4, 0.6)
-	ring.width = 3.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 64
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 1.2 })
-
-func _on_earth_collided():
-	_collision_flash = max(_collision_flash, 1.0)
-	var ring := Line2D.new()
-	ring.default_color = Color(0.3, 0.7, 1.0, 0.7)
-	ring.width = 3.5
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 72
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 1.5 })
-
-func _on_mars_collided():
-	_collision_flash = max(_collision_flash, 0.7)
-	var ring := Line2D.new()
-	ring.default_color = Color(0.9, 0.4, 0.15, 0.5)
-	ring.width = 2.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 40
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 0.9 })
-
-func _on_jupiter_collided():
-	_collision_flash = max(_collision_flash, 2.0)
-	var ring := Line2D.new()
-	ring.default_color = Color(0.85, 0.6, 0.3, 0.9)
-	ring.width = 6.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 96
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 2.5 })
-
-func _on_saturn_collided():
-	_collision_flash = max(_collision_flash, 1.8)
-	var ring := Line2D.new()
-	ring.default_color = Color(0.8, 0.7, 0.4, 0.8)
-	ring.width = 5.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 88
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 2.2 })
-
-func _on_uranus_collided():
-	_collision_flash = max(_collision_flash, 1.2)
-	var ring := Line2D.new()
-	ring.default_color = Color(0.4, 0.7, 0.9, 0.6)
-	ring.width = 3.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 64
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 1.6 })
-
-func _on_neptune_collided():
-	_collision_flash = max(_collision_flash, 1.3)
-	var ring := Line2D.new()
-	ring.default_color = Color(0.2, 0.3, 0.85, 0.6)
-	ring.width = 3.0
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg := 66
-	for i in range(seg + 1):
-		var a := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 1.7 })
+	_impact_rings.append({ ring = ring, timer = p.ct })
 
 func _spawn_asteroid():
 	var a := Node2D.new()
