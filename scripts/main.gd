@@ -246,6 +246,11 @@ func _process(delta):
 
 	_check_body_collisions()
 
+	var planet_data: Array[Dictionary] = []
+	for p in _planet_data:
+		if not p.node._dead:
+			planet_data.append({ pos = p.node.position, mass = p.node.mass })
+
 	for i in range(_asteroids.size() - 1, -1, -1):
 		var a := _asteroids[i] as Node2D
 		if not a.is_alive():
@@ -253,6 +258,7 @@ func _process(delta):
 			_asteroids.remove_at(i)
 		else:
 			a.sun_mass = sun_mass
+			a._planets = planet_data
 
 	_asteroid_spawn_timer -= delta
 	if _asteroid_spawn_timer <= 0.0 and _asteroids.size() < 3:
@@ -298,7 +304,7 @@ func _process(delta):
 			_impact_rings.remove_at(i)
 
 	if _mass_label:
-		_mass_label.text = "M☉ = %.3f" % sun_mass
+		_mass_label.text = "M☉ = %.7f" % sun_mass
 
 	var camera := $Camera2D as Camera2D
 	var cur_zoom: float = camera.zoom.x

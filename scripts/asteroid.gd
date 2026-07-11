@@ -1,6 +1,9 @@
 extends Node2D
 
 const GM_UNIT: float = 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (30.0 * 30.0)
+const PLANET_GRAVITY_SCALE: float = 5.0
+const PLANET_MASS_EXPONENT: float = 0.3
+const PLANET_SOFTENING: float = 150.0
 const _ORBITAL_BODY := preload("res://scripts/orbital_body.gd")
 
 var sun_mass: float = 1.0
@@ -13,6 +16,7 @@ var _trail_tick: int = 0
 var _alive: bool = false
 var _sprite: Sprite2D
 var _trail_line: Line2D
+var _planets: Array[Dictionary] = []
 
 signal collided_with_sun
 
@@ -57,7 +61,7 @@ func _generate_texture():
 	add_child(_sprite)
 
 func spawn():
-	mass = randf_range(0.005, 0.02)
+	mass = randf_range(1.5e-8, 6e-8)
 	var spawn_r := randf_range(900.0, 1200.0)
 	var entry_angle := randf_range(0.0, TAU)
 	_pos = Vector2(cos(entry_angle), sin(entry_angle)) * spawn_r
@@ -85,6 +89,12 @@ func _process(delta):
 		r2 = 4.0
 	var r := sqrt(r2)
 	var acc := -gm / r2 * _pos / r
+	for pl in _planets:
+		var offset: Vector2 = pl.pos - _pos
+		var dist_sq: float = offset.length_squared()
+		var dist: float = sqrt(dist_sq)
+		var softened_r2: float = dist_sq + PLANET_SOFTENING * PLANET_SOFTENING
+		acc += GM_UNIT * pow(pl.mass, PLANET_MASS_EXPONENT) / softened_r2 * offset / dist * PLANET_GRAVITY_SCALE
 	_vel += acc * delta
 	_pos += _vel * delta
 	position = _pos

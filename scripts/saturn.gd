@@ -5,7 +5,7 @@ func _ready():
 	orbit_radius = 1800.0
 	orbit_period = 269.0
 	start_angle = 3.0
-	mass = 95.2
+	mass = 2.86e-4
 	collision_radius = 44.0
 	_trail_max = 3000
 	_generate_texture()
@@ -19,7 +19,7 @@ func _process(delta):
 func _get_planet_texture_size() -> int:
 	return 88
 
-func _get_planet_color(t: float, x: int, y: int) -> Color:
+func _get_planet_color(t: float, _x: int, y: int) -> Color:
 	var band: float = sin(float(y) * 0.5) * 0.1
 	var b: float = 0.7 + 0.3 * (1.0 - t) + band
 	var alpha := 1.0

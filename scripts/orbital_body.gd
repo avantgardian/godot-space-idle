@@ -34,7 +34,7 @@ func _generate_texture():
 func _get_planet_texture_size() -> int:
 	return 32
 
-func _get_planet_color(t: float, x: int, y: int) -> Color:
+func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
 	return Color.WHITE
 
 func _reset():

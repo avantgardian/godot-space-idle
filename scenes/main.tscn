@@ -1,57 +1,53 @@
-[gd_scene load_steps=9 format=3 uid="uid://b6cwmx4lhjm7t"]
+[gd_scene format=3 uid="uid://b6cwmx4lhjm7t"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_3ceyx"]
-[ext_resource type="Script" path="res://scripts/mercury.gd" id="2_3ceyz"]
-[ext_resource type="Script" path="res://scripts/venus.gd" id="3_bfxyz"]
-[ext_resource type="Script" path="res://scripts/earth.gd" id="4_3cexz"]
-[ext_resource type="Script" path="res://scripts/mars.gd" id="5_3ceyx"]
-[ext_resource type="Script" path="res://scripts/jupiter.gd" id="6_3ceyz"]
-[ext_resource type="Script" path="res://scripts/saturn.gd" id="7_3cexz"]
-[ext_resource type="Script" path="res://scripts/uranus.gd" id="8_3ceyx"]
-[ext_resource type="Script" path="res://scripts/neptune.gd" id="9_3ceyz"]
+[ext_resource type="Script" uid="uid://bht4fhoj7c7kb" path="res://scripts/main.gd" id="1_3ceyx"]
+[ext_resource type="Script" uid="uid://cmym8n68lngns" path="res://scripts/mercury.gd" id="2_3ceyz"]
+[ext_resource type="Script" uid="uid://d2i3ff5rylah0" path="res://scripts/venus.gd" id="3_bfxyz"]
+[ext_resource type="Script" uid="uid://bpuqcr080n8ef" path="res://scripts/earth.gd" id="4_3cexz"]
+[ext_resource type="Script" uid="uid://dkmwqs6ct54vu" path="res://scripts/mars.gd" id="5_3ceyx"]
+[ext_resource type="Script" uid="uid://uxk0oflpfafx" path="res://scripts/jupiter.gd" id="6_3ceyz"]
+[ext_resource type="Script" uid="uid://lc3qs481xodg" path="res://scripts/saturn.gd" id="7_3cexz"]
+[ext_resource type="Script" uid="uid://dmo50hd20mo5e" path="res://scripts/uranus.gd" id="8_3ceyx"]
+[ext_resource type="Script" uid="uid://dj80qwr7odxpq" path="res://scripts/neptune.gd" id="9_3ceyz"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1112431360]
 script = ExtResource("1_3ceyx")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-enabled = true
-current = true
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1136277576]
 
-[node name="StarField" type="Node2D" parent="."]
+[node name="StarField" type="Node2D" parent="." unique_id=1984048694]
 
-[node name="Sun" type="Sprite2D" parent="."]
-centered = true
+[node name="Sun" type="Sprite2D" parent="." unique_id=1227695083]
 
-[node name="Mercury" type="Node2D" parent="."]
+[node name="Mercury" type="Node2D" parent="." unique_id=1820550349]
 script = ExtResource("2_3ceyz")
 
-[node name="Venus" type="Node2D" parent="."]
+[node name="Venus" type="Node2D" parent="." unique_id=20539749]
 script = ExtResource("3_bfxyz")
 
-[node name="Earth" type="Node2D" parent="."]
+[node name="Earth" type="Node2D" parent="." unique_id=807002999]
 script = ExtResource("4_3cexz")
 
-[node name="Mars" type="Node2D" parent="."]
+[node name="Mars" type="Node2D" parent="." unique_id=1958058809]
 script = ExtResource("5_3ceyx")
 
-[node name="Jupiter" type="Node2D" parent="."]
+[node name="Jupiter" type="Node2D" parent="." unique_id=1239311480]
 script = ExtResource("6_3ceyz")
 
-[node name="Saturn" type="Node2D" parent="."]
+[node name="Saturn" type="Node2D" parent="." unique_id=1967820671]
 script = ExtResource("7_3cexz")
 
-[node name="Uranus" type="Node2D" parent="."]
+[node name="Uranus" type="Node2D" parent="." unique_id=262236446]
 script = ExtResource("8_3ceyx")
 
-[node name="Neptune" type="Node2D" parent="."]
+[node name="Neptune" type="Node2D" parent="." unique_id=483098561]
 script = ExtResource("9_3ceyz")
 
-[node name="UI" type="CanvasLayer" parent="."]
-layer = 1
+[node name="UI" type="CanvasLayer" parent="." unique_id=78578215]
 
-[node name="MassLabel" type="Label" parent="UI"]
-offset_left = 16
-offset_top = 16
+[node name="MassLabel" type="Label" parent="UI" unique_id=760719478]
+offset_left = 16.0
+offset_top = 16.0
 theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
 theme_override_font_sizes/font_size = 18
 text = "M☉ = 1.000"
