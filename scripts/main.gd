@@ -66,6 +66,42 @@ func _ready():
 		p.initial_mass = p.node.mass
 		p.destroyed_by = ""
 	_setup_planet_mass_ui()
+	_setup_pause_button()
+
+func _setup_pause_button():
+	var btn := Button.new()
+	btn.name = "PauseButton"
+	btn.anchor_left = 1.0
+	btn.anchor_top = 1.0
+	btn.anchor_right = 1.0
+	btn.anchor_bottom = 1.0
+	btn.offset_left = -96.0
+	btn.offset_top = -46.0
+	btn.offset_right = -16.0
+	btn.offset_bottom = -16.0
+	btn.text = "Pause"
+	btn.pressed.connect(_toggle_pause)
+	btn.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	$UI.add_child(btn)
+
+	var overlay := ColorRect.new()
+	overlay.name = "PauseOverlay"
+	overlay.anchor_left = 0.0
+	overlay.anchor_top = 0.0
+	overlay.anchor_right = 1.0
+	overlay.anchor_bottom = 1.0
+	overlay.color = Color(0.0, 0.0, 0.0, 0.3)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.hide()
+	$UI.add_child(overlay)
+
+func _toggle_pause():
+	var tree := get_tree()
+	tree.paused = not tree.paused
+	var btn := $UI/PauseButton as Button
+	btn.text = "Play" if tree.paused else "Pause"
+	var overlay := $UI/PauseOverlay as ColorRect
+	overlay.visible = tree.paused
 
 func _setup_planet_mass_ui():
 	_planet_mass_labels = []
