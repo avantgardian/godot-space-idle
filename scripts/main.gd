@@ -321,7 +321,6 @@ func _create_orbit_line(line_name: String, planet: Node2D, color0: Color, color1
 	move_child(line, planet.get_index())
 
 var _follow_target: Node2D = null
-const _FOLLOW_ZOOM: float = 0.5
 
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
@@ -541,11 +540,9 @@ func _apply_zoom(new_zoom: float):
 			mat.set_shader_parameter("blur_amount", blur_amount)
 
 func _zoom_in():
-	_follow_target = null
 	_target_zoom = clamp(_target_zoom + camera_zoom_step, camera_min_zoom, camera_max_zoom)
 
 func _zoom_out():
-	_follow_target = null
 	_target_zoom = clamp(_target_zoom - camera_zoom_step, camera_min_zoom, camera_max_zoom)
 
 func _input(event):
@@ -577,7 +574,7 @@ func _unhandled_input(event):
 			var clicked := _check_planet_click(event.position, camera)
 			if not clicked.is_empty():
 				_follow_target = clicked.node
-				_target_zoom = _FOLLOW_ZOOM
+				_target_zoom = camera_max_zoom
 				return
 
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
