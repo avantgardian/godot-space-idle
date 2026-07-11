@@ -81,7 +81,6 @@ func _setup_pause_button():
 	btn.offset_bottom = -16.0
 	btn.text = "Pause"
 	btn.pressed.connect(_toggle_pause)
-	btn.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	$UI.add_child(btn)
 
 	var overlay := ColorRect.new()
@@ -95,13 +94,15 @@ func _setup_pause_button():
 	overlay.hide()
 	$UI.add_child(overlay)
 
+var _paused := false
+
 func _toggle_pause():
-	var tree := get_tree()
-	tree.paused = not tree.paused
+	_paused = not _paused
+	Engine.time_scale = 0.0 if _paused else 1.0
 	var btn := $UI/PauseButton as Button
-	btn.text = "Play" if tree.paused else "Pause"
+	btn.text = "Play" if _paused else "Pause"
 	var overlay := $UI/PauseOverlay as ColorRect
-	overlay.visible = tree.paused
+	overlay.visible = _paused
 
 func _setup_planet_mass_ui():
 	_planet_mass_labels = []
