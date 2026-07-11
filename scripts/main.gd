@@ -344,18 +344,7 @@ func _align_floor(offset: float, period: float) -> float:
 func _on_planet_collided(p: Dictionary):
 	sun_mass += p.node.mass
 	_collision_flash = max(_collision_flash, p.cf)
-	var ring := Line2D.new()
-	ring.default_color = p.cc
-	ring.width = p.cw
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	var seg: int = p.cs
-	for i in range(seg + 1):
-		var a: float = (float(i) / seg) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = p.ct })
+	_spawn_impact_ring(p.cc, p.cw, p.cs, p.ct)
 
 func _spawn_asteroid():
 	var a := Node2D.new()
@@ -369,18 +358,20 @@ func _spawn_asteroid():
 func _on_asteroid_collided(ast: Node2D):
 	sun_mass += ast.mass
 	_collision_flash = max(_collision_flash, 0.2)
+	_spawn_impact_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
+
+func _spawn_impact_ring(color: Color, width: float, segments: int, timer: float):
 	var ring := Line2D.new()
-	ring.default_color = Color(1, 0.7, 0.3, 0.3)
-	ring.width = 1.5
+	ring.default_color = color
+	ring.width = width
 	ring.antialiased = true
 	var pts := PackedVector2Array()
-	var seg := 24
-	for i in range(seg + 1):
-		var angle := (float(i) / seg) * TAU
-		pts.append(Vector2(cos(angle), sin(angle)))
+	for i in range(segments + 1):
+		var a := (float(i) / segments) * TAU
+		pts.append(Vector2(cos(a), sin(a)))
 	ring.points = pts
 	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = 0.4 })
+	_impact_rings.append({ ring = ring, timer = timer })
 
 func _apply_zoom(new_zoom: float):
 	var camera := $Camera2D as Camera2D
