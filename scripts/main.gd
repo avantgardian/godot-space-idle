@@ -32,6 +32,7 @@ var _scroll_accum: float = 0.0
 
 var sun_mass: float = 1.0
 var _mass_label: Label
+var _planet_mass_labels: Array[Label]
 var _collision_flash: float = 0.0
 var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
@@ -61,6 +62,28 @@ func _ready():
 	for p in _planet_data:
 		p.node.collided_with_sun.connect(_on_planet_collided.bind(p))
 		_create_orbit_line(p.orbit_name, p.node, p.color0, p.color1)
+	_setup_planet_mass_ui()
+
+func _setup_planet_mass_ui():
+	_planet_mass_labels = []
+	var container := VBoxContainer.new()
+	container.name = "PlanetMassList"
+	container.position = Vector2(16, 44)
+	container.add_theme_constant_override("separation", 2)
+	$UI.add_child(container)
+
+	var title := Label.new()
+	title.text = "Planets (M☉):"
+	title.theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+	title.theme_override_font_sizes/font_size = 14
+	container.add_child(title)
+
+	for p in _planet_data:
+		var lbl := Label.new()
+		lbl.theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
+		lbl.theme_override_font_sizes/font_size = 12
+		container.add_child(lbl)
+		_planet_mass_labels.append(lbl)
 
 func _generate_star_layers():
 	var rng := RandomNumberGenerator.new()
@@ -305,6 +328,9 @@ func _process(delta):
 
 	if _mass_label:
 		_mass_label.text = "M☉ = %.7f" % sun_mass
+		var planet_names := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
+		for i in _planet_data.size():
+			_planet_mass_labels[i].text = "  %s: %.2e" % [planet_names[i], _planet_data[i].node.mass]
 
 	var camera := $Camera2D as Camera2D
 	var cur_zoom: float = camera.zoom.x
