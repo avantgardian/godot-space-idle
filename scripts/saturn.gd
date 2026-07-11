@@ -3,11 +3,11 @@ var _ring: Sprite2D
 
 func _ready():
 	orbit_radius = 1800.0
-	orbit_period = 269.0
+	orbit_period = 616.0
 	start_angle = 3.0
 	mass = 2.86e-4
 	collision_radius = 44.0
-	_trail_max = 8070  # full orbit: 269s × 30 pts/s
+	_trail_max = 18480 # full orbit: 616s × 30 pts/s
 	_generate_texture()
 	_generate_ring()
 	_reset()

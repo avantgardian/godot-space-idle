@@ -2,11 +2,11 @@ extends "res://scripts/orbital_body.gd"
 
 func _ready():
 	orbit_radius = 2600.0
-	orbit_period = 468.0
+	orbit_period = 1599.0
 	start_angle = 4.5
 	mass = 5.14e-5
 	collision_radius = 27.0
-	_trail_max = 14040 # full orbit: 468s × 30 pts/s
+	_trail_max = 47970 # full orbit: 1599s × 30 pts/s
 	_generate_texture()
 	_reset()
 

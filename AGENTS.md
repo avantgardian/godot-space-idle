@@ -23,14 +23,14 @@ There are no build/test/lint commands. This is a pure Godot project with no tool
 |--------|---------|------|
 | `main.gd` | `Node2D` | Root controller — owns all state, orchestrates planets, asteroids, star field, camera, UI, collisions |
 | `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection |
-| `mercury.gd` | `orbital_body.gd` | Orbit radius 400, period 37s, mass 1.66e-7, grey |
-| `venus.gd` | `orbital_body.gd` | Orbit radius 550, period 58s, mass 2.45e-6, golden |
+| `mercury.gd` | `orbital_body.gd` | Orbit radius 350, period 25s, mass 1.65e-7, grey |
+| `venus.gd` | `orbital_body.gd` | Orbit radius 500, period 47s, mass 2.45e-6, golden |
 | `earth.gd` | `orbital_body.gd` | Orbit radius 700, period 78s, mass 3.0e-6, blue-green |
-| `mars.gd` | `orbital_body.gd` | Orbit radius 950, period 123s, mass 3.21e-7, reddish-brown |
-| `jupiter.gd` | `orbital_body.gd` | Orbit radius 1400, period 221s, mass 9.54e-4, banded texture |
-| `saturn.gd` | `orbital_body.gd` | Orbit radius 1800, period 269s, mass 2.86e-4, procedural ring (animated) |
-| `uranus.gd` | `orbital_body.gd` | Orbit radius 2200, period 364s, mass 4.35e-5, cyan-blue |
-| `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 468s, mass 5.14e-5, deep blue |
+| `mars.gd` | `orbital_body.gd` | Orbit radius 950, period 131s, mass 3.21e-7, reddish-brown |
+| `jupiter.gd` | `orbital_body.gd` | Orbit radius 1400, period 355s, mass 9.54e-4, banded texture |
+| `saturn.gd` | `orbital_body.gd` | Orbit radius 1800, period 616s, mass 2.86e-4, procedural ring (animated) |
+| `uranus.gd` | `orbital_body.gd` | Orbit radius 2200, period 1074s, mass 4.35e-5, cyan-blue |
+| `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 1599s, mass 5.14e-5, deep blue |
 | `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave reddish trails, despawn >4000u |
 | `texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
 
