@@ -74,14 +74,14 @@ func _setup_planet_mass_ui():
 
 	var title := Label.new()
 	title.text = "Planets (M☉):"
-	title.theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
-	title.theme_override_font_sizes/font_size = 14
+	title.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85, 1))
+	title.add_theme_font_size_override("font_size", 14)
 	container.add_child(title)
 
 	for p in _planet_data:
 		var lbl := Label.new()
-		lbl.theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
-		lbl.theme_override_font_sizes/font_size = 12
+		lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75, 1))
+		lbl.add_theme_font_size_override("font_size", 12)
 		container.add_child(lbl)
 		_planet_mass_labels.append(lbl)
 
@@ -330,7 +330,7 @@ func _process(delta):
 		_mass_label.text = "M☉ = %.7f" % sun_mass
 		var planet_names := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 		for i in _planet_data.size():
-			_planet_mass_labels[i].text = "  %s: %.2e" % [planet_names[i], _planet_data[i].node.mass]
+			_planet_mass_labels[i].text = "  %s: %s" % [planet_names[i], str(_planet_data[i].node.mass)]
 
 	var camera := $Camera2D as Camera2D
 	var cur_zoom: float = camera.zoom.x
