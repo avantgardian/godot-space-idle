@@ -332,7 +332,7 @@ func _process(delta):
 		var planet_names := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 		for i in _planet_data.size():
 			var p := _planet_data[i]
-			var m := p.node.mass
+			var m: float = p.node.mass
 			var pct: float = (m - p.initial_mass) / p.initial_mass * 100.0
 			var change := ""
 			if pct > 0.001:
