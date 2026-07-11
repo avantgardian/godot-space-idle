@@ -13,7 +13,6 @@ var collision_radius: float = 20.0
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
-var _respawn_timer: float = 0.0
 var _trail: PackedVector2Array
 var _trail_tick: int = 0
 var _trail_max: int = 1200
@@ -55,10 +54,6 @@ func _initial_gm() -> float:
 
 func _process(delta):
 	if _dead:
-		_respawn_timer += delta
-		if _respawn_timer >= 2.0:
-			_respawn_timer = 0.0
-			_reset()
 		return
 
 	var gm := _initial_gm() * sun_mass
@@ -74,7 +69,6 @@ func _process(delta):
 	var sun_r := sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
 		_dead = true
-		_respawn_timer = 0.0
 		visible = false
 		collided_with_sun.emit()
 
