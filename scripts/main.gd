@@ -341,7 +341,8 @@ func _process(delta):
 				if dot > 0 and dot + 2 < pct_str.length():
 					pct_str = pct_str.left(dot + 2)
 				change = " +%s%%" % pct_str
-			var line: String = "%s: %s%s" % [planet_names[i], str(m), change]
+			var status := " (Destroyed)" if p.node._dead else ""
+			var line: String = "%s: %s%s%s" % [planet_names[i], str(m), change, status]
 			_planet_mass_labels[i].text = line
 
 	var camera := $Camera2D as Camera2D
