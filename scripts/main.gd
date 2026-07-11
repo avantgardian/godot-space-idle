@@ -433,6 +433,7 @@ func _unhandled_input(event):
 		elif event.keycode == KEY_MINUS:
 			_zoom_out()
 
+
 func _check_body_collisions():
 	var all_bodies: Array[Node2D] = []
 
@@ -454,11 +455,15 @@ func _check_body_collisions():
 			if dist < a.collision_radius + b.collision_radius:
 				var contact_r: float = a.collision_radius + b.collision_radius
 				if a.mass >= b.mass:
-					a.mass += b.mass
+					var total: float = a.mass + b.mass
+					a._vel = (a._vel * a.mass + b._vel * b.mass) / total
+					a.mass = total
 					_disable_body(b)
 					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
 				else:
-					b.mass += a.mass
+					var total: float = a.mass + b.mass
+					b._vel = (b._vel * b.mass + a._vel * a.mass) / total
+					b.mass = total
 					_disable_body(a)
 					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
 
