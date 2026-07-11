@@ -438,6 +438,8 @@ func _unhandled_input(event):
 			_zoom_in()
 		elif event.keycode == KEY_MINUS:
 			_zoom_out()
+		elif event.keycode == KEY_L:
+			_spawn_asteroid()
 
 
 func _check_body_collisions():
