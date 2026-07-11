@@ -231,7 +231,7 @@ func _show_planet_popup(planet_node: Node2D):
 
 	$UI.add_child(panel)
 	_planet_popup = panel
-	panel.reset_minimum_size()
+	panel.size = Vector2(260, 120)
 
 	panel.modulate = Color(1, 1, 1, 0)
 	var tween := create_tween()
