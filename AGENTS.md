@@ -6,7 +6,8 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 
 - Entry point: `scenes/main.tscn` (run/main_scene)
 - All scripts in `scripts/` — GDScript only, no C# or GDExtension
-- Sun clickable (left-click) to increase mass; `+`/`-` or scroll to zoom; drag to pan
+- Sun clickable (left-click) to increase mass (+0.01/click); `+`/`-` or scroll to zoom; left/middle drag to pan
+- `L` key spawns an asteroid manually
 
 ## Dev commands
 
@@ -16,12 +17,31 @@ There are no build/test/lint commands. This is a pure Godot project with no tool
 - No formatter, linter, typechecker, or test framework is configured
 - No CI, no pre-commit hooks, no task runner
 
-## Architecture notes
+## Scripts
 
-- No autoloads/singletons; `main.gd` owns all state and coordinates child nodes via `$` paths
-- Planets (`mercury.gd`, `venus.gd`) use Newtonian orbital mechanics (`GM_UNIT` / `_initial_gm()`), orbit the Sun, respawn 2s after collision
-- Asteroids (`asteroid.gd`) spawn from the outer field every ~35–55s, max 3 alive at once
-- Star field uses procedural parallax with canvas-item shaders (6 layers, seeded by `star_seed`)
-- Sun shader + glows generated at runtime (additive blend sprites)
-- Camera is a `Camera2D` smoothed child of the root; zoom applies star blur via shader parameter
-- All textures generated in code (`Image.create` → `ImageTexture`); no imported assets beyond `icon.svg`
+| Script | Extends | Role |
+|--------|---------|------|
+| `main.gd` | `Node2D` | Root controller — owns all state, orchestrates planets, asteroids, star field, camera, UI, collisions |
+| `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection |
+| `mercury.gd` | `orbital_body.gd` | Orbit radius 400, period 37s, mass 1.66e-7, grey |
+| `venus.gd` | `orbital_body.gd` | Orbit radius 550, period 58s, mass 2.45e-6, golden |
+| `earth.gd` | `orbital_body.gd` | Orbit radius 700, period 78s, mass 3.0e-6, blue-green |
+| `mars.gd` | `orbital_body.gd` | Orbit radius 950, period 123s, mass 3.21e-7, reddish-brown |
+| `jupiter.gd` | `orbital_body.gd` | Orbit radius 1400, period 221s, mass 9.54e-4, banded texture |
+| `saturn.gd` | `orbital_body.gd` | Orbit radius 1800, period 269s, mass 2.86e-4, procedural ring (animated) |
+| `uranus.gd` | `orbital_body.gd` | Orbit radius 2200, period 364s, mass 4.35e-5, cyan-blue |
+| `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 468s, mass 5.14e-5, deep blue |
+| `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave reddish trails, despawn >4000u |
+| `texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
+
+## Architecture
+
+- **No autoloads/singletons** — `main.gd` owns all state and coordinates child nodes via `$` paths
+- **Planets** inherit from `orbital_body.gd` which handles circular Newtonian orbits (`GM_UNIT` / `_initial_gm()`), trail recording (1200 points, Line2D rendering), and sun-collision detection. When a planet hits the sun it is marked dead (no respawn) and emits `collided_with_sun`. Each planet has a custom `_get_planet_color()` for its procedural texture. Saturn additionally generates a rotating ring sprite.
+- **Body-body collisions** — `main.gd` checks planet-planet, planet-asteroid overlaps each frame. The larger body absorbs the smaller with momentum conservation; collision effects (impact rings + additive glow sprites) spawn at the merge point.
+- **Asteroids** spawn every ~35–55s (max 3 alive), feel softened gravity from all planets, and despawn when >4000 units from origin.
+- **Star field** — procedural parallax with canvas-item shaders (6 layers, edge-wrapping, seeded by `star_seed`). Blur amount driven by camera zoom via shader parameter.
+- **Sun** — runtime-generated noise texture + shader (`sun_noise.gdshader`), 4 additive-blend glow sprites, pulsating `breathe` animation, collision flash on any impact.
+- **Camera** — `Camera2D` with position smoothing and lerp-smoothed zoom (clamped 0.3–1.3×). Zoom level mapped to star-field blur.
+- **Textures** — all generated in code (`Image.create` → `ImageTexture`); no imported assets beyond `icon.svg`
+- **UI** — sun mass label, planet mass panel (`VBoxContainer` with per-planet mass/%/status), orbit trail lines (gradient-colored `Line2D`)
