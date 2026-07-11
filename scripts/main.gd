@@ -36,6 +36,7 @@ var _collision_flash: float = 0.0
 var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
+var _planet_data: Array[Dictionary]
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const _TEX := preload("res://scripts/texture_utils.gd")
 
@@ -47,23 +48,20 @@ func _ready():
 	_generate_sun_glows()
 	_generate_mercury_texture()
 	_setup_camera()
-	$Mercury.collided_with_sun.connect(_on_mercury_collided)
-	$Venus.collided_with_sun.connect(_on_venus_collided)
-	$Earth.collided_with_sun.connect(_on_earth_collided)
-	$Mars.collided_with_sun.connect(_on_mars_collided)
-	$Jupiter.collided_with_sun.connect(_on_jupiter_collided)
-	$Saturn.collided_with_sun.connect(_on_saturn_collided)
-	$Uranus.collided_with_sun.connect(_on_uranus_collided)
-	$Neptune.collided_with_sun.connect(_on_neptune_collided)
 	_mass_label = $UI/MassLabel as Label
-	_create_orbit_line("MercuryOrbit", $Mercury, Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.5))
-	_create_orbit_line("VenusOrbit", $Venus, Color(1, 0.9, 0.6, 0.0), Color(1, 0.9, 0.6, 0.4))
-	_create_orbit_line("EarthOrbit", $Earth, Color(0.3, 0.6, 1.0, 0.0), Color(0.3, 0.6, 1.0, 0.4))
-	_create_orbit_line("MarsOrbit", $Mars, Color(0, 0, 0, 0.0), Color(1.0, 0.6, 0.1, 0.4))
-	_create_orbit_line("JupiterOrbit", $Jupiter, Color(0.85, 0.6, 0.3, 0.0), Color(0.85, 0.6, 0.3, 0.4))
-	_create_orbit_line("SaturnOrbit", $Saturn, Color(0.8, 0.7, 0.4, 0.0), Color(0.8, 0.7, 0.4, 0.4))
-	_create_orbit_line("UranusOrbit", $Uranus, Color(0.4, 0.7, 0.9, 0.0), Color(0.4, 0.7, 0.9, 0.4))
-	_create_orbit_line("NeptuneOrbit", $Neptune, Color(0.2, 0.3, 0.85, 0.0), Color(0.2, 0.3, 0.85, 0.4))
+	_planet_data = [
+		{ node = $Mercury, orbit_name = "MercuryOrbit", color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), on_collide = _on_mercury_collided },
+		{ node = $Venus, orbit_name = "VenusOrbit", color0 = Color(1, 0.9, 0.6, 0.0), color1 = Color(1, 0.9, 0.6, 0.4), on_collide = _on_venus_collided },
+		{ node = $Earth, orbit_name = "EarthOrbit", color0 = Color(0.3, 0.6, 1.0, 0.0), color1 = Color(0.3, 0.6, 1.0, 0.4), on_collide = _on_earth_collided },
+		{ node = $Mars, orbit_name = "MarsOrbit", color0 = Color(0, 0, 0, 0.0), color1 = Color(1.0, 0.6, 0.1, 0.4), on_collide = _on_mars_collided },
+		{ node = $Jupiter, orbit_name = "JupiterOrbit", color0 = Color(0.85, 0.6, 0.3, 0.0), color1 = Color(0.85, 0.6, 0.3, 0.4), on_collide = _on_jupiter_collided },
+		{ node = $Saturn, orbit_name = "SaturnOrbit", color0 = Color(0.8, 0.7, 0.4, 0.0), color1 = Color(0.8, 0.7, 0.4, 0.4), on_collide = _on_saturn_collided },
+		{ node = $Uranus, orbit_name = "UranusOrbit", color0 = Color(0.4, 0.7, 0.9, 0.0), color1 = Color(0.4, 0.7, 0.9, 0.4), on_collide = _on_uranus_collided },
+		{ node = $Neptune, orbit_name = "NeptuneOrbit", color0 = Color(0.2, 0.3, 0.85, 0.0), color1 = Color(0.2, 0.3, 0.85, 0.4), on_collide = _on_neptune_collided },
+	]
+	for p in _planet_data:
+		p.node.collided_with_sun.connect(p.on_collide)
+		_create_orbit_line(p.orbit_name, p.node, p.color0, p.color1)
 
 func _generate_star_layers():
 	var rng := RandomNumberGenerator.new()
@@ -325,45 +323,11 @@ func _process(delta):
 	var temp_color: Color = Color(1.0, 1.0, 0.5).lerp(Color(1.0, 0.35, 0.05), mass_t)
 	sun.modulate = temp_color * (sin(_sun_time * 1.2) * 0.05 + 0.95)
 
-	$Mercury.sun_mass = sun_mass
-	var orbit_line := $MercuryOrbit as Line2D
-	if orbit_line:
-		orbit_line.points = $Mercury.get_trail()
-
-	var venus_line := $VenusOrbit as Line2D
-	if venus_line:
-		venus_line.points = $Venus.get_trail()
-	$Venus.sun_mass = sun_mass
-
-	var earth_line := $EarthOrbit as Line2D
-	if earth_line:
-		earth_line.points = $Earth.get_trail()
-	$Earth.sun_mass = sun_mass
-
-	var mars_line := $MarsOrbit as Line2D
-	if mars_line:
-		mars_line.points = $Mars.get_trail()
-	$Mars.sun_mass = sun_mass
-
-	var jupiter_line := $JupiterOrbit as Line2D
-	if jupiter_line:
-		jupiter_line.points = $Jupiter.get_trail()
-	$Jupiter.sun_mass = sun_mass
-
-	var saturn_line := $SaturnOrbit as Line2D
-	if saturn_line:
-		saturn_line.points = $Saturn.get_trail()
-	$Saturn.sun_mass = sun_mass
-
-	var uranus_line := $UranusOrbit as Line2D
-	if uranus_line:
-		uranus_line.points = $Uranus.get_trail()
-	$Uranus.sun_mass = sun_mass
-
-	var neptune_line := $NeptuneOrbit as Line2D
-	if neptune_line:
-		neptune_line.points = $Neptune.get_trail()
-	$Neptune.sun_mass = sun_mass
+	for p in _planet_data:
+		p.node.sun_mass = sun_mass
+		var line := get_node(p.orbit_name) as Line2D
+		if line:
+			line.points = p.node.get_trail()
 
 	_check_body_collisions()
 
@@ -668,12 +632,11 @@ func _unhandled_input(event):
 			_zoom_out()
 
 func _check_body_collisions():
-	var planets := [$Mercury, $Venus, $Earth, $Mars, $Jupiter, $Saturn, $Uranus, $Neptune]
 	var all_bodies: Array[Node2D] = []
 
-	for p in planets:
-		if not p._dead:
-			all_bodies.append(p)
+	for p in _planet_data:
+		if not p.node._dead:
+			all_bodies.append(p.node)
 
 	for a in _asteroids:
 		if a.is_alive():
