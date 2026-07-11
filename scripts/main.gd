@@ -157,7 +157,7 @@ func _show_planet_popup(planet_node: Node2D):
 	var idx := _find_planet_idx(planet_node)
 	if idx < 0:
 		return
-	var color := PLANET_COLORS[idx]
+	var color: Color = PLANET_COLORS[idx]
 
 	var panel := Panel.new()
 	panel.name = "PlanetPopup"
@@ -254,10 +254,10 @@ func _update_planet_popup():
 	if not _planet_popup or not _follow_target:
 		return
 	var node := _follow_target
-	_popup_labels.mass.text = _popup_labels.mass.fmt % str(node.mass)
-	_popup_labels.speed.text = _popup_labels.speed.fmt % node._vel.length()
-	_popup_labels.radius.text = _popup_labels.radius.fmt % node.orbit_radius
-	_popup_labels.period.text = _popup_labels.period.fmt % node.orbit_period
+	_popup_labels.mass.text = "%s  M☉" % str(node.mass)
+	_popup_labels.speed.text = "%.2f  u/s" % node._vel.length()
+	_popup_labels.radius.text = "%.0f  u" % node.orbit_radius
+	_popup_labels.period.text = "%.0f  s" % node.orbit_period
 
 func _hide_planet_popup():
 	if not _planet_popup or not is_instance_valid(_planet_popup):
