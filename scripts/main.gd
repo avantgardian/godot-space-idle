@@ -474,7 +474,8 @@ func _align_floor(offset: float, period: float) -> float:
 	return floor(offset / period) * period
 
 func _check_planet_click(screen_pos: Vector2, camera: Camera2D) -> Dictionary:
-	var closest = null
+	var closest: Dictionary
+	var found := false
 	var closest_dist := INF
 	for p in _planet_data:
 		if p.node._dead:
@@ -485,7 +486,9 @@ func _check_planet_click(screen_pos: Vector2, camera: Camera2D) -> Dictionary:
 		if d < hit_r and d < closest_dist:
 			closest = p
 			closest_dist = d
-	return closest
+			found = true
+	return closest if found else {}
+
 
 func _find_planet_idx(node: Node2D) -> int:
 	for i in _planet_data.size():
@@ -572,7 +575,7 @@ func _unhandled_input(event):
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			var clicked := _check_planet_click(event.position, camera)
-			if clicked != null:
+			if not clicked.is_empty():
 				_follow_target = clicked.node
 				_target_zoom = _FOLLOW_ZOOM
 				return
