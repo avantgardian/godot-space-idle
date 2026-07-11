@@ -44,7 +44,6 @@ func _ready():
 	_generate_sun_texture()
 	_apply_sun_shader()
 	_generate_sun_glows()
-	_create_orbit_line()
 	_generate_mercury_texture()
 	_setup_camera()
 	$Mercury.collided_with_sun.connect(_on_mercury_collided)
@@ -56,13 +55,14 @@ func _ready():
 	$Uranus.collided_with_sun.connect(_on_uranus_collided)
 	$Neptune.collided_with_sun.connect(_on_neptune_collided)
 	_mass_label = $UI/MassLabel as Label
-	_create_venus_orbit_line()
-	_create_earth_orbit_line()
-	_create_mars_orbit_line()
-	_create_jupiter_orbit_line()
-	_create_saturn_orbit_line()
-	_create_uranus_orbit_line()
-	_create_neptune_orbit_line()
+	_create_orbit_line("MercuryOrbit", $Mercury, Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.5))
+	_create_orbit_line("VenusOrbit", $Venus, Color(1, 0.9, 0.6, 0.0), Color(1, 0.9, 0.6, 0.4))
+	_create_orbit_line("EarthOrbit", $Earth, Color(0.3, 0.6, 1.0, 0.0), Color(0.3, 0.6, 1.0, 0.4))
+	_create_orbit_line("MarsOrbit", $Mars, Color(0, 0, 0, 0.0), Color(1.0, 0.6, 0.1, 0.4))
+	_create_orbit_line("JupiterOrbit", $Jupiter, Color(0.85, 0.6, 0.3, 0.0), Color(0.85, 0.6, 0.3, 0.4))
+	_create_orbit_line("SaturnOrbit", $Saturn, Color(0.8, 0.7, 0.4, 0.0), Color(0.8, 0.7, 0.4, 0.4))
+	_create_orbit_line("UranusOrbit", $Uranus, Color(0.4, 0.7, 0.9, 0.0), Color(0.4, 0.7, 0.9, 0.4))
+	_create_orbit_line("NeptuneOrbit", $Neptune, Color(0.2, 0.3, 0.85, 0.0), Color(0.2, 0.3, 0.85, 0.4))
 
 func _generate_star_layers():
 	var rng := RandomNumberGenerator.new()
@@ -308,101 +308,17 @@ func _generate_mercury_texture():
 	var texture := ImageTexture.create_from_image(image)
 	$Mercury/Sprite.texture = texture
 
-func _create_orbit_line():
+func _create_orbit_line(name: String, planet: Node2D, color0: Color, color1: Color):
 	var line := Line2D.new()
-	line.name = "MercuryOrbit"
+	line.name = name
 	line.width = 1.5
 	line.antialiased = true
 	var grad := Gradient.new()
-	grad.set_color(0, Color(1, 1, 1, 0.0))
-	grad.set_color(1, Color(1, 1, 1, 0.5))
+	grad.set_color(0, color0)
+	grad.set_color(1, color1)
 	line.gradient = grad
 	add_child(line)
-	move_child(line, $Mercury.get_index())
-
-func _create_venus_orbit_line():
-	var line := Line2D.new()
-	line.name = "VenusOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(1, 0.9, 0.6, 0.0))
-	grad.set_color(1, Color(1, 0.9, 0.6, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Venus.get_index())
-
-func _create_earth_orbit_line():
-	var line := Line2D.new()
-	line.name = "EarthOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.3, 0.6, 1.0, 0.0))
-	grad.set_color(1, Color(0.3, 0.6, 1.0, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Earth.get_index())
-
-func _create_mars_orbit_line():
-	var line := Line2D.new()
-	line.name = "MarsOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.0))
-	grad.set_color(1, Color(1.0, 0.6, 0.1, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Mars.get_index())
-
-func _create_jupiter_orbit_line():
-	var line := Line2D.new()
-	line.name = "JupiterOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.85, 0.6, 0.3, 0.0))
-	grad.set_color(1, Color(0.85, 0.6, 0.3, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Jupiter.get_index())
-
-func _create_saturn_orbit_line():
-	var line := Line2D.new()
-	line.name = "SaturnOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.8, 0.7, 0.4, 0.0))
-	grad.set_color(1, Color(0.8, 0.7, 0.4, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Saturn.get_index())
-
-func _create_uranus_orbit_line():
-	var line := Line2D.new()
-	line.name = "UranusOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.4, 0.7, 0.9, 0.0))
-	grad.set_color(1, Color(0.4, 0.7, 0.9, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Uranus.get_index())
-
-func _create_neptune_orbit_line():
-	var line := Line2D.new()
-	line.name = "NeptuneOrbit"
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.2, 0.3, 0.85, 0.0))
-	grad.set_color(1, Color(0.2, 0.3, 0.85, 0.4))
-	line.gradient = grad
-	add_child(line)
-	move_child(line, $Neptune.get_index())
+	move_child(line, planet.get_index())
 
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
