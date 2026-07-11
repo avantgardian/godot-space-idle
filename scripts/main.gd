@@ -42,6 +42,16 @@ const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const _STAR_SHADER := preload("res://shaders/star_blur.gdshader")
 const _SUN_SHADER := preload("res://shaders/sun_noise.gdshader")
 const PLANET_NAMES := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
+const PLANET_COLORS := [
+	Color(0.7, 0.7, 0.7),
+	Color(0.95, 0.85, 0.5),
+	Color(0.3, 0.6, 1.0),
+	Color(0.85, 0.35, 0.15),
+	Color(0.85, 0.6, 0.3),
+	Color(0.8, 0.7, 0.4),
+	Color(0.4, 0.7, 0.9),
+	Color(0.2, 0.3, 0.85),
+]
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	_generate_star_layers()
@@ -141,6 +151,124 @@ func _toggle_pause():
 	btn.text = "Play" if _paused else "Pause"
 	var overlay := $UI/PauseOverlay as ColorRect
 	overlay.visible = _paused
+
+func _show_planet_popup(planet_node: Node2D):
+	_hide_planet_popup()
+	var idx := _find_planet_idx(planet_node)
+	if idx < 0:
+		return
+	var color := PLANET_COLORS[idx]
+
+	var panel := Panel.new()
+	panel.name = "PlanetPopup"
+	panel.anchor_left = 1.0
+	panel.anchor_top = 0.0
+	panel.anchor_right = 1.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = -300.0
+	panel.offset_top = 20.0
+	panel.offset_right = -20.0
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.04, 0.1, 0.88)
+	sb.border_color = color
+	sb.border_width_left = 3
+	sb.border_width_top = 1
+	sb.border_width_right = 1
+	sb.border_width_bottom = 1
+	sb.corner_radius_top_left = 6
+	sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_right = 6
+	sb.corner_radius_bottom_left = 6
+	sb.content_margin_left = 16
+	sb.content_margin_top = 12
+	sb.content_margin_right = 16
+	sb.content_margin_bottom = 10
+	panel.add_theme_stylebox_override("panel", sb)
+
+	var vbox := VBoxContainer.new()
+	vbox.anchor_left = 0.0
+	vbox.anchor_top = 0.0
+	vbox.anchor_right = 1.0
+	vbox.anchor_bottom = 1.0
+	vbox.add_theme_constant_override("separation", 5)
+	panel.add_child(vbox)
+
+	var name_label := Label.new()
+	name_label.text = PLANET_NAMES[idx]
+	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0, 1.0))
+	name_label.add_theme_constant_override("outline_size", 1)
+	name_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.3))
+	vbox.add_child(name_label)
+
+	var sep := ColorRect.new()
+	sep.custom_minimum_size = Vector2(0, 1)
+	sep.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	sep.color = Color(0.3, 0.4, 0.6, 0.25)
+	vbox.add_child(sep)
+
+	_popup_labels = {}
+	var fields := [
+		{ key = "mass",   label = "Mass",   fmt = "%s  M☉" },
+		{ key = "speed",  label = "Speed",  fmt = "%.2f  u/s" },
+		{ key = "radius", label = "Orbit",  fmt = "%.0f  u" },
+		{ key = "period", label = "Period", fmt = "%.0f  s" },
+	]
+	for f in fields:
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 8)
+		var lbl := Label.new()
+		lbl.text = f.label
+		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7, 1.0))
+		lbl.custom_minimum_size = Vector2(52, 0)
+		hbox.add_child(lbl)
+
+		var val := Label.new()
+		val.add_theme_font_size_override("font_size", 12)
+		val.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0, 1.0))
+		val.add_theme_constant_override("outline_size", 1)
+		val.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.2))
+		hbox.add_child(val)
+		_popup_labels[f.key] = val
+		vbox.add_child(hbox)
+
+	vbox.add_child(sep.duplicate())
+
+	var track := Label.new()
+	track.text = "● Tracking"
+	track.add_theme_font_size_override("font_size", 10)
+	track.add_theme_color_override("font_color", color)
+	vbox.add_child(track)
+
+	$UI.add_child(panel)
+	_planet_popup = panel
+
+	panel.modulate = Color(1, 1, 1, 0)
+	var tween := create_tween()
+	tween.tween_property(panel, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+func _update_planet_popup():
+	if not _planet_popup or not _follow_target:
+		return
+	var node := _follow_target
+	_popup_labels.mass.text = _popup_labels.mass.fmt % str(node.mass)
+	_popup_labels.speed.text = _popup_labels.speed.fmt % node._vel.length()
+	_popup_labels.radius.text = _popup_labels.radius.fmt % node.orbit_radius
+	_popup_labels.period.text = _popup_labels.period.fmt % node.orbit_period
+
+func _hide_planet_popup():
+	if not _planet_popup or not is_instance_valid(_planet_popup):
+		_planet_popup = null
+		return
+	var panel := _planet_popup
+	_planet_popup = null
+	_popup_labels = {}
+	var tween := create_tween()
+	tween.tween_property(panel, "modulate", Color(1, 1, 1, 0), 0.15)
+	tween.tween_callback(panel.queue_free)
 
 func _setup_planet_mass_ui():
 	_planet_mass_labels = []
@@ -321,6 +449,8 @@ func _create_orbit_line(line_name: String, planet: Node2D, color0: Color, color1
 	move_child(line, planet.get_index())
 
 var _follow_target: Node2D = null
+var _planet_popup: Panel
+var _popup_labels: Dictionary
 
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
@@ -437,8 +567,10 @@ func _process(delta):
 	if _follow_target:
 		if is_instance_valid(_follow_target) and not _follow_target._dead:
 			camera.position = camera.position.lerp(_follow_target.position, 3.0 * delta)
+			_update_planet_popup()
 		else:
 			_follow_target = null
+			_hide_planet_popup()
 
 	_update_star_parallax(camera)
 
@@ -453,6 +585,7 @@ func _process(delta):
 		move.y -= 1
 	if move != Vector2.ZERO:
 		_follow_target = null
+		_hide_planet_popup()
 		move = move.normalized() * camera_move_speed * delta / camera.zoom.x
 		camera.position += move
 
@@ -575,10 +708,12 @@ func _unhandled_input(event):
 			if not clicked.is_empty():
 				_follow_target = clicked.node
 				_target_zoom = camera_max_zoom
+				_show_planet_popup(clicked.node)
 				return
 
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
 			_follow_target = null
+			_hide_planet_popup()
 			_dragging = true
 			_drag_prev = event.position
 
