@@ -62,6 +62,7 @@ func _ready():
 	for p in _planet_data:
 		p.node.collided_with_sun.connect(_on_planet_collided.bind(p))
 		_create_orbit_line(p.orbit_name, p.node, p.color0, p.color1)
+		p.initial_mass = p.node.mass
 	_setup_planet_mass_ui()
 
 func _setup_planet_mass_ui():
@@ -330,7 +331,13 @@ func _process(delta):
 		_mass_label.text = "M☉ = %.7f" % sun_mass
 		var planet_names := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 		for i in _planet_data.size():
-			_planet_mass_labels[i].text = "  %s: %s" % [planet_names[i], str(_planet_data[i].node.mass)]
+			var p := _planet_data[i]
+			var m := p.node.mass
+			var pct: float = (m - p.initial_mass) / p.initial_mass * 100.0
+			var change := ""
+			if pct > 0.001:
+				change = " +%.1f%% ↑" % pct
+			_planet_mass_labels[i].text = "  %s: %s%s" % [planet_names[i], str(m), change]
 
 	var camera := $Camera2D as Camera2D
 	var cur_zoom: float = camera.zoom.x
