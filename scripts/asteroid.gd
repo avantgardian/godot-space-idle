@@ -69,7 +69,7 @@ func spawn():
 	var gm := GM_UNIT * sun_mass
 	var v_circ := sqrt(gm / spawn_r)
 	var radial := -randf_range(20.0, 60.0)
-	var tangential := randf_range(0.2, 1.6) * v_circ
+	var tangential := randf_range(0.2, 2.5) * v_circ
 	var dir := Vector2(cos(entry_angle), sin(entry_angle))
 	var tangent := Vector2(-dir.y, dir.x)
 	_vel = dir * radial + tangent * tangential
