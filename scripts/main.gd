@@ -37,6 +37,7 @@ var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
+const _TEX := preload("res://scripts/texture_utils.gd")
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
@@ -285,28 +286,13 @@ func _generate_sun_glows():
 	$Sun.add_child(_sun_glow_inner)
 
 func _generate_mercury_texture():
-	var size := 36
-	var radius := size / 2.0
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-
-	var center := Vector2(radius, radius)
-	for x in range(size):
-		for y in range(size):
-			var pos := Vector2(x, y)
-			var dist := pos.distance_to(center)
-			if dist <= radius:
-				var t := dist / radius
-				var brightness := 0.5 + 0.5 * (1.0 - t)
-				var c := Color(0.7, 0.7, 0.72)
-				var color := Color(c.r * brightness, c.g * brightness, c.b * brightness)
-				var alpha := 1.0
-				if t > 0.85:
-					alpha = 1.0 - (t - 0.85) / 0.15
-				image.set_pixel(x, y, Color(color.r, color.g, color.b, alpha))
-
-	var texture := ImageTexture.create_from_image(image)
-	$Mercury/Sprite.texture = texture
+	$Mercury/Sprite.texture = _TEX.make_circle_texture(36, func(t, x, y):
+		var b: float = 0.5 + 0.5 * (1.0 - t)
+		var alpha := 1.0
+		if t > 0.85:
+			alpha = 1.0 - (t - 0.85) / 0.15
+		return Color(0.7 * b, 0.7 * b, 0.72 * b, alpha)
+	)
 
 func _create_orbit_line(name: String, planet: Node2D, color0: Color, color1: Color):
 	var line := Line2D.new()

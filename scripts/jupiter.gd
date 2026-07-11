@@ -5,6 +5,7 @@ extends Node2D
 @export var start_angle: float = 0.5
 
 const G: float = 1.0
+const _TEX := preload("res://scripts/texture_utils.gd")
 
 var sun_mass: float = 1.0
 var mass: float = 317.8
@@ -24,30 +25,20 @@ func _ready():
 	_reset()
 
 func _generate_texture():
-	var size := 100
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var cx := size / 2.0
-	var cy := size / 2.0
-	for x in range(size):
-		for y in range(size):
-			var dx := x - cx
-			var dy := y - cy
-			var dist := sqrt(dx * dx + dy * dy)
-			var max_r := size / 2.0 - 1
-			if dist <= max_r:
-				var t := dist / max_r
-				var band := sin(float(y) * 0.7) * 0.15
-				var brightness := 0.65 + 0.35 * (1.0 - t) + band
-				var r := (0.85 + band * 0.3) * brightness
-				var g := (0.65 + band * 0.2) * brightness
-				var b := (0.3 - band * 0.1) * brightness
-				var alpha := 1.0
-				if t > 0.85:
-					alpha = 1.0 - (t - 0.85) / 0.15
-				image.set_pixel(x, y, Color(clampf(r, 0, 1), clampf(g, 0, 1), clampf(b, 0, 1), alpha))
 	_sprite = Sprite2D.new()
-	_sprite.texture = ImageTexture.create_from_image(image)
+	_sprite.texture = _TEX.make_circle_texture(100, func(t, x, y):
+		var band: float = sin(float(y) * 0.7) * 0.15
+		var b: float = 0.65 + 0.35 * (1.0 - t) + band
+		var alpha := 1.0
+		if t > 0.85:
+			alpha = 1.0 - (t - 0.85) / 0.15
+		return Color(
+			clampf((0.85 + band * 0.3) * b, 0, 1),
+			clampf((0.65 + band * 0.2) * b, 0, 1),
+			clampf((0.3 - band * 0.1) * b, 0, 1),
+			alpha
+		)
+	)
 	_sprite.centered = true
 	add_child(_sprite)
 

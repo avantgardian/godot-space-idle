@@ -5,6 +5,7 @@ extends Node2D
 @export var start_angle: float = 4.0
 
 const G: float = 1.0
+const _TEX := preload("res://scripts/texture_utils.gd")
 
 var sun_mass: float = 1.0
 var mass: float = 0.107
@@ -24,29 +25,14 @@ func _ready():
 	_reset()
 
 func _generate_texture():
-	var size := 26
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var cx := size / 2.0
-	var cy := size / 2.0
-	for x in range(size):
-		for y in range(size):
-			var dx := x - cx
-			var dy := y - cy
-			var dist := sqrt(dx * dx + dy * dy)
-			var max_r := size / 2.0 - 1
-			if dist <= max_r:
-				var t := dist / max_r
-				var brightness := 0.6 + 0.4 * (1.0 - t)
-				var r := 0.75 * brightness
-				var g := 0.35 * brightness
-				var b := 0.15 * brightness
-				var alpha := 1.0
-				if t > 0.85:
-					alpha = 1.0 - (t - 0.85) / 0.15
-				image.set_pixel(x, y, Color(r, g, b, alpha))
 	_sprite = Sprite2D.new()
-	_sprite.texture = ImageTexture.create_from_image(image)
+	_sprite.texture = _TEX.make_circle_texture(26, func(t, x, y):
+		var b: float = 0.6 + 0.4 * (1.0 - t)
+		var alpha := 1.0
+		if t > 0.85:
+			alpha = 1.0 - (t - 0.85) / 0.15
+		return Color(0.75 * b, 0.35 * b, 0.15 * b, alpha)
+	)
 	_sprite.centered = true
 	add_child(_sprite)
 
