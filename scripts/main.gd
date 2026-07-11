@@ -482,7 +482,7 @@ func _check_planet_click(screen_pos: Vector2, camera: Camera2D) -> Dictionary:
 			continue
 		var planet_screen: Vector2 = camera.get_canvas_transform() * p.node.position
 		var d := planet_screen.distance_to(screen_pos)
-		var hit_r := max(p.node.collision_radius * camera.zoom.x, 12.0)
+		var hit_r: float = max(p.node.collision_radius * camera.zoom.x, 12.0)
 		if d < hit_r and d < closest_dist:
 			closest = p
 			closest_dist = d
