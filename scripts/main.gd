@@ -511,26 +511,26 @@ func _check_body_collisions():
 			var dist := a.position.distance_to(b.position)
 			if dist < a.collision_radius + b.collision_radius:
 				var contact_r: float = a.collision_radius + b.collision_radius
-			if a.mass >= b.mass:
-				var total: float = a.mass + b.mass
-				a._vel = (a._vel * a.mass + b._vel * b.mass) / total
-				a.mass = total
-				var b_idx := _find_planet_idx(b)
-				if b_idx >= 0:
-					var a_idx := _find_planet_idx(a)
-					_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
-				_disable_body(b)
-				_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
-			else:
-				var total: float = a.mass + b.mass
-				b._vel = (b._vel * b.mass + a._vel * a.mass) / total
-				b.mass = total
-				var a_idx := _find_planet_idx(a)
-				if a_idx >= 0:
+				if a.mass >= b.mass:
+					var total: float = a.mass + b.mass
+					a._vel = (a._vel * a.mass + b._vel * b.mass) / total
+					a.mass = total
 					var b_idx := _find_planet_idx(b)
-					_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
-				_disable_body(a)
-				_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
+					if b_idx >= 0:
+						var a_idx := _find_planet_idx(a)
+						_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
+					_disable_body(b)
+					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
+				else:
+					var total: float = a.mass + b.mass
+					b._vel = (b._vel * b.mass + a._vel * a.mass) / total
+					b.mass = total
+					var a_idx := _find_planet_idx(a)
+					if a_idx >= 0:
+						var b_idx := _find_planet_idx(b)
+						_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
+					_disable_body(a)
+					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
 
 func _is_body_alive(body: Node2D) -> bool:
 	if body.get_script() == _ASTEROID_SCRIPT:
