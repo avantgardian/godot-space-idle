@@ -427,6 +427,7 @@ func _align_floor(offset: float, period: float) -> float:
 	return floor(offset / period) * period
 
 func _on_planet_collided(p: Dictionary):
+	sun_mass += p.node.mass
 	_collision_flash = max(_collision_flash, p.cf)
 	var ring := Line2D.new()
 	ring.default_color = p.cc
