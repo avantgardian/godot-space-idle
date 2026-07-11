@@ -1,6 +1,4 @@
 extends "res://scripts/orbital_body.gd"
-const _TEX := preload("res://scripts/texture_utils.gd")
-var _sprite: Sprite2D
 var _ring: Sprite2D
 
 func _ready():
@@ -18,23 +16,21 @@ func _process(delta):
 	super(delta)
 	_ring.rotation += delta * 0.05
 
-func _generate_texture():
-	_sprite = Sprite2D.new()
-	_sprite.texture = _TEX.make_circle_texture(88, func(t, _x, y):
-		var band: float = sin(float(y) * 0.5) * 0.1
-		var b: float = 0.7 + 0.3 * (1.0 - t) + band
-		var alpha := 1.0
-		if t > 0.85:
-			alpha = 1.0 - (t - 0.85) / 0.15
-		return Color(
-			clampf((0.8 + band) * b, 0, 1),
-			clampf((0.7 + band) * b, 0, 1),
-			clampf((0.4 + band * 0.5) * b, 0, 1),
-			alpha
-		)
+func _get_planet_texture_size() -> int:
+	return 88
+
+func _get_planet_color(t: float, x: int, y: int) -> Color:
+	var band: float = sin(float(y) * 0.5) * 0.1
+	var b: float = 0.7 + 0.3 * (1.0 - t) + band
+	var alpha := 1.0
+	if t > 0.85:
+		alpha = 1.0 - (t - 0.85) / 0.15
+	return Color(
+		clampf((0.8 + band) * b, 0, 1),
+		clampf((0.7 + band) * b, 0, 1),
+		clampf((0.4 + band * 0.5) * b, 0, 1),
+		alpha
 	)
-	_sprite.centered = true
-	add_child(_sprite)
 
 func _generate_ring():
 	var size := 160

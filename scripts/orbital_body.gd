@@ -1,5 +1,8 @@
 extends Node2D
 
+const _TEX := preload("res://scripts/texture_utils.gd")
+var _sprite: Sprite2D
+
 @export var orbit_radius: float = 500.0
 @export var orbit_period: float = 48.0
 @export var start_angle: float = 0.0
@@ -22,7 +25,17 @@ func _ready():
 	_reset()
 
 func _generate_texture():
-	pass
+	var tex_size := _get_planet_texture_size()
+	_sprite = Sprite2D.new()
+	_sprite.texture = _TEX.make_circle_texture(tex_size, _get_planet_color)
+	_sprite.centered = true
+	add_child(_sprite)
+
+func _get_planet_texture_size() -> int:
+	return 32
+
+func _get_planet_color(t: float, x: int, y: int) -> Color:
+	return Color.WHITE
 
 func _reset():
 	var gm := _initial_gm()

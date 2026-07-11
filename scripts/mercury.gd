@@ -1,6 +1,4 @@
 extends "res://scripts/orbital_body.gd"
-const _TEX := preload("res://scripts/texture_utils.gd")
-var _sprite: Sprite2D
 
 func _ready():
 	orbit_radius = 350.0
@@ -12,17 +10,15 @@ func _ready():
 	_generate_texture()
 	_reset()
 
-func _generate_texture():
-	_sprite = Sprite2D.new()
-	_sprite.texture = _TEX.make_circle_texture(36, func(t, _x, _y):
-		var b: float = 0.5 + 0.5 * (1.0 - t)
-		var alpha := 1.0
-		if t > 0.85:
-			alpha = 1.0 - (t - 0.85) / 0.15
-		return Color(0.7 * b, 0.7 * b, 0.72 * b, alpha)
-	)
-	_sprite.centered = true
-	add_child(_sprite)
+func _get_planet_texture_size() -> int:
+	return 36
+
+func _get_planet_color(t: float, x: int, y: int) -> Color:
+	var b: float = 0.5 + 0.5 * (1.0 - t)
+	var alpha := 1.0
+	if t > 0.85:
+		alpha = 1.0 - (t - 0.85) / 0.15
+	return Color(0.7 * b, 0.7 * b, 0.72 * b, alpha)
 
 func predict_orbit(steps: int = 1200, future_mass: float = -1.0) -> PackedVector2Array:
 	if _dead:
