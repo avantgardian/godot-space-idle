@@ -81,6 +81,44 @@ func _setup_pause_button():
 	btn.offset_bottom = -16.0
 	btn.text = "Pause"
 	btn.pressed.connect(_toggle_pause)
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.0, 0.0, 0.0, 0.5)
+	sb.border_color = Color(0.5, 0.6, 0.8, 0.9)
+	sb.border_width_left = 1
+	sb.border_width_top = 1
+	sb.border_width_right = 1
+	sb.border_width_bottom = 1
+	sb.corner_radius_top_left = 4
+	sb.corner_radius_top_right = 4
+	sb.corner_radius_bottom_right = 4
+	sb.corner_radius_bottom_left = 4
+	sb.content_margin_left = 12
+	sb.content_margin_right = 12
+	sb.content_margin_top = 4
+	sb.content_margin_bottom = 4
+	btn.add_theme_stylebox_override("normal", sb)
+
+	var sb_hover := StyleBoxFlat.new()
+	sb_hover.bg_color = Color(0.15, 0.2, 0.35, 0.6)
+	sb_hover.border_color = Color(0.7, 0.8, 1.0, 1.0)
+	sb_hover.border_width_left = 1
+	sb_hover.border_width_top = 1
+	sb_hover.border_width_right = 1
+	sb_hover.border_width_bottom = 1
+	sb_hover.corner_radius_top_left = 4
+	sb_hover.corner_radius_top_right = 4
+	sb_hover.corner_radius_bottom_right = 4
+	sb_hover.corner_radius_bottom_left = 4
+	sb_hover.content_margin_left = 12
+	sb_hover.content_margin_right = 12
+	sb_hover.content_margin_top = 4
+	sb_hover.content_margin_bottom = 4
+	btn.add_theme_stylebox_override("hover", sb_hover)
+
+	btn.add_theme_color_override("font_color", Color(0.8, 0.85, 1.0, 1.0))
+	btn.add_theme_font_size_override("font_size", 14)
+
 	$UI.add_child(btn)
 
 	var overlay := ColorRect.new()
