@@ -29,7 +29,7 @@ var _star_motion_scales: Array[float]
 var _target_zoom: float = 1.0
 var _zoom_lerp_speed: float = 10.0
 var _scroll_accum: float = 0.0
-const _SPEED_SCALE: float = 0.5
+const PLANET_SPEEDS := [47.4, 35.0, 29.8, 24.1, 13.1, 9.7, 6.8, 5.4]
 
 var sun_mass: float = 1.0
 var _mass_label: Label
@@ -244,7 +244,8 @@ func _update_planet_popup():
 		return
 	var node := _follow_target
 	_popup_labels.mass.text = "%s  M☉" % str(node.mass)
-	_popup_labels.speed.text = "%.1f  km/s" % (node._vel.length() * _SPEED_SCALE)
+	var sidx := _find_planet_idx(node)
+	_popup_labels.speed.text = "%.1f  km/s" % (PLANET_SPEEDS[sidx] if sidx >= 0 else 0.0)
 	_popup_labels.radius.text = "%.0f  u" % node.orbit_radius
 	_popup_labels.period.text = "%.0f  s" % node.orbit_period
 
