@@ -30,7 +30,7 @@ func predict_orbit(steps: int = 1200, future_mass: float = -1.0) -> PackedVector
 	var dt := 1.0 / 60.0
 	var pts := PackedVector2Array()
 	pts.resize(steps)
-	var hit_radius := (128.0 + sqrt(sun_mass) * 8.0) * 0.85 + 18.0
+	var hit_radius := sun_collision_r(sun_mass) + collision_radius
 
 	for i in range(steps):
 		pts[i] = sim_pos

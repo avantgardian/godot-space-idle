@@ -47,6 +47,9 @@ func _reset():
 	visible = true
 	_trail.clear()
 
+static func sun_collision_r(mass_solar: float) -> float:
+	return (128.0 + sqrt(mass_solar) * 8.0) * 0.85
+
 func _initial_gm() -> float:
 	return 4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
 
@@ -68,7 +71,7 @@ func _process(delta):
 	_pos += _vel * delta
 	position = _pos
 
-	var sun_r := (128.0 + sqrt(sun_mass) * 8.0) * 0.85 + collision_radius
+	var sun_r := sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
 		_dead = true
 		_respawn_timer = 0.0

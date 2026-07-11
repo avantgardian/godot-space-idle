@@ -1,6 +1,7 @@
 extends Node2D
 
 const GM_UNIT: float = 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (30.0 * 30.0)
+const _ORBITAL_BODY := preload("res://scripts/orbital_body.gd")
 
 var sun_mass: float = 1.0
 var mass: float = 0.0
@@ -90,7 +91,7 @@ func _process(delta):
 
 	_sprite.rotation += delta * 1.5
 
-	var sun_r := (128.0 + sqrt(sun_mass) * 8.0) * 0.85
+	var sun_r := _ORBITAL_BODY.sun_collision_r(sun_mass)
 	if r < sun_r:
 		_alive = false
 		visible = false
