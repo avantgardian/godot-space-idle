@@ -38,15 +38,12 @@ var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
-const _TEX := preload("res://scripts/texture_utils.gd")
-
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	_generate_star_layers()
 	_generate_sun_texture()
 	_apply_sun_shader()
 	_generate_sun_glows()
-	_generate_mercury_texture()
 	_setup_camera()
 	_mass_label = $UI/MassLabel as Label
 	_planet_data = [
@@ -282,15 +279,6 @@ func _generate_sun_glows():
 	_sun_glow_inner.z_index = -1
 	_sun_glow_inner.material = add_mat.call()
 	$Sun.add_child(_sun_glow_inner)
-
-func _generate_mercury_texture():
-	$Mercury/Sprite.texture = _TEX.make_circle_texture(36, func(t, _x, _y):
-		var b: float = 0.5 + 0.5 * (1.0 - t)
-		var alpha := 1.0
-		if t > 0.85:
-			alpha = 1.0 - (t - 0.85) / 0.15
-		return Color(0.7 * b, 0.7 * b, 0.72 * b, alpha)
-	)
 
 func _create_orbit_line(line_name: String, planet: Node2D, color0: Color, color1: Color):
 	var line := Line2D.new()

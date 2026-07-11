@@ -25,9 +25,6 @@ centered = true
 [node name="Mercury" type="Node2D" parent="."]
 script = ExtResource("2_3ceyz")
 
-[node name="Sprite" type="Sprite2D" parent="Mercury"]
-centered = true
-
 [node name="Venus" type="Node2D" parent="."]
 script = ExtResource("3_bfxyz")
 
