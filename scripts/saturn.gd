@@ -1,34 +1,26 @@
-extends Node2D
-
-@export var orbit_radius: float = 1800.0
-@export var orbit_period: float = 269.0
-@export var start_angle: float = 3.0
-
-const G: float = 1.0
+extends "res://scripts/orbital_body.gd"
 const _TEX := preload("res://scripts/texture_utils.gd")
-
-var sun_mass: float = 1.0
-var mass: float = 95.2
-var collision_radius: float = 44.0
-var _pos: Vector2
-var _vel: Vector2
-var _dead: bool = false
-var _respawn_timer: float = 0.0
-var _trail: PackedVector2Array
-var _trail_tick: int = 0
 var _sprite: Sprite2D
 var _ring: Sprite2D
 
-signal collided_with_sun
-
 func _ready():
+	orbit_radius = 1800.0
+	orbit_period = 269.0
+	start_angle = 3.0
+	mass = 95.2
+	collision_radius = 44.0
+	_trail_max = 3000
 	_generate_texture()
 	_generate_ring()
 	_reset()
 
+func _process(delta):
+	super(delta)
+	_ring.rotation += delta * 0.05
+
 func _generate_texture():
 	_sprite = Sprite2D.new()
-	_sprite.texture = _TEX.make_circle_texture(88, func(t, x, y):
+	_sprite.texture = _TEX.make_circle_texture(88, func(t, _x, y):
 		var band: float = sin(float(y) * 0.5) * 0.1
 		var b: float = 0.7 + 0.3 * (1.0 - t) + band
 		var alpha := 1.0
@@ -70,55 +62,3 @@ func _generate_ring():
 	_ring.centered = true
 	_ring.z_index = -1
 	add_child(_ring)
-
-func _reset():
-	mass = 95.2
-	var gm := _initial_gm()
-	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
-	var tangent := Vector2(-_pos.y, _pos.x).normalized()
-	_vel = tangent * sqrt(gm / orbit_radius)
-	position = _pos
-	_dead = false
-	visible = true
-	_trail.clear()
-
-func _initial_gm() -> float:
-	return 4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
-
-func _process(delta):
-	if _dead:
-		_respawn_timer += delta
-		if _respawn_timer >= 2.0:
-			_respawn_timer = 0.0
-			_reset()
-		return
-
-	var gm := _initial_gm() * sun_mass
-	var r2 := _pos.length_squared()
-	if r2 < 1.0:
-		r2 = 1.0
-	var r := sqrt(r2)
-	var acc := -gm / r2 * _pos / r
-	_vel += acc * delta
-	_pos += _vel * delta
-	position = _pos
-
-	_ring.rotation += delta * 0.05
-
-	var sun_r := (128.0 + sqrt(sun_mass) * 8.0) * 0.85 + collision_radius
-	if r < sun_r:
-		_dead = true
-		_respawn_timer = 0.0
-		visible = false
-		collided_with_sun.emit()
-
-	_trail_tick += 1
-	if _trail_tick % 2 == 0:
-		_trail.append(position)
-		if _trail.size() > 3000:
-			_trail.remove_at(0)
-
-func get_trail() -> PackedVector2Array:
-	if _dead or _trail.size() < 2:
-		return PackedVector2Array()
-	return _trail

@@ -284,7 +284,7 @@ func _generate_sun_glows():
 	$Sun.add_child(_sun_glow_inner)
 
 func _generate_mercury_texture():
-	$Mercury/Sprite.texture = _TEX.make_circle_texture(36, func(t, x, y):
+	$Mercury/Sprite.texture = _TEX.make_circle_texture(36, func(t, _x, _y):
 		var b: float = 0.5 + 0.5 * (1.0 - t)
 		var alpha := 1.0
 		if t > 0.85:
@@ -292,9 +292,9 @@ func _generate_mercury_texture():
 		return Color(0.7 * b, 0.7 * b, 0.72 * b, alpha)
 	)
 
-func _create_orbit_line(name: String, planet: Node2D, color0: Color, color1: Color):
+func _create_orbit_line(line_name: String, planet: Node2D, color0: Color, color1: Color):
 	var line := Line2D.new()
-	line.name = name
+	line.name = line_name
 	line.width = 1.5
 	line.antialiased = true
 	var grad := Gradient.new()
