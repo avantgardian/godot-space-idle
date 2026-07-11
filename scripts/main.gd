@@ -38,6 +38,8 @@ var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
+const _STAR_SHADER := preload("res://shaders/star_blur.gdshader")
+const _SUN_SHADER := preload("res://shaders/sun_noise.gdshader")
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	_generate_star_layers()
@@ -86,36 +88,8 @@ func _generate_star_layers():
 		sprite.centered = false
 		sprite.scale = Vector2(tile_scale, tile_scale)
 
-		var code := "\n"
-		code += "shader_type canvas_item;\n"
-		code += "uniform float blur_amount : hint_range(0.0, 8.0) = 0.0;\n"
-		code += "uniform float tiles : hint_range(1.0, 10.0) = 4.0;\n"
-		code += "void fragment() {\n"
-		code += "	vec2 uv = fract(UV * tiles);\n"
-		code += "	vec4 col = texture(TEXTURE, uv);\n"
-		code += "	if (blur_amount < 0.01 || col.a < 0.001) {\n"
-		code += "		COLOR = col;\n"
-		code += "	} else {\n"
-		code += "		vec2 ps = TEXTURE_PIXEL_SIZE;\n"
-		code += "		vec4 sum = col; float total = 1.0;\n"
-		code += "		for (int i = 1; i <= 5; i++) {\n"
-		code += "			float f = float(i) / 5.0;\n"
-		code += "			float dist = f * blur_amount;\n"
-		code += "			float w = exp(-dist * dist * 3.0);\n"
-		code += "			vec2 o = vec2(dist, 0.0) * ps;\n"
-		code += "			sum += texture(TEXTURE, uv + vec2( o.x,  o.x)) * w;\n"
-		code += "			sum += texture(TEXTURE, uv + vec2(-o.x,  o.x)) * w;\n"
-		code += "			sum += texture(TEXTURE, uv + vec2( o.x, -o.x)) * w;\n"
-		code += "			sum += texture(TEXTURE, uv + vec2(-o.x, -o.x)) * w;\n"
-		code += "			total += 4.0 * w;\n"
-		code += "		}\n"
-		code += "		COLOR = sum / total;\n"
-		code += "	}\n"
-		code += "}\n"
-		var shader := Shader.new()
-		shader.code = code
 		var mat := ShaderMaterial.new()
-		mat.shader = shader
+		mat.shader = _STAR_SHADER
 		mat.set_shader_parameter("tiles", tile_scale)
 		mat.set_shader_parameter("blur_amount", 0.0)
 		sprite.material = mat
@@ -192,55 +166,8 @@ func _generate_sun_texture():
 	$Sun.texture = texture
 
 func _apply_sun_shader():
-	var code := "\n"
-	code += "shader_type canvas_item;\n"
-	code += "uniform float time : hint_range(0.0, 100.0) = 0.0;\n"
-	code += "float hash21(vec2 p) {\n"
-	code += "	p = fract(p * vec2(234.34, 435.345));\n"
-	code += "	p += dot(p, p + 19.19);\n"
-	code += "	return fract(p.x * p.y);\n"
-	code += "}\n"
-	code += "float smooth_noise(vec2 p) {\n"
-	code += "	vec2 i = floor(p);\n"
-	code += "	vec2 f = fract(p);\n"
-	code += "	f = f * f * (3.0 - 2.0 * f);\n"
-	code += "	float a = hash21(i);\n"
-	code += "	float b = hash21(i + vec2(1.0, 0.0));\n"
-	code += "	float c = hash21(i + vec2(0.0, 1.0));\n"
-	code += "	float d = hash21(i + vec2(1.0, 1.0));\n"
-	code += "	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);\n"
-	code += "}\n"
-	code += "float fbm(vec2 p) {\n"
-	code += "	float v = 0.0;\n"
-	code += "	float a = 0.5;\n"
-	code += "	float f = 1.0;\n"
-	code += "	for (int i = 0; i < 3; i++) {\n"
-	code += "		v += a * smooth_noise(p * f + time * 0.08 * float(i + 1));\n"
-	code += "		f *= 2.0;\n"
-	code += "		a *= 0.5;\n"
-	code += "	}\n"
-	code += "	return v;\n"
-	code += "}\n"
-	code += "void fragment() {\n"
-	code += "	vec4 tex = texture(TEXTURE, UV);\n"
-	code += "	if (tex.a > 0.01) {\n"
-	code += "		vec2 uv = UV * 2.0 - 1.0;\n"
-	code += "		float dist = length(uv);\n"
-	code += "		float edge = 1.0 - smoothstep(0.0, 1.0, dist);\n"
-	code += "		float n = fbm(uv * 4.0) * edge;\n"
-	code += "		vec3 col = tex.rgb;\n"
-	code += "		col += vec3(n * 0.15, n * 0.08, n * 0.03);\n"
-	code += "		float spots = smooth_noise(uv * 10.0 + time * 0.05);\n"
-	code += "		spots = pow(spots, 3.0) * 0.12 * edge;\n"
-	code += "		col -= vec3(spots, spots * 0.8, spots * 0.5);\n"
-	code += "		col = clamp(col, 0.0, 1.0);\n"
-	code += "		COLOR = vec4(col, tex.a);\n"
-	code += "	} else { COLOR = tex; }\n"
-	code += "}\n"
-	var shader := Shader.new()
-	shader.code = code
 	var shader_mat := ShaderMaterial.new()
-	shader_mat.shader = shader
+	shader_mat.shader = _SUN_SHADER
 	shader_mat.set_shader_parameter("time", 0.0)
 	$Sun.material = shader_mat
 
