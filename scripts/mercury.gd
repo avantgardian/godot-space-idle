@@ -6,7 +6,7 @@ func _ready():
 	start_angle = 0.0
 	mass = 1.65e-7
 	collision_radius = 18.0
-	_trail_max = 900   # full orbit: 30s × 30 pts/s
+	_trail_max = 450   # half orbit: 30s × 30 pts/s ÷ 2
 	_generate_texture()
 	_reset()
 
