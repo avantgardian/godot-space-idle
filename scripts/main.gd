@@ -183,26 +183,57 @@ func _trigger_impact_effects():
 	_shake_intensity = min(_shake_intensity + 12.5, 40.0)
 
 func _setup_event_log():
-	var log := VBoxContainer.new()
-	log.name = "EventLog"
-	log.position = Vector2(16, SCREEN_SIZE.y - 300)
-	log.add_theme_constant_override("separation", 2)
-	$UI.add_child(log)
+	var panel := Panel.new()
+	panel.name = "EventLogPanel"
+	panel.position = Vector2(16, SCREEN_SIZE.y - 300)
+	panel.size = Vector2(360, 280)
+	panel.clip_contents = true
+
+	var psb := StyleBoxFlat.new()
+	psb.bg_color = Color(0.04, 0.04, 0.1, 0.88)
+	psb.border_color = Color(0.35, 0.45, 0.65, 0.6)
+	psb.border_width_left = 1
+	psb.border_width_top = 1
+	psb.border_width_right = 1
+	psb.border_width_bottom = 1
+	psb.corner_radius_top_left = 4
+	psb.corner_radius_top_right = 4
+	psb.corner_radius_bottom_right = 4
+	psb.corner_radius_bottom_left = 4
+	psb.content_margin_left = 8
+	psb.content_margin_right = 8
+	psb.content_margin_top = 6
+	psb.content_margin_bottom = 6
+	panel.add_theme_stylebox_override("panel", psb)
+
+	var log_container := VBoxContainer.new()
+	log_container.name = "EventLog"
+	log_container.position = Vector2(10, 8)
+	log_container.size = Vector2(340, 264)
+	log_container.add_theme_constant_override("separation", 2)
+	panel.add_child(log_container)
+
+	$UI.add_child(panel)
 
 func _body_name(body: Node2D) -> String:
 	var idx := _find_planet_idx(body)
 	return PLANET_NAMES[idx] if idx >= 0 else "Asteroid"
 
+func _collision_msg(victim: Node2D, absorber: Node2D) -> String:
+	if _find_planet_idx(victim) < 0 or _find_planet_idx(absorber) < 0:
+		return _body_name(victim) + " collided with " + _body_name(absorber)
+	return _body_name(victim) + " was destroyed by " + _body_name(absorber)
+
 func _log_event(msg: String):
-	var log := $UI.get_node_or_null("EventLog") as VBoxContainer
-	if not log:
+	var event_log := $UI.get_node_or_null("EventLogPanel/EventLog") as VBoxContainer
+	if not event_log:
 		return
 	var lbl := Label.new()
 	lbl.text = msg
 	lbl.add_theme_font_size_override("font_size", 11)
 	lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
-	log.add_child(lbl)
-	log.move_child(lbl, 0)
+	event_log.add_child(lbl)
+	event_log.move_child(lbl, 0)
 	_event_log_entries.append({ label = lbl, age = 0.0 })
 	while _event_log_entries.size() > MAX_LOG_ENTRIES:
 		var oldest := _event_log_entries[0]
@@ -663,7 +694,7 @@ func _process(delta):
 	for i in range(_event_log_entries.size() - 1, -1, -1):
 		var entry := _event_log_entries[i]
 		entry.age += delta
-		var t := entry.age / EVENT_LOG_DURATION
+		var t: float = entry.age / EVENT_LOG_DURATION
 		if t >= 1.0:
 			entry.label.queue_free()
 			_event_log_entries.remove_at(i)
@@ -851,7 +882,7 @@ func _check_body_collisions():
 						_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
 					_disable_body(b)
 					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
-					_log_event(_body_name(b) + " was destroyed by " + _body_name(a))
+					_log_event(_collision_msg(b, a))
 				else:
 					var total: float = a.mass + b.mass
 					b._vel = (b._vel * b.mass + a._vel * a.mass) / total
@@ -862,7 +893,7 @@ func _check_body_collisions():
 						_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
 					_disable_body(a)
 					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
-					_log_event(_body_name(a) + " was destroyed by " + _body_name(b))
+					_log_event(_collision_msg(a, b))
 
 func _is_body_alive(body: Node2D) -> bool:
 	if body.get_script() == _ASTEROID_SCRIPT:
