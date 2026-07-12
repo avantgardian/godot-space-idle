@@ -5,13 +5,7 @@ var planet_color: Color = Color(0.7, 0.7, 0.7)
 var planet_speed: float = 47.4
 
 func _ready():
-	orbit_radius = 350.0
-	orbit_period = 25.0
-	start_angle = 0.0
-	mass = 1.65e-7
-	collision_radius = 18.0
 	super()
-	trail_max = 750   # full orbit: 25s × 30 pts/s
 
 func _get_planet_texture_size() -> int:
 	return 36

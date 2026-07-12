@@ -4,15 +4,6 @@ var planet_name: String = "Neptune"
 var planet_color: Color = Color(0.2, 0.3, 0.85)
 var planet_speed: float = 5.4
 
-func _ready():
-	orbit_radius = 2600.0
-	orbit_period = 1599.0
-	start_angle = 4.5
-	mass = 5.14e-5
-	collision_radius = 27.0
-	super()
-	trail_max = 47970 # full orbit: 1599s × 30 pts/s
-
 func _get_planet_texture_size() -> int:
 	return 54
 

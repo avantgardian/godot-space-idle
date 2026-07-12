@@ -9,14 +9,14 @@ var _sprite: Sprite2D
 @export var start_angle: float = 0.0
 
 var sun_mass: float = 1.0
-var mass: float = 1.0
-var collision_radius: float = 20.0
+@export var mass: float = 1.0
+@export var collision_radius: float = 20.0
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
 var _trail: PackedVector2Array
 var _trail_tick: int = 0
-var trail_max: int = 1200
+@export var trail_max: int = 1200
 var _trail_line: Line2D
 
 signal collided_with_sun
