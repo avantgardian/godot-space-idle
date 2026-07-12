@@ -1,3 +1,4 @@
+class_name CameraController
 extends Camera2D
 
 @export var min_zoom: float = 0.3

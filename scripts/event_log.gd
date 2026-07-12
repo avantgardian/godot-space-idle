@@ -1,3 +1,4 @@
+class_name EventLog
 extends Node
 
 const DURATION := 60.0

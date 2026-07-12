@@ -6,13 +6,14 @@ const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 
 var sun_mass: float = 1.0
 var _mass_label: Label
-var _asteroids: Array[Node2D]
+var _asteroids: Array
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
 var _collision_mgr: CollisionManager
+var _planet_popup: Panel
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
-const PlanetPopup := preload("res://scripts/planet_popup.gd")
-const CollisionManager := preload("res://scripts/collision_manager.gd")
+const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
+const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
@@ -62,8 +63,6 @@ func _setup_post_process():
 func _trigger_impact_effects():
 	_ca_impact = min(_ca_impact + 0.008, 0.015)
 	$Camera2D.trigger_shake(12.5)
-
-var _planet_popup: Panel
 
 func _show_planet_popup(planet_node: Node2D):
 	_close_planet_popup()
@@ -158,8 +157,7 @@ func _on_planet_collided(p: Dictionary):
 	$UI/EventLog.log_message(p.node.planet_name + " collided with the Sun")
 
 func _spawn_asteroid():
-	var a := Node2D.new()
-	a.set_script(_ASTEROID_SCRIPT)
+	var a := _ASTEROID_SCRIPT.new()
 	a.sun_mass = sun_mass
 	a.collided_with_sun.connect(_on_asteroid_collided.bind(a))
 	a.spawn()

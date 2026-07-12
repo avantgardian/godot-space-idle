@@ -1,3 +1,4 @@
+class_name Asteroid
 extends Node2D
 
 const GM_UNIT: float = 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (30.0 * 30.0)
