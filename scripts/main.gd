@@ -79,6 +79,7 @@ func _ready():
 	_setup_planet_mass_ui()
 	_setup_pause_button()
 	_setup_post_process()
+	_setup_event_log()
 
 func _setup_pause_button():
 	var btn := Button.new()
@@ -180,6 +181,33 @@ func _setup_post_process():
 func _trigger_impact_effects():
 	_ca_impact = min(_ca_impact + 0.008, 0.015)
 	_shake_intensity = min(_shake_intensity + 12.5, 40.0)
+
+func _setup_event_log():
+	var log := VBoxContainer.new()
+	log.name = "EventLog"
+	log.position = Vector2(16, SCREEN_SIZE.y - 300)
+	log.add_theme_constant_override("separation", 2)
+	$UI.add_child(log)
+
+func _body_name(body: Node2D) -> String:
+	var idx := _find_planet_idx(body)
+	return PLANET_NAMES[idx] if idx >= 0 else "Asteroid"
+
+func _log_event(msg: String):
+	var log := $UI.get_node_or_null("EventLog") as VBoxContainer
+	if not log:
+		return
+	var lbl := Label.new()
+	lbl.text = msg
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	log.add_child(lbl)
+	log.move_child(lbl, 0)
+	_event_log_entries.append({ label = lbl, age = 0.0 })
+	while _event_log_entries.size() > MAX_LOG_ENTRIES:
+		var oldest := _event_log_entries[0]
+		_event_log_entries.remove_at(0)
+		oldest.label.queue_free()
 
 func _show_planet_popup(planet_node: Node2D):
 	_hide_planet_popup()
@@ -482,6 +510,9 @@ var _popup_labels: Dictionary
 var _post_process_mat: ShaderMaterial
 var _ca_impact: float = 0.0
 var _shake_intensity: float = 0.0
+var _event_log_entries: Array[Dictionary] = []
+const EVENT_LOG_DURATION := 60.0
+const MAX_LOG_ENTRIES := 30
 
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
@@ -629,6 +660,16 @@ func _process(delta):
 		_shake_intensity = max(_shake_intensity - 15.0 * delta, 0.0)
 		camera.position += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake_intensity
 
+	for i in range(_event_log_entries.size() - 1, -1, -1):
+		var entry := _event_log_entries[i]
+		entry.age += delta
+		var t := entry.age / EVENT_LOG_DURATION
+		if t >= 1.0:
+			entry.label.queue_free()
+			_event_log_entries.remove_at(i)
+		else:
+			entry.label.modulate.a = 1.0 - ease(t, 0.5)
+
 func _update_star_parallax(camera: Camera2D):
 	var cam_pos := camera.position
 	var world_half := SCREEN_SIZE * 0.5 / camera.zoom.x
@@ -674,6 +715,8 @@ func _on_planet_collided(p: Dictionary):
 	_collision_flash = max(_collision_flash, p.cf)
 	_spawn_impact_ring(p.cc, p.cw, p.cs, p.ct)
 	_trigger_impact_effects()
+	var p_idx := _find_planet_idx(p.node)
+	_log_event(PLANET_NAMES[p_idx] + " collided with the Sun")
 
 func _spawn_asteroid():
 	var a := Node2D.new()
@@ -689,6 +732,7 @@ func _on_asteroid_collided(ast: Node2D):
 	_collision_flash = max(_collision_flash, 0.2)
 	_spawn_impact_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
 	_trigger_impact_effects()
+	_log_event("Asteroid collided with the Sun")
 
 func _spawn_impact_ring(color: Color, width: float, segments: int, timer: float):
 	var ring := Line2D.new()
@@ -807,6 +851,7 @@ func _check_body_collisions():
 						_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
 					_disable_body(b)
 					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
+					_log_event(_body_name(b) + " was destroyed by " + _body_name(a))
 				else:
 					var total: float = a.mass + b.mass
 					b._vel = (b._vel * b.mass + a._vel * a.mass) / total
@@ -817,6 +862,7 @@ func _check_body_collisions():
 						_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
 					_disable_body(a)
 					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
+					_log_event(_body_name(a) + " was destroyed by " + _body_name(b))
 
 func _is_body_alive(body: Node2D) -> bool:
 	if body.get_script() == _ASTEROID_SCRIPT:
