@@ -29,6 +29,7 @@ func setup_trail(color0: Color, color1: Color):
 	_trail_line.top_level = true
 	_trail_line.width = 1.5
 	_trail_line.antialiased = true
+	_trail_line.z_index = -1
 	var grad := Gradient.new()
 	grad.set_color(0, color0)
 	grad.set_color(1, color1)
