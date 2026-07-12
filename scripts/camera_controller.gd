@@ -17,6 +17,7 @@ var _follow_target: Node2D = null
 var _last_frame: int = 0
 
 func _ready():
+	process_mode = PROCESS_MODE_ALWAYS
 	zoom = Vector2(1, 1)
 	position = Vector2.ZERO
 
@@ -58,7 +59,27 @@ func _process(delta):
 		shake_intensity = max(shake_intensity - 15.0 * delta, 0.0)
 		position += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_intensity
 
+	if get_tree().paused:
+		var star_field := get_node("../StarField") as Node2D
+		if star_field and star_field.has_method("update_parallax"):
+			star_field.update_parallax(position, zoom.x)
+			if star_field.has_method("set_blur"):
+				star_field.set_blur(get_blur_amount())
+
 func _input(event):
+	if get_tree().paused:
+		if event is InputEventMouseButton:
+			if event.pressed and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE):
+				_follow_target = null
+				_dragging = true
+				_drag_prev = event.position
+			elif not event.pressed and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE):
+				_dragging = false
+		if event is InputEventMouseMotion and _dragging:
+			var delta_vec: Vector2 = event.position - _drag_prev
+			position -= delta_vec / zoom.x
+			_drag_prev = event.position
+
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			zoom_in()
