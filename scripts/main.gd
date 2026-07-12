@@ -13,6 +13,7 @@ var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
+const PlanetPopup := preload("res://scripts/planet_popup.gd")
 const PLANET_NAMES := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 const PLANET_COLORS := [
 	Color(0.7, 0.7, 0.7),
@@ -82,127 +83,24 @@ func _collision_msg(victim: Node2D, absorber: Node2D) -> String:
 		return _body_name(victim) + " collided with " + _body_name(absorber)
 	return _body_name(victim) + " was destroyed by " + _body_name(absorber)
 
+var _planet_popup: Panel
+
 func _show_planet_popup(planet_node: Node2D):
-	_hide_planet_popup()
+	_close_planet_popup()
 	var idx := _find_planet_idx(planet_node)
 	if idx < 0:
 		return
-	var color: Color = PLANET_COLORS[idx]
+	var popup := PlanetPopup.new()
+	popup.show_for_planet(planet_node, PLANET_NAMES[idx], PLANET_COLORS[idx], PLANET_SPEEDS[idx], $Camera2D)
+	$UI.add_child(popup)
+	_planet_popup = popup
 
-	var panel := Panel.new()
-	panel.name = "PlanetPopup"
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.04, 0.1, 0.88)
-	sb.border_color = color
-	sb.border_width_left = 3
-	sb.border_width_top = 1
-	sb.border_width_right = 1
-	sb.border_width_bottom = 1
-	sb.corner_radius_top_left = 6
-	sb.corner_radius_top_right = 6
-	sb.corner_radius_bottom_right = 6
-	sb.corner_radius_bottom_left = 6
-	panel.add_theme_stylebox_override("panel", sb)
-
-	var margin := MarginContainer.new()
-	margin.anchor_left = 0.0
-	margin.anchor_top = 0.0
-	margin.anchor_right = 1.0
-	margin.anchor_bottom = 1.0
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 14)
-	panel.add_child(margin)
-
-	var vbox := VBoxContainer.new()
-	vbox.anchor_left = 0.0
-	vbox.anchor_top = 0.0
-	vbox.anchor_right = 1.0
-	vbox.anchor_bottom = 1.0
-	vbox.add_theme_constant_override("separation", 4)
-	margin.add_child(vbox)
-
-	var name_label := Label.new()
-	name_label.text = PLANET_NAMES[idx]
-	name_label.add_theme_font_size_override("font_size", 18)
-	name_label.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0, 1.0))
-	vbox.add_child(name_label)
-
-	var sep := ColorRect.new()
-	sep.custom_minimum_size = Vector2(0, 1)
-	sep.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	sep.color = Color(0.3, 0.4, 0.6, 0.25)
-	vbox.add_child(sep)
-
-	_popup_labels = {}
-	var fields := [
-		{ key = "mass",   label = "Mass",   fmt = "%s  M☉" },
-		{ key = "speed",  label = "Speed",  fmt = "%.1f  km/s" },
-		{ key = "radius", label = "Orbit",  fmt = "%.0f  u" },
-		{ key = "period", label = "Period", fmt = "%.0f  s" },
-	]
-	for f in fields:
-		var hbox := HBoxContainer.new()
-		hbox.add_theme_constant_override("separation", 8)
-		var lbl := Label.new()
-		lbl.text = f.label
-		lbl.add_theme_font_size_override("font_size", 11)
-		lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7, 1.0))
-		lbl.custom_minimum_size = Vector2(48, 0)
-		hbox.add_child(lbl)
-		var val := Label.new()
-		val.add_theme_font_size_override("font_size", 11)
-		val.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0, 1.0))
-		hbox.add_child(val)
-		_popup_labels[f.key] = val
-		vbox.add_child(hbox)
-
-	$UI.add_child(panel)
-	_planet_popup = panel
-	panel.size = Vector2(280, 150)
-
-	panel.modulate = Color(1, 1, 1, 0)
-	var tween := create_tween()
-	tween.tween_property(panel, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-
-func _update_planet_popup():
-	if not _planet_popup or not $Camera2D.is_following():
-		return
-	var node = $Camera2D.get_follow_target()
-	if not node:
-		return
-	_popup_labels.mass.text = "%s  M☉" % str(node.mass)
-	var sidx := _find_planet_idx(node)
-	_popup_labels.speed.text = "%.1f  km/s" % (PLANET_SPEEDS[sidx] if sidx >= 0 else 0.0)
-	_popup_labels.radius.text = "%.0f  u" % node.orbit_radius
-	_popup_labels.period.text = "%.0f  s" % node.orbit_period
-
-	var camera := $Camera2D as Camera2D
-	var screen_pos: Vector2 = camera.get_canvas_transform() * node.position
-	var panel: Panel = _planet_popup
-	var ps := panel.size
-
-	panel.position = screen_pos + Vector2(24, -ps.y - 36)
-	panel.position.x = clamp(panel.position.x, 10, SCREEN_SIZE.x - ps.x - 10)
-	panel.position.y = clamp(panel.position.y, 10, SCREEN_SIZE.y - ps.y - 10)
-
-func _hide_planet_popup():
+func _close_planet_popup():
 	if not _planet_popup or not is_instance_valid(_planet_popup):
 		_planet_popup = null
 		return
-	var panel := _planet_popup
+	_planet_popup.close()
 	_planet_popup = null
-	_popup_labels = {}
-	var tween := create_tween()
-	tween.tween_property(panel, "modulate", Color(1, 1, 1, 0), 0.15)
-	tween.tween_callback(panel.queue_free)
-
-
-var _planet_popup: Panel
-var _popup_labels: Dictionary
 
 var _post_process_mat: ShaderMaterial
 var _ca_impact: float = 0.0
@@ -242,10 +140,8 @@ func _process(delta):
 		if _post_process_mat:
 			_post_process_mat.set_shader_parameter("u_ca_impact", _ca_impact)
 
-	if _planet_popup and $Camera2D.is_following():
-		_update_planet_popup()
-	elif _planet_popup and not $Camera2D.is_following():
-		_hide_planet_popup()
+	if _planet_popup and not $Camera2D.is_following():
+		_close_planet_popup()
 
 	$StarField.update_parallax($Camera2D.position, $Camera2D.zoom.x)
 	$StarField.set_blur($Camera2D.get_blur_amount())
@@ -315,7 +211,7 @@ func _unhandled_input(event):
 
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
 			$Camera2D.start_drag(event.position)
-			_hide_planet_popup()
+			_close_planet_popup()
 
 	if event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
