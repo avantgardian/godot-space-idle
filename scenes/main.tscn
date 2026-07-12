@@ -9,11 +9,13 @@
 [ext_resource type="Script" uid="uid://lc3qs481xodg" path="res://scripts/saturn.gd" id="7_3cexz"]
 [ext_resource type="Script" uid="uid://dmo50hd20mo5e" path="res://scripts/uranus.gd" id="8_3ceyx"]
 [ext_resource type="Script" uid="uid://dj80qwr7odxpq" path="res://scripts/neptune.gd" id="9_3ceyz"]
+[ext_resource type="Script" path="res://scripts/camera_controller.gd" id="10"]
 
 [node name="Main" type="Node2D" unique_id=1112431360]
 script = ExtResource("1_3ceyx")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1136277576]
+script = ExtResource("10")
 
 [node name="StarField" type="Node2D" parent="." unique_id=1984048694]
 

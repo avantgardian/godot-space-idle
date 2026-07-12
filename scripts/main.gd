@@ -2,10 +2,6 @@ extends Node2D
 
 @export var star_seed: int = 42
 @export var sun_texture_size: int = 256
-@export var camera_min_zoom: float = 0.3
-@export var camera_max_zoom: float = 1.3
-@export var camera_move_speed: float = 600.0
-@export var camera_zoom_step: float = 0.05
 
 const SCREEN_SIZE := Vector2(1920, 1080)
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
@@ -22,13 +18,8 @@ const STAR_LAYERS := [
 var _sun_glow_outer: Sprite2D
 var _sun_glow_inner: Sprite2D
 var _sun_time: float = 0.0
-var _dragging: bool = false
-var _drag_prev: Vector2
 var _star_sprites: Array[Sprite2D]
 var _star_motion_scales: Array[float]
-var _target_zoom: float = 1.0
-var _zoom_lerp_speed: float = 10.0
-var _scroll_accum: float = 0.0
 const PLANET_SPEEDS := [47.4, 35.0, 29.8, 24.1, 13.1, 9.7, 6.8, 5.4]
 
 var sun_mass: float = 1.0
@@ -59,7 +50,6 @@ func _ready():
 	_generate_sun_texture()
 	_apply_sun_shader()
 	_generate_sun_glows()
-	_setup_camera()
 	_mass_label = $UI/MassLabel as Label
 	_planet_data = [
 		{ node = $Mercury, orbit_name = "MercuryOrbit", color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), cf = 0.6, cc = Color(1, 0.9, 0.6, 0.5), cw = 2.0, cs = 48, ct = 0.8 },
@@ -180,7 +170,7 @@ func _setup_post_process():
 
 func _trigger_impact_effects():
 	_ca_impact = min(_ca_impact + 0.008, 0.015)
-	_shake_intensity = min(_shake_intensity + 12.5, 40.0)
+	$Camera2D.trigger_shake(12.5)
 
 func _setup_event_log():
 	var panel := Panel.new()
@@ -327,9 +317,11 @@ func _show_planet_popup(planet_node: Node2D):
 	tween.tween_property(panel, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func _update_planet_popup():
-	if not _planet_popup or not _follow_target:
+	if not _planet_popup or not $Camera2D.is_following():
 		return
-	var node := _follow_target
+	var node = $Camera2D.get_follow_target()
+	if not node:
+		return
 	_popup_labels.mass.text = "%s  M☉" % str(node.mass)
 	var sidx := _find_planet_idx(node)
 	_popup_labels.speed.text = "%.1f  km/s" % (PLANET_SPEEDS[sidx] if sidx >= 0 else 0.0)
@@ -382,7 +374,7 @@ func _generate_star_layers():
 	rng.seed = star_seed
 
 	var star_field := $StarField as Node2D
-	var tile_scale := 2.0 / camera_min_zoom
+	var tile_scale = 2.0 / $Camera2D.min_zoom
 
 	for cfg in STAR_LAYERS:
 		var image := Image.create(int(SCREEN_SIZE.x), int(SCREEN_SIZE.y), false, Image.FORMAT_RGBA8)
@@ -534,21 +526,14 @@ func _create_orbit_line(line_name: String, planet: Node2D, color0: Color, color1
 	add_child(line)
 	move_child(line, planet.get_index())
 
-var _follow_target: Node2D = null
 var _planet_popup: Panel
 var _popup_labels: Dictionary
 
 var _post_process_mat: ShaderMaterial
 var _ca_impact: float = 0.0
-var _shake_intensity: float = 0.0
 var _event_log_entries: Array[Dictionary] = []
 const EVENT_LOG_DURATION := 60.0
 const MAX_LOG_ENTRIES := 30
-
-func _setup_camera():
-	var camera := $Camera2D as Camera2D
-	camera.zoom = Vector2(1, 1)
-	camera.position = Vector2.ZERO
 
 func _process(delta):
 	_sun_time += delta
@@ -647,49 +632,23 @@ func _process(delta):
 			var line: String = "%s: %s%s%s" % [PLANET_NAMES[i], str(m), change, status]
 			_planet_mass_labels[i].text = line
 
-	var camera := $Camera2D as Camera2D
-	var cur_zoom: float = camera.zoom.x
-	if abs(cur_zoom - _target_zoom) > 0.0001:
-		var new_zoom: float = lerp(cur_zoom, _target_zoom, _zoom_lerp_speed * delta)
-		if abs(new_zoom - _target_zoom) < 0.001:
-			new_zoom = _target_zoom
-		_apply_zoom(new_zoom)
-	else:
-		_apply_zoom(_target_zoom)
-
-	if _follow_target:
-		if is_instance_valid(_follow_target) and not _follow_target._dead:
-			camera.position = camera.position.lerp(_follow_target.position, 3.0 * delta)
-			_update_planet_popup()
-		else:
-			_follow_target = null
-			_hide_planet_popup()
-
-	_update_star_parallax(camera)
-
-	var move := Vector2.ZERO
-	if Input.is_action_pressed("ui_right"):
-		move.x += 1
-	if Input.is_action_pressed("ui_left"):
-		move.x -= 1
-	if Input.is_action_pressed("ui_down"):
-		move.y += 1
-	if Input.is_action_pressed("ui_up"):
-		move.y -= 1
-	if move != Vector2.ZERO:
-		_follow_target = null
-		_hide_planet_popup()
-		move = move.normalized() * camera_move_speed * delta / camera.zoom.x
-		camera.position += move
-
 	if _ca_impact > 0.0:
 		_ca_impact = max(_ca_impact - 0.02 * delta, 0.0)
 		if _post_process_mat:
 			_post_process_mat.set_shader_parameter("u_ca_impact", _ca_impact)
 
-	if _shake_intensity > 0.0:
-		_shake_intensity = max(_shake_intensity - 15.0 * delta, 0.0)
-		camera.position += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake_intensity
+	if _planet_popup and $Camera2D.is_following():
+		_update_planet_popup()
+	elif _planet_popup and not $Camera2D.is_following():
+		_hide_planet_popup()
+
+	_update_star_parallax()
+
+	var blur = $Camera2D.get_blur_amount()
+	for sprite in _star_sprites:
+		var mat := sprite.material as ShaderMaterial
+		if mat:
+			mat.set_shader_parameter("blur_amount", blur)
 
 	for i in range(_event_log_entries.size() - 1, -1, -1):
 		var entry := _event_log_entries[i]
@@ -701,14 +660,14 @@ func _process(delta):
 		else:
 			entry.label.modulate.a = 1.0 - ease(t, 0.5)
 
-func _update_star_parallax(camera: Camera2D):
-	var cam_pos := camera.position
-	var world_half := SCREEN_SIZE * 0.5 / camera.zoom.x
+func _update_star_parallax():
+	var cam_pos = $Camera2D.position
+	var world_half = SCREEN_SIZE * 0.5 / $Camera2D.zoom.x
 
 	for i in _star_sprites.size():
 		var sprite := _star_sprites[i]
 		var ms := _star_motion_scales[i]
-		var origin := -cam_pos * ms
+		var origin = -cam_pos * ms
 		sprite.position = Vector2(
 			origin.x + _align_floor(cam_pos.x - world_half.x - origin.x, SCREEN_SIZE.x),
 			origin.y + _align_floor(cam_pos.y - world_half.y - origin.y, SCREEN_SIZE.y)
@@ -717,16 +676,16 @@ func _update_star_parallax(camera: Camera2D):
 func _align_floor(offset: float, period: float) -> float:
 	return floor(offset / period) * period
 
-func _check_planet_click(screen_pos: Vector2, camera: Camera2D) -> Dictionary:
+func _check_planet_click(screen_pos: Vector2) -> Dictionary:
 	var closest: Dictionary
 	var found := false
 	var closest_dist := INF
 	for p in _planet_data:
 		if p.node._dead:
 			continue
-		var planet_screen: Vector2 = camera.get_canvas_transform() * p.node.position
+		var planet_screen: Vector2 = $Camera2D.get_canvas_transform() * p.node.position
 		var d := planet_screen.distance_to(screen_pos)
-		var hit_r: float = max(p.node.collision_radius * camera.zoom.x, 12.0)
+		var hit_r: float = max(p.node.collision_radius * $Camera2D.zoom.x, 12.0)
 		if d < hit_r and d < closest_dist:
 			closest = p
 			closest_dist = d
@@ -778,76 +737,35 @@ func _spawn_impact_ring(color: Color, width: float, segments: int, timer: float)
 	add_child(ring)
 	_impact_rings.append({ ring = ring, timer = timer })
 
-func _apply_zoom(new_zoom: float):
-	var camera := $Camera2D as Camera2D
-	camera.zoom = Vector2(new_zoom, new_zoom)
-
-	var blur_t := (new_zoom - camera_min_zoom) / (camera_max_zoom - camera_min_zoom)
-	var blur_amount := blur_t * blur_t * 5.0
-	for sprite in _star_sprites:
-		var mat := sprite.material as ShaderMaterial
-		if mat:
-			mat.set_shader_parameter("blur_amount", blur_amount)
-
-func _zoom_in():
-	_target_zoom = clamp(_target_zoom + camera_zoom_step, camera_min_zoom, camera_max_zoom)
-
-func _zoom_out():
-	_target_zoom = clamp(_target_zoom - camera_zoom_step, camera_min_zoom, camera_max_zoom)
-
-func _input(event):
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_zoom_in()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_zoom_out()
-	if event is InputEventPanGesture:
-		_scroll_accum += event.delta.y
-		while _scroll_accum >= 0.3:
-			_zoom_out()
-			_scroll_accum -= 0.3
-		while _scroll_accum <= -0.3:
-			_zoom_in()
-			_scroll_accum += 0.3
-
 func _unhandled_input(event):
-	var camera := $Camera2D as Camera2D
-
 	if event is InputEventMouseButton and event.pressed:
-		var sun_screen: Vector2 = camera.get_canvas_transform() * $Sun.position
+		var sun_screen: Vector2 = $Camera2D.get_canvas_transform() * $Sun.position
 		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
 		if event.button_index == MOUSE_BUTTON_LEFT and on_sun:
 			sun_mass += 0.01
 			return
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			var clicked := _check_planet_click(event.position, camera)
+			var clicked := _check_planet_click(event.position)
 			if not clicked.is_empty():
-				_follow_target = clicked.node
-				_target_zoom = camera_max_zoom
+				$Camera2D.follow_node(clicked.node)
 				_show_planet_popup(clicked.node)
 				return
 
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
-			_follow_target = null
+			$Camera2D.start_drag(event.position)
 			_hide_planet_popup()
-			_dragging = true
-			_drag_prev = event.position
 
 	if event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
-			_dragging = false
+			$Camera2D.end_drag()
 
-	if event is InputEventMouseMotion and _dragging:
-		var delta_vec: Vector2 = event.position - _drag_prev
-		camera.position -= delta_vec / camera.zoom.x
-		_drag_prev = event.position
+	if event is InputEventMouseMotion and (Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE)):
+		$Camera2D.update_drag(event.position)
 
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_EQUAL:
-			_zoom_in()
-		elif event.keycode == KEY_MINUS:
-			_zoom_out()
+		if event.keycode == KEY_EQUAL or event.keycode == KEY_MINUS:
+			pass
 		elif event.keycode == KEY_L:
 			_spawn_asteroid()
 
