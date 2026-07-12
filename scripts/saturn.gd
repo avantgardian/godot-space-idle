@@ -8,9 +8,8 @@ func _ready():
 	mass = 2.86e-4
 	collision_radius = 44.0
 	_trail_max = 18480 # full orbit: 616s × 30 pts/s
-	_generate_texture()
+	super()
 	_generate_ring()
-	_reset()
 
 func _process(delta):
 	super(delta)
