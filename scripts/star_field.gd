@@ -1,7 +1,5 @@
 extends Node2D
 
-const SCREEN_SIZE := Vector2(1920, 1080)
-
 const LAYERS := [
 	{ count=500, min_r=0.2, max_r=0.5, min_b=0.08, max_b=0.25, motion_scale=0.003 },
 	{ count=400, min_r=0.3, max_r=0.7, min_b=0.12, max_b=0.35, motion_scale=0.008 },
@@ -21,14 +19,15 @@ func generate(seed_val: int, min_zoom: float):
 	rng.seed = seed_val
 
 	var tile_scale = 2.0 / min_zoom
+	var screen_size := get_viewport_rect().size
 
 	for cfg in LAYERS:
-		var image := Image.create(int(SCREEN_SIZE.x), int(SCREEN_SIZE.y), false, Image.FORMAT_RGBA8)
+		var image := Image.create(int(screen_size.x), int(screen_size.y), false, Image.FORMAT_RGBA8)
 		image.fill(Color.TRANSPARENT)
 
 		for _j in range(cfg.count):
-			var x := rng.randf_range(0.0, SCREEN_SIZE.x)
-			var y := rng.randf_range(0.0, SCREEN_SIZE.y)
+			var x := rng.randf_range(0.0, screen_size.x)
+			var y := rng.randf_range(0.0, screen_size.y)
 			var radius := rng.randf_range(cfg.min_r, cfg.max_r)
 			var brightness := rng.randf_range(cfg.min_b, cfg.max_b)
 			var color := Color(brightness, brightness, brightness, 1.0)
@@ -52,15 +51,16 @@ func generate(seed_val: int, min_zoom: float):
 		add_child(sprite)
 
 func update_parallax(camera_position: Vector2, camera_zoom: float):
-	var world_half = SCREEN_SIZE * 0.5 / camera_zoom
+	var screen_size := get_viewport_rect().size
+	var world_half = screen_size * 0.5 / camera_zoom
 
 	for i in _sprites.size():
 		var sprite := _sprites[i]
 		var ms := _motion_scales[i]
 		var origin = -camera_position * ms
 		sprite.position = Vector2(
-			origin.x + _align_floor(camera_position.x - world_half.x - origin.x, SCREEN_SIZE.x),
-			origin.y + _align_floor(camera_position.y - world_half.y - origin.y, SCREEN_SIZE.y)
+			origin.x + _align_floor(camera_position.x - world_half.x - origin.x, screen_size.x),
+			origin.y + _align_floor(camera_position.y - world_half.y - origin.y, screen_size.y)
 		)
 
 func set_blur(amount: float):

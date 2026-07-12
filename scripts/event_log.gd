@@ -1,6 +1,5 @@
 extends Node
 
-const SCREEN_SIZE := Vector2(1920, 1080)
 const DURATION := 60.0
 const MAX_ENTRIES := 30
 
@@ -13,7 +12,7 @@ func _ready():
 func setup():
 	var panel := Panel.new()
 	panel.name = "EventLogPanel"
-	panel.position = Vector2(16, SCREEN_SIZE.y - 300)
+	panel.position = Vector2(16, get_viewport().get_visible_rect().size.y - 300)
 	panel.size = Vector2(360, 280)
 	panel.clip_contents = true
 

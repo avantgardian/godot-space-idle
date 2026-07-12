@@ -2,7 +2,6 @@ extends Node2D
 
 @export var star_seed: int = 42
 
-const SCREEN_SIZE := Vector2(1920, 1080)
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 
 var sun_mass: float = 1.0
