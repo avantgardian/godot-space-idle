@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/star_field.gd" id="11"]
 [ext_resource type="Script" path="res://scripts/sun.gd" id="12"]
 [ext_resource type="Script" path="res://scripts/event_log.gd" id="13"]
+[ext_resource type="Script" path="res://scripts/impact_fx.gd" id="14"]
 
 [node name="Main" type="Node2D" unique_id=1112431360]
 script = ExtResource("1_3ceyx")
@@ -25,6 +26,10 @@ script = ExtResource("11")
 
 [node name="Sun" type="Sprite2D" parent="." unique_id=1227695083]
 script = ExtResource("12")
+
+[node name="ImpactFX" type="Node" parent="."]
+script = ExtResource("14")
+
 
 [node name="Mercury" type="Node2D" parent="." unique_id=1820550349]
 script = ExtResource("2_3ceyz")

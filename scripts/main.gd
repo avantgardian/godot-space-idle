@@ -9,7 +9,6 @@ const PLANET_SPEEDS := [47.4, 35.0, 29.8, 24.1, 13.1, 9.7, 6.8, 5.4]
 
 var sun_mass: float = 1.0
 var _mass_label: Label
-var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
@@ -310,22 +309,6 @@ func _process(delta):
 		_spawn_asteroid()
 		_asteroid_spawn_timer = randf_range(35.0, 55.0)
 
-	for i in range(_impact_rings.size() - 1, -1, -1):
-		var rd := _impact_rings[i]
-		rd.timer -= delta
-		var total: float = rd.get("initial", 0.8)
-		var t: float = rd.timer / total
-		var base: float = rd.get("base_scale", 1.0)
-		var s := base * (1.0 + (1.0 - t) * 3.0)
-		rd.ring.scale = Vector2(s, s)
-		if "is_glow" in rd:
-			rd.ring.modulate.a = t * t
-		else:
-			rd.ring.default_color.a = t * 0.6
-		if rd.timer <= 0.0:
-			rd.ring.queue_free()
-			_impact_rings.remove_at(i)
-
 	if _mass_label:
 		_mass_label.text = "M☉ = %.7f" % sun_mass
 
@@ -369,7 +352,7 @@ func _on_planet_collided(p: Dictionary):
 	sun_mass += p.node.mass
 	p.destroyed_by = "Sun"
 	$Sun.flash(p.cf)
-	_spawn_impact_ring(p.cc, p.cw, p.cs, p.ct)
+	$ImpactFX.spawn_ring(p.cc, p.cw, p.cs, p.ct)
 	_trigger_impact_effects()
 	var p_idx := _find_planet_idx(p.node)
 	$UI/EventLog.log_message(PLANET_NAMES[p_idx] + " collided with the Sun")
@@ -386,22 +369,9 @@ func _spawn_asteroid():
 func _on_asteroid_collided(ast: Node2D):
 	sun_mass += ast.mass
 	$Sun.flash(0.2)
-	_spawn_impact_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
+	$ImpactFX.spawn_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
 	_trigger_impact_effects()
 	$UI/EventLog.log_message("Asteroid collided with the Sun")
-
-func _spawn_impact_ring(color: Color, width: float, segments: int, timer: float):
-	var ring := Line2D.new()
-	ring.default_color = color
-	ring.width = width
-	ring.antialiased = true
-	var pts := PackedVector2Array()
-	for i in range(segments + 1):
-		var a := (float(i) / segments) * TAU
-		pts.append(Vector2(cos(a), sin(a)))
-	ring.points = pts
-	add_child(ring)
-	_impact_rings.append({ ring = ring, timer = timer })
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
@@ -465,7 +435,8 @@ func _check_body_collisions():
 						var a_idx := _find_planet_idx(a)
 						_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
 					_disable_body(b)
-					_spawn_collision_effect(a.position.lerp(b.position, 0.5), b.mass, contact_r)
+					$ImpactFX.spawn_glow(a.position.lerp(b.position, 0.5), b.mass, contact_r)
+					_trigger_impact_effects()
 					$UI/EventLog.log_message(_collision_msg(b, a))
 				else:
 					var total: float = a.mass + b.mass
@@ -476,7 +447,8 @@ func _check_body_collisions():
 						var b_idx := _find_planet_idx(b)
 						_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
 					_disable_body(a)
-					_spawn_collision_effect(a.position.lerp(b.position, 0.5), a.mass, contact_r)
+					$ImpactFX.spawn_glow(a.position.lerp(b.position, 0.5), a.mass, contact_r)
+					_trigger_impact_effects()
 					$UI/EventLog.log_message(_collision_msg(a, b))
 
 func _is_body_alive(body: Node2D) -> bool:
@@ -490,34 +462,3 @@ func _disable_body(body: Node2D):
 		body._alive = false
 	else:
 		body._dead = true
-
-func _spawn_collision_effect(pos: Vector2, mass: float, contact_radius: float = 1.0):
-	var t := clampf(mass * 10.0, 0.2, 1.0)
-	_trigger_impact_effects()
-
-	var tex_size := 64
-	var image := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var half := tex_size / 2.0
-	var max_r := half - 1.0
-	for x in range(tex_size):
-		for y in range(tex_size):
-			var dx := x - half
-			var dy := y - half
-			var dist := sqrt(dx * dx + dy * dy)
-			if dist <= max_r:
-				var nt := dist / max_r
-				var alpha := (1.0 - nt * nt) * t * 0.8
-				image.set_pixel(x, y, Color(1.0, 0.85, 0.3, alpha))
-
-	var glow := Sprite2D.new()
-	glow.texture = ImageTexture.create_from_image(image)
-	glow.centered = true
-	glow.position = pos
-	glow.modulate = Color(1, 1, 1, 1)
-	var mat := CanvasItemMaterial.new()
-	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	glow.material = mat
-	add_child(glow)
-	var duration := 0.5 + t * 1.0
-	_impact_rings.append({ ring = glow, timer = duration, initial = duration, base_scale = contact_radius / 32.0, is_glow = true })
