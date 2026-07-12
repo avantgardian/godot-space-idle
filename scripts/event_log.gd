@@ -13,8 +13,8 @@ func _ready():
 func setup():
 	var panel := Panel.new()
 	panel.name = "EventLogPanel"
-	panel.position = Vector2(16, get_viewport().get_visible_rect().size.y - 300)
-	panel.size = Vector2(360, 280)
+	panel.position = Vector2(16, get_viewport().get_visible_rect().size.y - 155)
+	panel.size = Vector2(300, 135)
 	panel.clip_contents = true
 
 	var psb := StyleBoxFlat.new()
@@ -38,7 +38,7 @@ func setup():
 	_container = VBoxContainer.new()
 	_container.name = "EventLog"
 	_container.position = Vector2(10, 8)
-	_container.size = Vector2(340, 264)
+	_container.size = Vector2(280, 119)
 	_container.add_theme_constant_override("separation", 2)
 	panel.add_child(_container)
 
