@@ -16,12 +16,24 @@ var _dead: bool = false
 var _trail: PackedVector2Array
 var _trail_tick: int = 0
 var _trail_max: int = 1200
+var _trail_line: Line2D
 
 signal collided_with_sun
 
 func _ready():
 	_generate_texture()
 	_reset()
+
+func setup_trail(color0: Color, color1: Color):
+	_trail_line = Line2D.new()
+	_trail_line.top_level = true
+	_trail_line.width = 1.5
+	_trail_line.antialiased = true
+	var grad := Gradient.new()
+	grad.set_color(0, color0)
+	grad.set_color(1, color1)
+	_trail_line.gradient = grad
+	add_child(_trail_line)
 
 func _generate_texture():
 	var tex_size := _get_planet_texture_size()
@@ -77,6 +89,9 @@ func _process(delta):
 		_trail.append(position)
 		if _trail.size() > _trail_max:
 			_trail.remove_at(0)
+
+	if _trail_line:
+		_trail_line.points = get_trail()
 
 func get_trail() -> PackedVector2Array:
 	if _dead or _trail.size() < 2:

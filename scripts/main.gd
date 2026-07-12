@@ -52,18 +52,18 @@ func _ready():
 	_generate_sun_glows()
 	_mass_label = $UI/MassLabel as Label
 	_planet_data = [
-		{ node = $Mercury, orbit_name = "MercuryOrbit", color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), cf = 0.6, cc = Color(1, 0.9, 0.6, 0.5), cw = 2.0, cs = 48, ct = 0.8 },
-		{ node = $Venus, orbit_name = "VenusOrbit", color0 = Color(1, 0.9, 0.6, 0.0), color1 = Color(1, 0.9, 0.6, 0.4), cf = 0.8, cc = Color(1, 0.8, 0.4, 0.6), cw = 3.0, cs = 64, ct = 1.2 },
-		{ node = $Earth, orbit_name = "EarthOrbit", color0 = Color(0.3, 0.6, 1.0, 0.0), color1 = Color(0.3, 0.6, 1.0, 0.4), cf = 1.0, cc = Color(0.3, 0.7, 1.0, 0.7), cw = 3.5, cs = 72, ct = 1.5 },
-		{ node = $Mars, orbit_name = "MarsOrbit", color0 = Color(0, 0, 0, 0.0), color1 = Color(1.0, 0.6, 0.1, 0.4), cf = 0.7, cc = Color(0.9, 0.4, 0.15, 0.5), cw = 2.0, cs = 40, ct = 0.9 },
-		{ node = $Jupiter, orbit_name = "JupiterOrbit", color0 = Color(0.85, 0.6, 0.3, 0.0), color1 = Color(0.85, 0.6, 0.3, 0.4), cf = 2.0, cc = Color(0.85, 0.6, 0.3, 0.9), cw = 6.0, cs = 96, ct = 2.5 },
-		{ node = $Saturn, orbit_name = "SaturnOrbit", color0 = Color(0.8, 0.7, 0.4, 0.0), color1 = Color(0.8, 0.7, 0.4, 0.4), cf = 1.8, cc = Color(0.8, 0.7, 0.4, 0.8), cw = 5.0, cs = 88, ct = 2.2 },
-		{ node = $Uranus, orbit_name = "UranusOrbit", color0 = Color(0.4, 0.7, 0.9, 0.0), color1 = Color(0.4, 0.7, 0.9, 0.4), cf = 1.2, cc = Color(0.4, 0.7, 0.9, 0.6), cw = 3.0, cs = 64, ct = 1.6 },
-		{ node = $Neptune, orbit_name = "NeptuneOrbit", color0 = Color(0.2, 0.3, 0.85, 0.0), color1 = Color(0.2, 0.3, 0.85, 0.4), cf = 1.3, cc = Color(0.2, 0.3, 0.85, 0.6), cw = 3.0, cs = 66, ct = 1.7 },
+		{ node = $Mercury, color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), cf = 0.6, cc = Color(1, 0.9, 0.6, 0.5), cw = 2.0, cs = 48, ct = 0.8 },
+		{ node = $Venus, color0 = Color(1, 0.9, 0.6, 0.0), color1 = Color(1, 0.9, 0.6, 0.4), cf = 0.8, cc = Color(1, 0.8, 0.4, 0.6), cw = 3.0, cs = 64, ct = 1.2 },
+		{ node = $Earth, color0 = Color(0.3, 0.6, 1.0, 0.0), color1 = Color(0.3, 0.6, 1.0, 0.4), cf = 1.0, cc = Color(0.3, 0.7, 1.0, 0.7), cw = 3.5, cs = 72, ct = 1.5 },
+		{ node = $Mars, color0 = Color(0, 0, 0, 0.0), color1 = Color(1.0, 0.6, 0.1, 0.4), cf = 0.7, cc = Color(0.9, 0.4, 0.15, 0.5), cw = 2.0, cs = 40, ct = 0.9 },
+		{ node = $Jupiter, color0 = Color(0.85, 0.6, 0.3, 0.0), color1 = Color(0.85, 0.6, 0.3, 0.4), cf = 2.0, cc = Color(0.85, 0.6, 0.3, 0.9), cw = 6.0, cs = 96, ct = 2.5 },
+		{ node = $Saturn, color0 = Color(0.8, 0.7, 0.4, 0.0), color1 = Color(0.8, 0.7, 0.4, 0.4), cf = 1.8, cc = Color(0.8, 0.7, 0.4, 0.8), cw = 5.0, cs = 88, ct = 2.2 },
+		{ node = $Uranus, color0 = Color(0.4, 0.7, 0.9, 0.0), color1 = Color(0.4, 0.7, 0.9, 0.4), cf = 1.2, cc = Color(0.4, 0.7, 0.9, 0.6), cw = 3.0, cs = 64, ct = 1.6 },
+		{ node = $Neptune, color0 = Color(0.2, 0.3, 0.85, 0.0), color1 = Color(0.2, 0.3, 0.85, 0.4), cf = 1.3, cc = Color(0.2, 0.3, 0.85, 0.6), cw = 3.0, cs = 66, ct = 1.7 },
 	]
 	for p in _planet_data:
 		p.node.collided_with_sun.connect(_on_planet_collided.bind(p))
-		_create_orbit_line(p.orbit_name, p.node, p.color0, p.color1)
+		p.node.setup_trail(p.color0, p.color1)
 		p.initial_mass = p.node.mass
 		p.destroyed_by = ""
 	_setup_planet_mass_ui()
@@ -514,18 +514,6 @@ func _generate_sun_glows():
 	_sun_glow_inner.material = add_mat.call()
 	$Sun.add_child(_sun_glow_inner)
 
-func _create_orbit_line(line_name: String, planet: Node2D, color0: Color, color1: Color):
-	var line := Line2D.new()
-	line.name = line_name
-	line.width = 1.5
-	line.antialiased = true
-	var grad := Gradient.new()
-	grad.set_color(0, color0)
-	grad.set_color(1, color1)
-	line.gradient = grad
-	add_child(line)
-	move_child(line, planet.get_index())
-
 var _planet_popup: Panel
 var _popup_labels: Dictionary
 
@@ -550,9 +538,6 @@ func _process(delta):
 
 	for p in _planet_data:
 		p.node.sun_mass = sun_mass
-		var line := get_node(p.orbit_name) as Line2D
-		if line:
-			line.points = p.node.get_trail()
 
 	_check_body_collisions()
 
