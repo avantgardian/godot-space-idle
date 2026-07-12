@@ -4,6 +4,7 @@ var _paused := false
 var _overlay: ColorRect
 
 func _ready():
+	process_mode = PROCESS_MODE_ALWAYS
 	name = "PauseButton"
 	anchor_left = 1.0
 	anchor_top = 1.0
@@ -67,6 +68,6 @@ func _ready():
 
 func _toggle():
 	_paused = not _paused
-	Engine.time_scale = 0.0 if _paused else 1.0
+	get_tree().paused = _paused
 	text = "Play" if _paused else "Pause"
 	_overlay.visible = _paused
