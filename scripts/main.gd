@@ -149,12 +149,7 @@ func _find_planet_idx(node: Node2D) -> int:
 	return -1
 
 func _on_planet_collided(p: Dictionary):
-	sun_mass += p.node.mass
-	p.destroyed_by = "Sun"
-	$Sun.flash(p.cf)
-	$ImpactFX.spawn_ring(p.cc, p.cw, p.cs, p.ct)
-	_trigger_impact_effects()
-	$UI/EventLog.log_message(p.node.planet_name + " collided with the Sun")
+	_on_body_hit_sun(p.node.mass, p.cf, p.cc, p.cw, p.cs, p.ct, p.node.planet_name + " collided with the Sun", p)
 
 func _spawn_asteroid():
 	var a := _ASTEROID_SCRIPT.new()
@@ -165,11 +160,16 @@ func _spawn_asteroid():
 	_asteroids.append(a)
 
 func _on_asteroid_collided(ast: Node2D):
-	sun_mass += ast.mass
-	$Sun.flash(0.2)
-	$ImpactFX.spawn_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
+	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
+
+func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String, planet_data: Dictionary = {}):
+	sun_mass += mass
+	if planet_data:
+		planet_data.destroyed_by = "Sun"
+	$Sun.flash(flash)
+	$ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
 	_trigger_impact_effects()
-	$UI/EventLog.log_message("Asteroid collided with the Sun")
+	$UI/EventLog.log_message(message)
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
