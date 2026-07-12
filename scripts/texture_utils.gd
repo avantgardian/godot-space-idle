@@ -1,3 +1,5 @@
+class_name TextureUtils
+
 static func make_circle_texture(size: int, color_fn: Callable) -> ImageTexture:
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	image.fill(Color.TRANSPARENT)

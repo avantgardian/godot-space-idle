@@ -1,3 +1,4 @@
+class_name PlanetPopup
 extends Panel
 
 var _planet_node: Node2D

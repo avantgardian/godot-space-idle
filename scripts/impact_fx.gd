@@ -1,3 +1,4 @@
+class_name ImpactFX
 extends Node
 
 var _rings: Array[Dictionary] = []
