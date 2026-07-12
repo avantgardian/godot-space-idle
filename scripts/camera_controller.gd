@@ -35,7 +35,7 @@ func _process(delta):
 		zoom = Vector2(target_zoom, target_zoom)
 
 	if _follow_target:
-		if is_instance_valid(_follow_target) and not _follow_target._dead:
+		if is_instance_valid(_follow_target) and not _follow_target.is_dead():
 			position = position.lerp(_follow_target.position, 3.0 * real_delta)
 		else:
 			_follow_target = null
@@ -81,7 +81,7 @@ func unfollow():
 	_follow_target = null
 
 func is_following() -> bool:
-	return _follow_target != null and is_instance_valid(_follow_target) and not _follow_target._dead
+	return _follow_target != null and is_instance_valid(_follow_target) and not _follow_target.is_dead()
 
 func get_follow_target() -> Node2D:
 	return _follow_target

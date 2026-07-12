@@ -10,8 +10,8 @@ func _ready():
 	start_angle = 3.0
 	mass = 2.86e-4
 	collision_radius = 44.0
-	_trail_max = 18480 # full orbit: 616s × 30 pts/s
 	super()
+	trail_max = 18480 # full orbit: 616s × 30 pts/s
 	_generate_ring()
 
 func _process(delta):

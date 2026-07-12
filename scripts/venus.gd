@@ -10,8 +10,8 @@ func _ready():
 	start_angle = 2.5
 	mass = 2.45e-6
 	collision_radius = 22.0
-	_trail_max = 1410  # full orbit: 47s × 30 pts/s
 	super()
+	trail_max = 1410  # full orbit: 47s × 30 pts/s
 
 func _get_planet_texture_size() -> int:
 	return 44

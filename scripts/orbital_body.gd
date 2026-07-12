@@ -16,10 +16,23 @@ var _vel: Vector2
 var _dead: bool = false
 var _trail: PackedVector2Array
 var _trail_tick: int = 0
-var _trail_max: int = 1200
+var trail_max: int = 1200
 var _trail_line: Line2D
 
 signal collided_with_sun
+
+func is_dead() -> bool:
+	return _dead
+
+func disable():
+	_dead = true
+	visible = false
+
+func get_vel() -> Vector2:
+	return _vel
+
+func set_vel(v: Vector2):
+	_vel = v
 
 func _ready():
 	_generate_texture()
@@ -89,7 +102,7 @@ func _process(delta):
 	_trail_tick += 1
 	if _trail_tick % 2 == 0:
 		_trail.append(position)
-		if _trail.size() > _trail_max:
+		if _trail.size() > trail_max:
 			_trail.remove_at(0)
 
 	if _trail_line:
