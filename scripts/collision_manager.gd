@@ -1,16 +1,14 @@
 extends RefCounted
 
 var _planet_data: Array[Dictionary]
-var _planet_names: Array[String]
 var _asteroid_script: GDScript
 var _impact_fx: Node
 var _event_log: Node
 var _find_planet_idx: Callable
 var _trigger_impact: Callable
 
-func _init(planet_data: Array[Dictionary], planet_names: Array[String], asteroid_script: GDScript, impact_fx: Node, event_log: Node, find_planet_idx: Callable, trigger_impact: Callable):
+func _init(planet_data: Array[Dictionary], asteroid_script: GDScript, impact_fx: Node, event_log: Node, find_planet_idx: Callable, trigger_impact: Callable):
 	_planet_data = planet_data
-	_planet_names = planet_names
 	_asteroid_script = asteroid_script
 	_impact_fx = impact_fx
 	_event_log = event_log
@@ -51,8 +49,7 @@ func _disable(body: Node2D):
 		body._dead = true
 
 func _body_name(body: Node2D) -> String:
-	var idx: int = _find_planet_idx.call(body)
-	return _planet_names[idx] if idx >= 0 else "Asteroid"
+	return body.planet_name if "planet_name" in body else "Asteroid"
 
 func _collision_msg(victim: Node2D, absorber: Node2D) -> String:
 	if _find_planet_idx.call(victim) < 0 or _find_planet_idx.call(absorber) < 0:
@@ -67,8 +64,7 @@ func _resolve(a: Node2D, b: Node2D):
 		a.mass = total
 		var b_idx: int = _find_planet_idx.call(b)
 		if b_idx >= 0:
-			var a_idx: int = _find_planet_idx.call(a)
-			_planet_data[b_idx].destroyed_by = _planet_names[a_idx] if a_idx >= 0 else "???"
+			_planet_data[b_idx].destroyed_by = a.planet_name
 		_disable(b)
 		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), b.mass, contact_r)
 		_trigger_impact.call()
@@ -79,8 +75,7 @@ func _resolve(a: Node2D, b: Node2D):
 		b.mass = total
 		var a_idx: int = _find_planet_idx.call(a)
 		if a_idx >= 0:
-			var b_idx: int = _find_planet_idx.call(b)
-			_planet_data[a_idx].destroyed_by = _planet_names[b_idx] if b_idx >= 0 else "???"
+			_planet_data[a_idx].destroyed_by = b.planet_name
 		_disable(a)
 		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), a.mass, contact_r)
 		_trigger_impact.call()

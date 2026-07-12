@@ -5,8 +5,6 @@ extends Node2D
 const SCREEN_SIZE := Vector2(1920, 1080)
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 
-const PLANET_SPEEDS := [47.4, 35.0, 29.8, 24.1, 13.1, 9.7, 6.8, 5.4]
-
 var sun_mass: float = 1.0
 var _mass_label: Label
 var _asteroids: Array[Node2D]
@@ -16,17 +14,6 @@ var _collision_mgr: CollisionManager
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const PlanetPopup := preload("res://scripts/planet_popup.gd")
 const CollisionManager := preload("res://scripts/collision_manager.gd")
-const PLANET_NAMES: Array[String] = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
-const PLANET_COLORS := [
-	Color(0.7, 0.7, 0.7),
-	Color(0.95, 0.85, 0.5),
-	Color(0.3, 0.6, 1.0),
-	Color(0.85, 0.35, 0.15),
-	Color(0.85, 0.6, 0.3),
-	Color(0.8, 0.7, 0.4),
-	Color(0.4, 0.7, 0.9),
-	Color(0.2, 0.3, 0.85),
-]
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
@@ -47,7 +34,7 @@ func _ready():
 		p.node.setup_trail(p.color0, p.color1)
 		p.initial_mass = p.node.mass
 		p.destroyed_by = ""
-	_collision_mgr = CollisionManager.new(_planet_data, PLANET_NAMES, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, _trigger_impact_effects)
+	_collision_mgr = CollisionManager.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, _trigger_impact_effects)
 	_setup_post_process()
 
 func _setup_post_process():
@@ -85,7 +72,7 @@ func _show_planet_popup(planet_node: Node2D):
 	if idx < 0:
 		return
 	var popup := PlanetPopup.new()
-	popup.show_for_planet(planet_node, PLANET_NAMES[idx], PLANET_COLORS[idx], PLANET_SPEEDS[idx], $Camera2D)
+	popup.show_for_planet(planet_node, $Camera2D)
 	$UI.add_child(popup)
 	_planet_popup = popup
 
@@ -169,8 +156,7 @@ func _on_planet_collided(p: Dictionary):
 	$Sun.flash(p.cf)
 	$ImpactFX.spawn_ring(p.cc, p.cw, p.cs, p.ct)
 	_trigger_impact_effects()
-	var p_idx := _find_planet_idx(p.node)
-	$UI/EventLog.log_message(PLANET_NAMES[p_idx] + " collided with the Sun")
+	$UI/EventLog.log_message(p.node.planet_name + " collided with the Sun")
 
 func _spawn_asteroid():
 	var a := Node2D.new()
