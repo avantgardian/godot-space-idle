@@ -2,19 +2,17 @@ extends Panel
 
 var _planet_node: Node2D
 var _camera: Camera2D
-var _planet_speed: float = 0.0
 var _popup_labels: Dictionary = {}
 
-func show_for_planet(planet_node: Node2D, planet_name: String, planet_color: Color, planet_speed: float, camera: Camera2D):
+func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	_planet_node = planet_node
-	_planet_speed = planet_speed
 	_camera = camera
 
 	mouse_filter = MOUSE_FILTER_IGNORE
 
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.04, 0.04, 0.1, 0.88)
-	sb.border_color = planet_color
+	sb.border_color = planet_node.planet_color
 	sb.border_width_left = 3
 	sb.border_width_top = 1
 	sb.border_width_right = 1
@@ -45,7 +43,7 @@ func show_for_planet(planet_node: Node2D, planet_name: String, planet_color: Col
 	margin.add_child(vbox)
 
 	var name_label := Label.new()
-	name_label.text = planet_name
+	name_label.text = planet_node.planet_name
 	name_label.add_theme_font_size_override("font_size", 18)
 	name_label.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0, 1.0))
 	vbox.add_child(name_label)
@@ -94,7 +92,7 @@ func _process(_delta):
 	var viewport_size := get_viewport_rect().size
 
 	_popup_labels.mass.text = "%s  M☉" % str(_planet_node.mass)
-	_popup_labels.speed.text = "%.1f  km/s" % _planet_speed
+	_popup_labels.speed.text = "%.1f  km/s" % _planet_node.planet_speed
 	_popup_labels.radius.text = "%.0f  u" % _planet_node.orbit_radius
 	_popup_labels.period.text = "%.0f  s" % _planet_node.orbit_period
 

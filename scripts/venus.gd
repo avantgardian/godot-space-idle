@@ -1,5 +1,9 @@
 extends OrbitalBody
 
+var planet_name: String = "Venus"
+var planet_color: Color = Color(0.95, 0.85, 0.5)
+var planet_speed: float = 35.0
+
 func _ready():
 	orbit_radius = 500.0
 	orbit_period = 47.0

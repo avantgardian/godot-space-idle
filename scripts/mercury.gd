@@ -1,5 +1,9 @@
 extends OrbitalBody
 
+var planet_name: String = "Mercury"
+var planet_color: Color = Color(0.7, 0.7, 0.7)
+var planet_speed: float = 47.4
+
 func _ready():
 	orbit_radius = 350.0
 	orbit_period = 25.0
