@@ -13,7 +13,7 @@ func spawn_ring(color: Color, width: float, segments: int, timer: float):
 		var a := (float(i) / segments) * TAU
 		pts.append(Vector2(cos(a), sin(a)))
 	ring.points = pts
-	get_parent().add_child(ring)
+	add_child(ring)
 	_rings.append({ ring = ring, timer = timer })
 
 func spawn_glow(pos: Vector2, mass: float, contact_radius: float = 1.0):
@@ -42,7 +42,7 @@ func spawn_glow(pos: Vector2, mass: float, contact_radius: float = 1.0):
 	var mat := CanvasItemMaterial.new()
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	glow.material = mat
-	get_parent().add_child(glow)
+	add_child(glow)
 	var duration := 0.5 + t * 1.0
 	_rings.append({ ring = glow, timer = duration, initial = duration, base_scale = contact_radius / 32.0, is_glow = true })
 
