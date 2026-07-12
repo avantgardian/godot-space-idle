@@ -30,6 +30,8 @@ Every feature or fix follows this sequence:
 5. **PR** — once QA passes, commit, push, and `gh pr create` with `Closes #N` in the body
 6. **Merge** — user merges via GitHub UI
 
+**Important:** Before any `git commit` or `git push`, always verify the current branch with `git branch` or `git status` to avoid pushing to the wrong branch.
+
 ## Scripts
 
 | Script | Extends | Role |
