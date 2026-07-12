@@ -215,7 +215,9 @@ func _unhandled_input(event):
 		$Camera2D.update_drag(event.position)
 
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_EQUAL or event.keycode == KEY_MINUS:
-			pass
+		if event.keycode == KEY_EQUAL:
+			$Camera2D.zoom_in()
+		elif event.keycode == KEY_MINUS:
+			$Camera2D.zoom_out()
 		elif event.keycode == KEY_L:
 			_spawn_asteroid()
