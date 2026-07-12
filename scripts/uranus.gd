@@ -7,8 +7,7 @@ func _ready():
 	mass = 4.35e-5
 	collision_radius = 28.0
 	_trail_max = 32220 # full orbit: 1074s × 30 pts/s
-	_generate_texture()
-	_reset()
+	super()
 
 func _get_planet_texture_size() -> int:
 	return 56
