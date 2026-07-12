@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scripts/sun.gd" id="12"]
 [ext_resource type="Script" path="res://scripts/event_log.gd" id="13"]
 [ext_resource type="Script" path="res://scripts/impact_fx.gd" id="14"]
+[ext_resource type="Script" path="res://scripts/pause_button.gd" id="15"]
 
 [node name="Main" type="Node2D" unique_id=1112431360]
 script = ExtResource("1_3ceyx")
@@ -66,3 +67,6 @@ text = "M☉ = 1.000"
 
 [node name="EventLog" type="Node" parent="UI"]
 script = ExtResource("13")
+
+[node name="PauseButton" type="Button" parent="UI"]
+script = ExtResource("15")

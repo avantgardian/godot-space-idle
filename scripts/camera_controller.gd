@@ -13,12 +13,17 @@ var _dragging: bool = false
 var _drag_prev: Vector2
 var _scroll_accum: float = 0.0
 var _follow_target: Node2D = null
+var _last_frame: int = 0
 
 func _ready():
 	zoom = Vector2(1, 1)
 	position = Vector2.ZERO
 
 func _process(delta):
+	var now := Time.get_ticks_msec()
+	var real_delta: float = (now - _last_frame) / 1000.0 if _last_frame > 0 else delta
+	_last_frame = now
+
 	var cur_zoom: float = zoom.x
 	if abs(cur_zoom - target_zoom) > 0.0001:
 		var new_zoom: float = lerp(cur_zoom, target_zoom, zoom_lerp_speed * delta)
@@ -30,7 +35,7 @@ func _process(delta):
 
 	if _follow_target:
 		if is_instance_valid(_follow_target) and not _follow_target._dead:
-			position = position.lerp(_follow_target.position, 3.0 * delta)
+			position = position.lerp(_follow_target.position, 3.0 * real_delta)
 		else:
 			_follow_target = null
 
@@ -45,7 +50,7 @@ func _process(delta):
 		move.y -= 1
 	if move != Vector2.ZERO:
 		_follow_target = null
-		move = move.normalized() * move_speed * delta / zoom.x
+		move = move.normalized() * move_speed * real_delta / zoom.x
 		position += move
 
 	if shake_intensity > 0.0:
@@ -82,9 +87,11 @@ func get_follow_target() -> Node2D:
 
 func zoom_in():
 	target_zoom = clamp(target_zoom + zoom_step, min_zoom, max_zoom)
+	zoom = Vector2(target_zoom, target_zoom)
 
 func zoom_out():
 	target_zoom = clamp(target_zoom - zoom_step, min_zoom, max_zoom)
+	zoom = Vector2(target_zoom, target_zoom)
 
 func start_drag(screen_pos: Vector2):
 	_follow_target = null
