@@ -1,3 +1,4 @@
+class_name OrbitalBody
 extends Node2D
 
 const _TEX := preload("res://scripts/texture_utils.gd")

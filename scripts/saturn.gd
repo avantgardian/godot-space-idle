@@ -1,4 +1,4 @@
-extends "res://scripts/orbital_body.gd"
+extends OrbitalBody
 var _ring: Sprite2D
 
 func _ready():

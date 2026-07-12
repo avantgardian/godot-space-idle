@@ -1,4 +1,4 @@
-extends "res://scripts/orbital_body.gd"
+extends OrbitalBody
 
 func _ready():
 	orbit_radius = 1400.0
