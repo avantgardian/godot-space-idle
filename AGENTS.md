@@ -16,6 +16,19 @@ There are no build/test/lint commands. This is a pure Godot project with no tool
 - Open the project: `godot .` from repo root (or open `project.godot` in the Godot editor)
 - No formatter, linter, typechecker, or test framework is configured
 - No CI, no pre-commit hooks, no task runner
+- Git operations use `rtk` wrapper: `rtk git status`, `rtk git diff`, `rtk git commit -m "..."`, `rtk git push`
+- GitHub operations use `gh`: `gh issue create`, `gh pr create`
+
+## Workflow
+
+Every feature or fix follows this sequence:
+
+1. **GitHub Issue** — work starts from an existing issue (or create one first)
+2. **Branch** — `rtk git checkout -b issue-N-description` off `main`
+3. **Code** — implement the change
+4. **Manual QA** — provide a list of specific test cases for the user to verify in the Godot editor
+5. **PR** — once QA passes, commit, push, and `gh pr create` with `Closes #N` in the body
+6. **Merge** — user merges via GitHub UI
 
 ## Scripts
 
