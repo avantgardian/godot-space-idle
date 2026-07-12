@@ -23,7 +23,9 @@ There are no build/test/lint commands. This is a pure Godot project with no tool
 
 Every feature or fix follows this sequence:
 
-1. **GitHub Issue** — work starts from an existing issue (or create one first)
+Every feature or fix follows this sequence:
+
+1. **GitHub Issue** — work starts from an existing issue (or create one first). Always add a label (`enhancement`, `bug`, etc.) when creating.
 2. **Branch** — `rtk git checkout -b issue-N-description` off `main`
 3. **Code** — implement the change
 4. **Manual QA** — provide a list of specific test cases for the user to verify in the Godot editor
@@ -31,6 +33,8 @@ Every feature or fix follows this sequence:
 6. **Merge** — user merges via GitHub UI
 
 **Important:** Before any `git commit` or `git push`, always verify the current branch with `git branch` or `git status` to avoid pushing to the wrong branch.
+
+**Branch hygiene:** Keep branches rebased on `main` to avoid merge conflicts. Before creating a PR, run `rtk git rebase main` and resolve any conflicts locally.
 
 ## Scripts
 
