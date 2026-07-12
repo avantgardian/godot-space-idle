@@ -154,6 +154,7 @@ func _on_planet_collided(p: Dictionary):
 func _spawn_asteroid():
 	var a := _ASTEROID_SCRIPT.new()
 	a.sun_mass = sun_mass
+	a.gm_unit = $Mercury._initial_gm()
 	a.collided_with_sun.connect(_on_asteroid_collided.bind(a))
 	a.spawn()
 	add_child(a)
