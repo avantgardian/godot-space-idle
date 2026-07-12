@@ -4,15 +4,6 @@ var planet_name: String = "Venus"
 var planet_color: Color = Color(0.95, 0.85, 0.5)
 var planet_speed: float = 35.0
 
-func _ready():
-	orbit_radius = 500.0
-	orbit_period = 47.0
-	start_angle = 2.5
-	mass = 2.45e-6
-	collision_radius = 22.0
-	super()
-	trail_max = 1410  # full orbit: 47s × 30 pts/s
-
 func _get_planet_texture_size() -> int:
 	return 44
 

@@ -4,15 +4,6 @@ var planet_name: String = "Jupiter"
 var planet_color: Color = Color(0.85, 0.6, 0.3)
 var planet_speed: float = 13.1
 
-func _ready():
-	orbit_radius = 1400.0
-	orbit_period = 355.0
-	start_angle = 0.5
-	mass = 9.54e-4
-	collision_radius = 50.0
-	super()
-	trail_max = 10650 # full orbit: 355s × 30 pts/s
-
 func _get_planet_texture_size() -> int:
 	return 100
 

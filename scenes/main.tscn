@@ -34,27 +34,75 @@ script = ExtResource("14")
 
 [node name="Mercury" type="Node2D" parent="." unique_id=1820550349]
 script = ExtResource("2_3ceyz")
+orbit_radius = 350.0
+orbit_period = 25.0
+start_angle = 0.0
+mass = 1.65e-7
+collision_radius = 18.0
+trail_max = 750
 
 [node name="Venus" type="Node2D" parent="." unique_id=20539749]
 script = ExtResource("3_bfxyz")
+orbit_radius = 500.0
+orbit_period = 47.0
+start_angle = 2.5
+mass = 2.45e-6
+collision_radius = 22.0
+trail_max = 1410
 
 [node name="Earth" type="Node2D" parent="." unique_id=807002999]
 script = ExtResource("4_3cexz")
+orbit_radius = 700.0
+orbit_period = 78.0
+start_angle = 1.0
+mass = 3.0e-6
+collision_radius = 24.0
+trail_max = 2340
 
 [node name="Mars" type="Node2D" parent="." unique_id=1958058809]
 script = ExtResource("5_3ceyx")
+orbit_radius = 950.0
+orbit_period = 131.0
+start_angle = 4.0
+mass = 3.21e-7
+collision_radius = 13.0
+trail_max = 3930
 
 [node name="Jupiter" type="Node2D" parent="." unique_id=1239311480]
 script = ExtResource("6_3ceyz")
+orbit_radius = 1400.0
+orbit_period = 355.0
+start_angle = 0.5
+mass = 9.54e-4
+collision_radius = 50.0
+trail_max = 10650
 
 [node name="Saturn" type="Node2D" parent="." unique_id=1967820671]
 script = ExtResource("7_3cexz")
+orbit_radius = 1800.0
+orbit_period = 616.0
+start_angle = 3.0
+mass = 2.86e-4
+collision_radius = 44.0
+trail_max = 18480
 
 [node name="Uranus" type="Node2D" parent="." unique_id=262236446]
 script = ExtResource("8_3ceyx")
+orbit_radius = 2200.0
+orbit_period = 1074.0
+start_angle = 1.5
+mass = 4.35e-5
+collision_radius = 28.0
+trail_max = 32220
 
 [node name="Neptune" type="Node2D" parent="." unique_id=483098561]
 script = ExtResource("9_3ceyz")
+orbit_radius = 2600.0
+orbit_period = 1599.0
+start_angle = 4.5
+mass = 5.14e-5
+collision_radius = 27.0
+trail_max = 47970
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=78578215]
 
