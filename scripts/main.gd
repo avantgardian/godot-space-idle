@@ -12,9 +12,11 @@ var _mass_label: Label
 var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
+var _collision_mgr: CollisionManager
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const PlanetPopup := preload("res://scripts/planet_popup.gd")
-const PLANET_NAMES := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
+const CollisionManager := preload("res://scripts/collision_manager.gd")
+const PLANET_NAMES: Array[String] = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 const PLANET_COLORS := [
 	Color(0.7, 0.7, 0.7),
 	Color(0.95, 0.85, 0.5),
@@ -45,6 +47,7 @@ func _ready():
 		p.node.setup_trail(p.color0, p.color1)
 		p.initial_mass = p.node.mass
 		p.destroyed_by = ""
+	_collision_mgr = CollisionManager.new(_planet_data, PLANET_NAMES, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, _trigger_impact_effects)
 	_setup_post_process()
 
 func _setup_post_process():
@@ -74,15 +77,6 @@ func _trigger_impact_effects():
 	_ca_impact = min(_ca_impact + 0.008, 0.015)
 	$Camera2D.trigger_shake(12.5)
 
-func _body_name(body: Node2D) -> String:
-	var idx := _find_planet_idx(body)
-	return PLANET_NAMES[idx] if idx >= 0 else "Asteroid"
-
-func _collision_msg(victim: Node2D, absorber: Node2D) -> String:
-	if _find_planet_idx(victim) < 0 or _find_planet_idx(absorber) < 0:
-		return _body_name(victim) + " collided with " + _body_name(absorber)
-	return _body_name(victim) + " was destroyed by " + _body_name(absorber)
-
 var _planet_popup: Panel
 
 func _show_planet_popup(planet_node: Node2D):
@@ -111,7 +105,7 @@ func _process(delta):
 	for p in _planet_data:
 		p.node.sun_mass = sun_mass
 
-	_check_body_collisions()
+	_collision_mgr.check_collisions(_asteroids)
 
 	var planet_data: Array[Dictionary] = []
 	for p in _planet_data:
@@ -225,61 +219,3 @@ func _unhandled_input(event):
 			pass
 		elif event.keycode == KEY_L:
 			_spawn_asteroid()
-
-
-func _check_body_collisions():
-	var all_bodies: Array[Node2D] = []
-
-	for p in _planet_data:
-		if not p.node._dead:
-			all_bodies.append(p.node)
-
-	for a in _asteroids:
-		if a.is_alive():
-			all_bodies.append(a)
-
-	for i in all_bodies.size():
-		for j in range(i + 1, all_bodies.size()):
-			var a := all_bodies[i]
-			var b := all_bodies[j]
-			if not _is_body_alive(a) or not _is_body_alive(b):
-				continue
-			var dist := a.position.distance_to(b.position)
-			if dist < a.collision_radius + b.collision_radius:
-				var contact_r: float = a.collision_radius + b.collision_radius
-				if a.mass >= b.mass:
-					var total: float = a.mass + b.mass
-					a._vel = (a._vel * a.mass + b._vel * b.mass) / total
-					a.mass = total
-					var b_idx := _find_planet_idx(b)
-					if b_idx >= 0:
-						var a_idx := _find_planet_idx(a)
-						_planet_data[b_idx].destroyed_by = PLANET_NAMES[a_idx] if a_idx >= 0 else "???"
-					_disable_body(b)
-					$ImpactFX.spawn_glow(a.position.lerp(b.position, 0.5), b.mass, contact_r)
-					_trigger_impact_effects()
-					$UI/EventLog.log_message(_collision_msg(b, a))
-				else:
-					var total: float = a.mass + b.mass
-					b._vel = (b._vel * b.mass + a._vel * a.mass) / total
-					b.mass = total
-					var a_idx := _find_planet_idx(a)
-					if a_idx >= 0:
-						var b_idx := _find_planet_idx(b)
-						_planet_data[a_idx].destroyed_by = PLANET_NAMES[b_idx] if b_idx >= 0 else "???"
-					_disable_body(a)
-					$ImpactFX.spawn_glow(a.position.lerp(b.position, 0.5), a.mass, contact_r)
-					_trigger_impact_effects()
-					$UI/EventLog.log_message(_collision_msg(a, b))
-
-func _is_body_alive(body: Node2D) -> bool:
-	if body.get_script() == _ASTEROID_SCRIPT:
-		return body._alive
-	return not body._dead
-
-func _disable_body(body: Node2D):
-	body.visible = false
-	if body.get_script() == _ASTEROID_SCRIPT:
-		body._alive = false
-	else:
-		body._dead = true
