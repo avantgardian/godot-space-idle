@@ -9,7 +9,6 @@ const PLANET_SPEEDS := [47.4, 35.0, 29.8, 24.1, 13.1, 9.7, 6.8, 5.4]
 
 var sun_mass: float = 1.0
 var _mass_label: Label
-var _planet_mass_labels: Array[Label]
 var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
@@ -46,7 +45,6 @@ func _ready():
 		p.node.setup_trail(p.color0, p.color1)
 		p.initial_mass = p.node.mass
 		p.destroyed_by = ""
-	_setup_planet_mass_ui()
 	_setup_pause_button()
 	_setup_post_process()
 	_setup_event_log()
@@ -328,29 +326,6 @@ func _hide_planet_popup():
 	tween.tween_property(panel, "modulate", Color(1, 1, 1, 0), 0.15)
 	tween.tween_callback(panel.queue_free)
 
-func _setup_planet_mass_ui():
-	_planet_mass_labels = []
-	var container := VBoxContainer.new()
-	container.name = "PlanetMassList"
-	container.position = Vector2(16, 44)
-	container.add_theme_constant_override("separation", 2)
-	$UI.add_child(container)
-
-	var title := Label.new()
-	title.text = "Planets (M☉):"
-	title.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85, 1))
-	title.add_theme_font_size_override("font_size", 14)
-	container.add_child(title)
-
-	for p in _planet_data:
-		var lbl := Label.new()
-		lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75, 1))
-		lbl.add_theme_font_size_override("font_size", 12)
-		container.add_child(lbl)
-		_planet_mass_labels.append(lbl)
-
-
-
 
 var _planet_popup: Panel
 var _popup_labels: Dictionary
@@ -406,22 +381,6 @@ func _process(delta):
 
 	if _mass_label:
 		_mass_label.text = "M☉ = %.7f" % sun_mass
-		for i in _planet_data.size():
-			var p := _planet_data[i]
-			var m: float = p.node.mass
-			var pct: float = (m - p.initial_mass) / p.initial_mass * 100.0
-			var change := ""
-			if pct > 0.001:
-				var pct_str: String = str(pct)
-				var dot := pct_str.find(".")
-				if dot > 0 and dot + 2 < pct_str.length():
-					pct_str = pct_str.left(dot + 2)
-				change = " +%s%%" % pct_str
-			var status := ""
-			if p.node._dead:
-				status = " (Destroyed by " + p.destroyed_by + ")" if p.destroyed_by else " (Destroyed)"
-			var line: String = "%s: %s%s%s" % [PLANET_NAMES[i], str(m), change, status]
-			_planet_mass_labels[i].text = line
 
 	if _ca_impact > 0.0:
 		_ca_impact = max(_ca_impact - 0.02 * delta, 0.0)
