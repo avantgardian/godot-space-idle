@@ -94,7 +94,7 @@ func _process(delta):
 
 	var planet_data: Array[Dictionary] = []
 	for p in _planet_data:
-		if not p.node._dead:
+		if not p.node.is_dead():
 			planet_data.append({ pos = p.node.position, mass = p.node.mass })
 
 	for i in range(_asteroids.size() - 1, -1, -1):
@@ -104,7 +104,7 @@ func _process(delta):
 			_asteroids.remove_at(i)
 		else:
 			a.sun_mass = sun_mass
-			a._planets = planet_data
+			a.set_planet_data(planet_data)
 
 	_asteroid_spawn_timer -= delta
 	if _asteroid_spawn_timer <= 0.0 and _asteroids.size() < 3:
@@ -130,7 +130,7 @@ func _check_planet_click(screen_pos: Vector2) -> Dictionary:
 	var found := false
 	var closest_dist := INF
 	for p in _planet_data:
-		if p.node._dead:
+		if p.node.is_dead():
 			continue
 		var planet_screen: Vector2 = $Camera2D.get_canvas_transform() * p.node.position
 		var d := planet_screen.distance_to(screen_pos)

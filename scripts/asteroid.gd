@@ -21,6 +21,19 @@ var _planets: Array[Dictionary] = []
 
 signal collided_with_sun
 
+func disable():
+	_alive = false
+	visible = false
+
+func set_planet_data(data: Array[Dictionary]):
+	_planets = data
+
+func get_vel() -> Vector2:
+	return _vel
+
+func set_vel(v: Vector2):
+	_vel = v
+
 func _ready():
 	_generate_texture()
 	_trail_line = Line2D.new()

@@ -20,7 +20,7 @@ func check_collisions(asteroids: Array):
 	var all_bodies: Array[Node2D] = []
 
 	for p in _planet_data:
-		if not p.node._dead:
+		if not p.node.is_dead():
 			all_bodies.append(p.node)
 
 	for a in asteroids:
@@ -39,15 +39,11 @@ func check_collisions(asteroids: Array):
 
 func _is_alive(body: Node2D) -> bool:
 	if body.get_script() == _asteroid_script:
-		return body._alive
-	return not body._dead
+		return body.is_alive()
+	return not body.is_dead()
 
 func _disable(body: Node2D):
-	body.visible = false
-	if body.get_script() == _asteroid_script:
-		body._alive = false
-	else:
-		body._dead = true
+	body.disable()
 
 func _body_name(body: Node2D) -> String:
 	var idx: int = _find_planet_idx.call(body)
@@ -62,7 +58,7 @@ func _resolve(a: Node2D, b: Node2D):
 	var contact_r: float = a.collision_radius + b.collision_radius
 	if a.mass >= b.mass:
 		var total: float = a.mass + b.mass
-		a._vel = (a._vel * a.mass + b._vel * b.mass) / total
+		a.set_vel((a.get_vel() * a.mass + b.get_vel() * b.mass) / total)
 		a.mass = total
 		var b_idx: int = _find_planet_idx.call(b)
 		if b_idx >= 0:
@@ -73,7 +69,7 @@ func _resolve(a: Node2D, b: Node2D):
 		_event_log.log_message(_collision_msg(b, a))
 	else:
 		var total: float = a.mass + b.mass
-		b._vel = (b._vel * b.mass + a._vel * a.mass) / total
+		b.set_vel((b.get_vel() * b.mass + a.get_vel() * a.mass) / total)
 		b.mass = total
 		var a_idx: int = _find_planet_idx.call(a)
 		if a_idx >= 0:
