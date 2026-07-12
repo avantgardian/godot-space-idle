@@ -1,26 +1,20 @@
 extends Node2D
 
 @export var star_seed: int = 42
-@export var sun_texture_size: int = 256
 
 const SCREEN_SIZE := Vector2(1920, 1080)
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 
-var _sun_glow_outer: Sprite2D
-var _sun_glow_inner: Sprite2D
-var _sun_time: float = 0.0
 const PLANET_SPEEDS := [47.4, 35.0, 29.8, 24.1, 13.1, 9.7, 6.8, 5.4]
 
 var sun_mass: float = 1.0
 var _mass_label: Label
 var _planet_mass_labels: Array[Label]
-var _collision_flash: float = 0.0
 var _impact_rings: Array[Dictionary]
 var _asteroids: Array[Node2D]
 var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Dictionary]
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
-const _SUN_SHADER := preload("res://shaders/sun_noise.gdshader")
 const PLANET_NAMES := ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 const PLANET_COLORS := [
 	Color(0.7, 0.7, 0.7),
@@ -35,9 +29,7 @@ const PLANET_COLORS := [
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
-	_generate_sun_texture()
-	_apply_sun_shader()
-	_generate_sun_glows()
+	$Sun.generate()
 	_mass_label = $UI/MassLabel as Label
 	_planet_data = [
 		{ node = $Mercury, color0 = Color(1, 1, 1, 0.0), color1 = Color(1, 1, 1, 0.5), cf = 0.6, cc = Color(1, 0.9, 0.6, 0.5), cw = 2.0, cs = 48, ct = 0.8 },
@@ -358,77 +350,7 @@ func _setup_planet_mass_ui():
 		_planet_mass_labels.append(lbl)
 
 
-func _generate_sun_texture():
-	var size := sun_texture_size
-	var radius := size / 2.0
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
 
-	var center := Vector2(radius, radius)
-	for x in range(size):
-		for y in range(size):
-			var pos := Vector2(x, y)
-			var dist := pos.distance_to(center)
-			if dist <= radius:
-				var t := dist / radius
-				var color: Color
-				if t < 0.2:
-					color = Color(1.0, 0.95, 0.8)
-				elif t < 0.6:
-					var lt := (t - 0.2) / 0.4
-					color = Color(1.0, 0.95, 0.8).lerp(Color(1.0, 0.7, 0.2), lt)
-				else:
-					var lt := (t - 0.6) / 0.4
-					color = Color(1.0, 0.7, 0.2).lerp(Color(0.8, 0.3, 0.05), lt)
-				var alpha := 1.0
-				if t > 0.85:
-					alpha = 1.0 - (t - 0.85) / 0.15
-				image.set_pixel(x, y, Color(color.r, color.g, color.b, alpha))
-
-	var texture := ImageTexture.create_from_image(image)
-	$Sun.texture = texture
-
-func _apply_sun_shader():
-	var shader_mat := ShaderMaterial.new()
-	shader_mat.shader = _SUN_SHADER
-	shader_mat.set_shader_parameter("time", 0.0)
-	$Sun.material = shader_mat
-
-func _generate_sun_glows():
-	var add_mat := func() -> CanvasItemMaterial:
-		var m := CanvasItemMaterial.new()
-		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-		return m
-
-	var glow_tex := func(size_ratio: float) -> Texture2D:
-		var size := int(sun_texture_size * size_ratio)
-		var radius := size / 2.0
-		var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-		image.fill(Color.TRANSPARENT)
-		var center := Vector2(radius, radius)
-		for x in range(size):
-			for y in range(size):
-				var dist := Vector2(x, y).distance_to(center)
-				if dist <= radius:
-					var t := dist / radius
-					image.set_pixel(x, y, Color(1.0, 0.5 + 0.5 * (1.0 - t), 0.1, (1.0 - t * t) * 0.6))
-		return ImageTexture.create_from_image(image)
-
-	_sun_glow_outer = Sprite2D.new()
-	_sun_glow_outer.texture = glow_tex.call(2.0)
-	_sun_glow_outer.centered = true
-	_sun_glow_outer.name = "GlowOuter"
-	_sun_glow_outer.z_index = -2
-	_sun_glow_outer.material = add_mat.call()
-	$Sun.add_child(_sun_glow_outer)
-
-	_sun_glow_inner = Sprite2D.new()
-	_sun_glow_inner.texture = glow_tex.call(1.25)
-	_sun_glow_inner.centered = true
-	_sun_glow_inner.name = "GlowInner"
-	_sun_glow_inner.z_index = -1
-	_sun_glow_inner.material = add_mat.call()
-	$Sun.add_child(_sun_glow_inner)
 
 var _planet_popup: Panel
 var _popup_labels: Dictionary
@@ -440,17 +362,7 @@ const EVENT_LOG_DURATION := 60.0
 const MAX_LOG_ENTRIES := 30
 
 func _process(delta):
-	_sun_time += delta
-
-	var sun := $Sun as Sprite2D
-	sun.material.set_shader_parameter("time", _sun_time)
-	sun.rotation += delta * 0.2
-	var breathe := sin(_sun_time * 0.5) * 0.04 + 1.0
-	sun.scale = Vector2(breathe, breathe)
-
-	var mass_t: float = clamp((sun_mass - 1.0) / 2.0, 0.0, 1.0)
-	var temp_color: Color = Color(1.0, 1.0, 0.5).lerp(Color(1.0, 0.35, 0.05), mass_t)
-	sun.modulate = temp_color * (sin(_sun_time * 1.2) * 0.05 + 0.95)
+	$Sun.mass = sun_mass
 
 	for p in _planet_data:
 		p.node.sun_mass = sun_mass
@@ -475,28 +387,6 @@ func _process(delta):
 	if _asteroid_spawn_timer <= 0.0 and _asteroids.size() < 3:
 		_spawn_asteroid()
 		_asteroid_spawn_timer = randf_range(35.0, 55.0)
-
-	var outer_pulse := sin(_sun_time * 0.25) * 0.12 + 1.12
-	var outer_alpha := sin(_sun_time * 0.2 + 0.5) * 0.2 + 0.4
-	var inner_pulse := sin(_sun_time * 0.35 + 1.2) * 0.06 + 1.06
-	var inner_alpha := sin(_sun_time * 0.3 + 0.3) * 0.15 + 0.6
-
-	if _collision_flash > 0.0:
-		var t: float = _collision_flash / 0.6
-		var flash: float = t * t
-		sun.modulate = sun.modulate.lerp(Color.WHITE, flash * 0.7)
-		sun.scale = Vector2(breathe, breathe) * (1.0 + flash * 0.15)
-		var pulse := 1.0 + flash * 0.4
-		_sun_glow_outer.scale = Vector2(outer_pulse, outer_pulse) * pulse
-		_sun_glow_outer.modulate = Color(1, 1, 1, outer_alpha + flash * 0.5)
-		_sun_glow_inner.scale = Vector2(inner_pulse, inner_pulse) * pulse
-		_sun_glow_inner.modulate = Color(1, 1, 1, inner_alpha + flash * 0.5)
-		_collision_flash -= delta
-	else:
-		_sun_glow_outer.scale = Vector2(outer_pulse, outer_pulse)
-		_sun_glow_outer.modulate = Color(1, 1, 1, outer_alpha)
-		_sun_glow_inner.scale = Vector2(inner_pulse, inner_pulse)
-		_sun_glow_inner.modulate = Color(1, 1, 1, inner_alpha)
 
 	for i in range(_impact_rings.size() - 1, -1, -1):
 		var rd := _impact_rings[i]
@@ -582,7 +472,7 @@ func _find_planet_idx(node: Node2D) -> int:
 func _on_planet_collided(p: Dictionary):
 	sun_mass += p.node.mass
 	p.destroyed_by = "Sun"
-	_collision_flash = max(_collision_flash, p.cf)
+	$Sun.flash(p.cf)
 	_spawn_impact_ring(p.cc, p.cw, p.cs, p.ct)
 	_trigger_impact_effects()
 	var p_idx := _find_planet_idx(p.node)
@@ -599,7 +489,7 @@ func _spawn_asteroid():
 
 func _on_asteroid_collided(ast: Node2D):
 	sun_mass += ast.mass
-	_collision_flash = max(_collision_flash, 0.2)
+	$Sun.flash(0.2)
 	_spawn_impact_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
 	_trigger_impact_effects()
 	_log_event("Asteroid collided with the Sun")

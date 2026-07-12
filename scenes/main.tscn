@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://dj80qwr7odxpq" path="res://scripts/neptune.gd" id="9_3ceyz"]
 [ext_resource type="Script" path="res://scripts/camera_controller.gd" id="10"]
 [ext_resource type="Script" path="res://scripts/star_field.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/sun.gd" id="12"]
 
 [node name="Main" type="Node2D" unique_id=1112431360]
 script = ExtResource("1_3ceyx")
@@ -22,6 +23,7 @@ script = ExtResource("10")
 script = ExtResource("11")
 
 [node name="Sun" type="Sprite2D" parent="." unique_id=1227695083]
+script = ExtResource("12")
 
 [node name="Mercury" type="Node2D" parent="." unique_id=1820550349]
 script = ExtResource("2_3ceyz")
