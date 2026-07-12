@@ -78,6 +78,7 @@ func _ready():
 		p.destroyed_by = ""
 	_setup_planet_mass_ui()
 	_setup_pause_button()
+	_setup_post_process()
 
 func _setup_pause_button():
 	var btn := Button.new()
@@ -152,6 +153,33 @@ func _toggle_pause():
 	btn.text = "Play" if _paused else "Pause"
 	var overlay := $UI/PauseOverlay as ColorRect
 	overlay.visible = _paused
+
+func _setup_post_process():
+	var pp_layer := CanvasLayer.new()
+	pp_layer.name = "PostProcessLayer"
+	pp_layer.layer = 1
+	add_child(pp_layer)
+
+	($UI as CanvasLayer).layer = 2
+
+	var cr := ColorRect.new()
+	cr.name = "PostProcess"
+	cr.anchor_left = 0.0
+	cr.anchor_top = 0.0
+	cr.anchor_right = 1.0
+	cr.anchor_bottom = 1.0
+	cr.color = Color(1, 1, 1, 1)
+	cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pp_layer.add_child(cr)
+
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://shaders/post_process.gdshader")
+	cr.material = mat
+	_post_process_mat = mat
+
+func _trigger_impact_effects():
+	_ca_impact = min(_ca_impact + 0.008, 0.015)
+	_shake_intensity = min(_shake_intensity + 12.5, 40.0)
 
 func _show_planet_popup(planet_node: Node2D):
 	_hide_planet_popup()
@@ -451,6 +479,10 @@ var _follow_target: Node2D = null
 var _planet_popup: Panel
 var _popup_labels: Dictionary
 
+var _post_process_mat: ShaderMaterial
+var _ca_impact: float = 0.0
+var _shake_intensity: float = 0.0
+
 func _setup_camera():
 	var camera := $Camera2D as Camera2D
 	camera.zoom = Vector2(1, 1)
@@ -588,6 +620,15 @@ func _process(delta):
 		move = move.normalized() * camera_move_speed * delta / camera.zoom.x
 		camera.position += move
 
+	if _ca_impact > 0.0:
+		_ca_impact = max(_ca_impact - 0.02 * delta, 0.0)
+		if _post_process_mat:
+			_post_process_mat.set_shader_parameter("u_ca_impact", _ca_impact)
+
+	if _shake_intensity > 0.0:
+		_shake_intensity = max(_shake_intensity - 15.0 * delta, 0.0)
+		camera.position += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake_intensity
+
 func _update_star_parallax(camera: Camera2D):
 	var cam_pos := camera.position
 	var world_half := SCREEN_SIZE * 0.5 / camera.zoom.x
@@ -632,6 +673,7 @@ func _on_planet_collided(p: Dictionary):
 	p.destroyed_by = "Sun"
 	_collision_flash = max(_collision_flash, p.cf)
 	_spawn_impact_ring(p.cc, p.cw, p.cs, p.ct)
+	_trigger_impact_effects()
 
 func _spawn_asteroid():
 	var a := Node2D.new()
@@ -646,6 +688,7 @@ func _on_asteroid_collided(ast: Node2D):
 	sun_mass += ast.mass
 	_collision_flash = max(_collision_flash, 0.2)
 	_spawn_impact_ring(Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4)
+	_trigger_impact_effects()
 
 func _spawn_impact_ring(color: Color, width: float, segments: int, timer: float):
 	var ring := Line2D.new()
@@ -789,7 +832,7 @@ func _disable_body(body: Node2D):
 
 func _spawn_collision_effect(pos: Vector2, mass: float, contact_radius: float = 1.0):
 	var t := clampf(mass * 10.0, 0.2, 1.0)
-	_collision_flash = max(_collision_flash, t)
+	_trigger_impact_effects()
 
 	var tex_size := 64
 	var image := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
