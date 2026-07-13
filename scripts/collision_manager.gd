@@ -1,14 +1,14 @@
 class_name CollisionManager
 extends RefCounted
 
-var _planet_data: Array[Dictionary]
+var _planet_data: Array[Node2D]
 var _asteroid_script: GDScript
 var _impact_fx: Node
 var _event_log: Node
 var _find_planet_idx: Callable
 var _trigger_impact: Callable
 
-func _init(planet_data: Array[Dictionary], asteroid_script: GDScript, impact_fx: Node, event_log: Node, find_planet_idx: Callable, trigger_impact: Callable):
+func _init(planet_data: Array[Node2D], asteroid_script: GDScript, impact_fx: Node, event_log: Node, find_planet_idx: Callable, trigger_impact: Callable):
 	_planet_data = planet_data
 	_asteroid_script = asteroid_script
 	_impact_fx = impact_fx
@@ -20,8 +20,8 @@ func check_collisions(asteroids: Array):
 	var all_bodies: Array[Node2D] = []
 
 	for p in _planet_data:
-		if not p.node.is_dead():
-			all_bodies.append(p.node)
+		if not p.is_dead():
+			all_bodies.append(p)
 
 	for a in asteroids:
 		if _is_alive(a):
@@ -47,7 +47,7 @@ func _disable(body: Node2D):
 
 func _body_name(body: Node2D) -> String:
 	var idx: int = _find_planet_idx.call(body)
-	return _planet_data[idx].node.planet_name if idx >= 0 else "Asteroid"
+	return _planet_data[idx].planet_name if idx >= 0 else "Asteroid"
 
 func _collision_msg(victim: Node2D, absorber: Node2D) -> String:
 	if _find_planet_idx.call(victim) < 0 or _find_planet_idx.call(absorber) < 0:
