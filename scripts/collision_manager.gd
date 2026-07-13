@@ -60,9 +60,6 @@ func _resolve(a: Node2D, b: Node2D):
 		var total: float = a.mass + b.mass
 		a.set_vel((a.get_vel() * a.mass + b.get_vel() * b.mass) / total)
 		a.mass = total
-		var b_idx: int = _find_planet_idx.call(b)
-		if b_idx >= 0:
-			_planet_data[b_idx].destroyed_by = a.planet_name
 		_disable(b)
 		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), b.mass, contact_r)
 		_trigger_impact.call()
@@ -71,9 +68,6 @@ func _resolve(a: Node2D, b: Node2D):
 		var total: float = a.mass + b.mass
 		b.set_vel((b.get_vel() * b.mass + a.get_vel() * a.mass) / total)
 		b.mass = total
-		var a_idx: int = _find_planet_idx.call(a)
-		if a_idx >= 0:
-			_planet_data[a_idx].destroyed_by = b.planet_name
 		_disable(a)
 		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), a.mass, contact_r)
 		_trigger_impact.call()
