@@ -14,6 +14,7 @@ var _planet_popup: Panel
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
 const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
+const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
@@ -32,35 +33,11 @@ func _ready():
 	for planet in _planet_data:
 		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
 		planet.setup_trail(planet.trail_color0, planet.trail_color1)
-	_collision_mgr = CollisionManager.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, _trigger_impact_effects)
-	_setup_post_process()
-
-func _setup_post_process():
-	var pp_layer := CanvasLayer.new()
-	pp_layer.name = "PostProcessLayer"
-	pp_layer.layer = 1
-	add_child(pp_layer)
-
 	($UI as CanvasLayer).layer = 2
-
-	var cr := ColorRect.new()
-	cr.name = "PostProcess"
-	cr.anchor_left = 0.0
-	cr.anchor_top = 0.0
-	cr.anchor_right = 1.0
-	cr.anchor_bottom = 1.0
-	cr.color = Color(1, 1, 1, 1)
-	cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pp_layer.add_child(cr)
-
-	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://shaders/post_process.gdshader")
-	cr.material = mat
-	_post_process_mat = mat
-
-func _trigger_impact_effects():
-	_ca_impact = min(_ca_impact + 0.008, 0.015)
-	$Camera2D.trigger_shake(12.5)
+	var pm := PostProcessManager.new()
+	pm.name = "PostProcessManager"
+	add_child(pm)
+	_collision_mgr = CollisionManager.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, pm.trigger)
 
 func _show_planet_popup(planet_node: Node2D):
 	_close_planet_popup()
@@ -78,9 +55,6 @@ func _close_planet_popup():
 		return
 	_planet_popup.close()
 	_planet_popup = null
-
-var _post_process_mat: ShaderMaterial
-var _ca_impact: float = 0.0
 
 func _process(delta):
 	$Sun.mass = sun_mass
@@ -111,11 +85,6 @@ func _process(delta):
 
 	if _mass_label:
 		_mass_label.text = "M☉ = %.7f" % sun_mass
-
-	if _ca_impact > 0.0:
-		_ca_impact = max(_ca_impact - 0.02 * delta, 0.0)
-		if _post_process_mat:
-			_post_process_mat.set_shader_parameter("u_ca_impact", _ca_impact)
 
 	if _planet_popup and not $Camera2D.is_following():
 		_close_planet_popup()
@@ -163,7 +132,7 @@ func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: 
 	sun_mass += mass
 	$Sun.flash(flash)
 	$ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
-	_trigger_impact_effects()
+	$PostProcessManager.trigger()
 	$UI/EventLog.log_message(message)
 
 func _unhandled_input(event):
@@ -171,7 +140,7 @@ func _unhandled_input(event):
 		var sun_screen: Vector2 = $Camera2D.get_canvas_transform() * $Sun.position
 		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
 		if event.button_index == MOUSE_BUTTON_LEFT and on_sun:
-			sun_mass += 0.01
+			sun_mass += 0.1
 			return
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
