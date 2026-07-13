@@ -115,7 +115,7 @@ func _process(delta):
 
 	_sprite.rotation += delta * 1.5
 
-	var sun_r := _ORBITAL_BODY.sun_collision_r(sun_mass)
+	var sun_r := _ORBITAL_BODY.sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
 		_alive = false
 		visible = false
