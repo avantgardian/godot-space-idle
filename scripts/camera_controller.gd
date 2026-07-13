@@ -57,7 +57,9 @@ func _process(delta):
 
 	if shake_intensity > 0.0:
 		shake_intensity = max(shake_intensity - 15.0 * delta, 0.0)
-		position += Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_intensity
+		offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_intensity
+	else:
+		offset = Vector2.ZERO
 
 	if get_tree().paused:
 		var star_field := get_node("../StarField") as Node2D
