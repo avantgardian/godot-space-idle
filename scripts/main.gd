@@ -32,8 +32,6 @@ func _ready():
 	for p in _planet_data:
 		p.node.collided_with_sun.connect(_on_planet_collided.bind(p))
 		p.node.setup_trail(p.color0, p.color1)
-		p.initial_mass = p.node.mass
-		p.destroyed_by = ""
 	_collision_mgr = CollisionManager.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, _trigger_impact_effects)
 	_setup_post_process()
 
@@ -149,7 +147,7 @@ func _find_planet_idx(node: Node2D) -> int:
 	return -1
 
 func _on_planet_collided(p: Dictionary):
-	_on_body_hit_sun(p.node.mass, p.cf, p.cc, p.cw, p.cs, p.ct, p.node.planet_name + " collided with the Sun", p)
+	_on_body_hit_sun(p.node.mass, p.cf, p.cc, p.cw, p.cs, p.ct, p.node.planet_name + " collided with the Sun")
 
 func _spawn_asteroid():
 	var a := _ASTEROID_SCRIPT.new()
@@ -163,10 +161,8 @@ func _spawn_asteroid():
 func _on_asteroid_collided(ast: Node2D):
 	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
 
-func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String, planet_data: Dictionary = {}):
+func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String):
 	sun_mass += mass
-	if planet_data:
-		planet_data.destroyed_by = "Sun"
 	$Sun.flash(flash)
 	$ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
 	_trigger_impact_effects()
