@@ -128,10 +128,7 @@ func _process(delta):
 		return
 
 	_trail_tick += 1
-	if _trail_tick % 2 == 0:
-		_trail.append(position)
-		if _trail.size() > 600:
-			_trail.remove_at(0)
+	_ORBITAL_BODY.record_trail(_trail, _trail_tick, position, 600)
 	_trail_line.points = _trail if _trail.size() >= 2 else PackedVector2Array()
 
 func is_alive() -> bool:
