@@ -76,6 +76,12 @@ func _reset():
 static func sun_collision_r(mass_solar: float) -> float:
 	return (128.0 + sqrt(mass_solar) * 8.0) * 0.85
 
+static func record_trail(trail: PackedVector2Array, tick: int, pos: Vector2, max_points: int) -> void:
+	if tick % 2 == 0:
+		trail.append(pos)
+		if trail.size() > max_points:
+			trail.remove_at(0)
+
 func _initial_gm() -> float:
 	return 4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
 
@@ -100,10 +106,7 @@ func _process(delta):
 		collided_with_sun.emit()
 
 	_trail_tick += 1
-	if _trail_tick % 2 == 0:
-		_trail.append(position)
-		if _trail.size() > trail_max:
-			_trail.remove_at(0)
+	record_trail(_trail, _trail_tick, position, trail_max)
 
 	if _trail_line:
 		_trail_line.points = get_trail()
