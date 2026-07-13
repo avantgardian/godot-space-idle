@@ -1,6 +1,13 @@
 extends OrbitalBody
 var planet_name: String = "Saturn"
 var planet_color: Color = Color(0.8, 0.7, 0.4)
+@export var trail_color0: Color = Color(0.8, 0.7, 0.4, 0.0)
+@export var trail_color1: Color = Color(0.8, 0.7, 0.4, 0.4)
+@export var collision_flash: float = 1.8
+@export var collision_ring_color: Color = Color(0.8, 0.7, 0.4, 0.8)
+@export var collision_ring_width: float = 5.0
+@export var collision_ring_segments: int = 88
+@export var collision_ring_timer: float = 2.2
 var _ring: Sprite2D
 
 func _ready():
