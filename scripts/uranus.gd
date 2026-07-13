@@ -2,7 +2,6 @@ extends OrbitalBody
 
 var planet_name: String = "Uranus"
 var planet_color: Color = Color(0.4, 0.7, 0.9)
-var planet_speed: float = 6.8
 
 func _get_planet_texture_size() -> int:
 	return 56

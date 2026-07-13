@@ -1,7 +1,6 @@
 extends OrbitalBody
 var planet_name: String = "Saturn"
 var planet_color: Color = Color(0.8, 0.7, 0.4)
-var planet_speed: float = 9.7
 var _ring: Sprite2D
 
 func _ready():

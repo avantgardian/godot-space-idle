@@ -57,7 +57,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 
 	var fields := [
 		{ key = "mass",   label = "Mass",   fmt = "%s  M☉" },
-		{ key = "speed",  label = "Speed",  fmt = "%.1f  km/s" },
+		{ key = "speed",  label = "Speed",  fmt = "%.1f  u/s" },
 		{ key = "radius", label = "Orbit",  fmt = "%.0f  u" },
 		{ key = "period", label = "Period", fmt = "%.0f  s" },
 	]
@@ -93,7 +93,7 @@ func _process(_delta):
 	var viewport_size := get_viewport_rect().size
 
 	_popup_labels.mass.text = "%s  M☉" % str(_planet_node.mass)
-	_popup_labels.speed.text = "%.1f  km/s" % _planet_node.planet_speed
+	_popup_labels.speed.text = "%.1f  u/s" % _planet_node.get_vel().length()
 	_popup_labels.radius.text = "%.0f  u" % _planet_node.orbit_radius
 	_popup_labels.period.text = "%.0f  s" % _planet_node.orbit_period
 
