@@ -6,20 +6,27 @@ const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 
 var sun_mass: float = 1.0
 var _mass_label: Label
-var _asteroids: Array
-var _asteroid_spawn_timer: float = 5.0
 var _planet_data: Array[Node2D]
 var _collision_mgr: CollisionManager
 var _planet_popup: Panel
-const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
 const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
+const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
+const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
 	$Sun.generate()
 	_mass_label = $UI/MassLabel as Label
+	($UI as CanvasLayer).layer = 2
+	var pm := PostProcessManager.new()
+	pm.name = "PostProcessManager"
+	add_child(pm)
+	var spawner := AsteroidSpawner.new()
+	spawner.name = "AsteroidSpawner"
+	spawner.init(_ASTEROID_SCRIPT, $Mercury._initial_gm(), _on_asteroid_collided)
+	add_child(spawner)
 	_planet_data = [
 		$Mercury,
 		$Venus,
@@ -33,10 +40,6 @@ func _ready():
 	for planet in _planet_data:
 		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
 		planet.setup_trail(planet.trail_color0, planet.trail_color1)
-	($UI as CanvasLayer).layer = 2
-	var pm := PostProcessManager.new()
-	pm.name = "PostProcessManager"
-	add_child(pm)
 	_collision_mgr = CollisionManager.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, pm.trigger)
 
 func _show_planet_popup(planet_node: Node2D):
@@ -62,26 +65,14 @@ func _process(delta):
 	for planet in _planet_data:
 		planet.sun_mass = sun_mass
 
-	_collision_mgr.check_collisions(_asteroids)
+	$AsteroidSpawner.sun_mass = sun_mass
+	_collision_mgr.check_collisions($AsteroidSpawner._asteroids)
 
 	var planet_data: Array[Dictionary] = []
 	for planet in _planet_data:
 		if not planet.is_dead():
 			planet_data.append({ pos = planet.position, mass = planet.mass })
-
-	for i in range(_asteroids.size() - 1, -1, -1):
-		var a := _asteroids[i] as Node2D
-		if not a.is_alive():
-			a.queue_free()
-			_asteroids.remove_at(i)
-		else:
-			a.sun_mass = sun_mass
-			a.set_planet_data(planet_data)
-
-	_asteroid_spawn_timer -= delta
-	if _asteroid_spawn_timer <= 0.0 and _asteroids.size() < 3:
-		_spawn_asteroid()
-		_asteroid_spawn_timer = randf_range(35.0, 55.0)
+	$AsteroidSpawner.set_planet_data(planet_data)
 
 	if _mass_label:
 		_mass_label.text = "M☉ = %.7f" % sun_mass
@@ -115,15 +106,6 @@ func _find_planet_idx(node: Node2D) -> int:
 
 func _on_planet_collided(planet: Node2D):
 	_on_body_hit_sun(planet.mass, planet.collision_flash, planet.collision_ring_color, planet.collision_ring_width, planet.collision_ring_segments, planet.collision_ring_timer, planet.planet_name + " collided with the Sun")
-
-func _spawn_asteroid():
-	var a := _ASTEROID_SCRIPT.new()
-	a.sun_mass = sun_mass
-	a.gm_unit = $Mercury._initial_gm()
-	a.collided_with_sun.connect(_on_asteroid_collided.bind(a))
-	a.spawn()
-	add_child(a)
-	_asteroids.append(a)
 
 func _on_asteroid_collided(ast: Node2D):
 	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
@@ -167,4 +149,4 @@ func _unhandled_input(event):
 		elif event.keycode == KEY_MINUS:
 			$Camera2D.zoom_out()
 		elif event.keycode == KEY_L:
-			_spawn_asteroid()
+			$AsteroidSpawner.spawn()
