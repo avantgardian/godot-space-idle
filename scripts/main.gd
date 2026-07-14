@@ -59,7 +59,7 @@ func _close_planet_popup():
 	_planet_popup.close()
 	_planet_popup = null
 
-func _process(delta):
+func _process(_delta):
 	$Sun.mass = sun_mass
 
 	for planet in _planet_data:
