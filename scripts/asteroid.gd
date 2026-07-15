@@ -76,13 +76,13 @@ func _generate_texture():
 
 func spawn():
 	mass = randf_range(1.5e-8, 6e-8)
-	var spawn_r := randf_range(900.0, 1200.0)
+	var spawn_r := randf_range(2400.0, 3200.0)
 	var entry_angle := randf_range(0.0, TAU)
 	_pos = Vector2(cos(entry_angle), sin(entry_angle)) * spawn_r
 
 	var gm := gm_unit * sun_mass
 	var v_circ := sqrt(gm / spawn_r)
-	var radial := -randf_range(20.0, 60.0)
+	var radial := -randf_range(0.1, 0.4) * v_circ
 	var tangential := randf_range(0.2, 2.5) * v_circ
 	var dir := Vector2(cos(entry_angle), sin(entry_angle))
 	var tangent := Vector2(-dir.y, dir.x)
@@ -122,7 +122,7 @@ func _process(delta):
 		collided_with_sun.emit()
 		return
 
-	if r > 4000.0:
+	if r > 5000.0:
 		_alive = false
 		visible = false
 		return
