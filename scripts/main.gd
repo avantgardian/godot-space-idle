@@ -7,23 +7,24 @@ const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 var sun_mass: float = 1.0
 var _mass_label: Label
 var _planet_data: Array[Node2D]
-var _collision_mgr: CollisionManager
+var _collision_mgr: RefCounted
 var _planet_popup: Panel
 const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
 const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
 const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
+const _ORBITAL_BODY := preload("res://scripts/orbital_body.gd")
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
 	$Sun.generate()
 	_mass_label = $UI/MassLabel as Label
 	($UI as CanvasLayer).layer = 2
-	var pm := PostProcessManager.new()
+	var pm := _POST_PROCESS.new()
 	pm.name = "PostProcessManager"
 	add_child(pm)
-	var spawner := AsteroidSpawner.new()
+	var spawner := _ASTEROID_SPAWNER.new()
 	spawner.name = "AsteroidSpawner"
 	spawner.init(_ASTEROID_SCRIPT, $Mercury._initial_gm(), _on_asteroid_collided)
 	add_child(spawner)
@@ -40,14 +41,14 @@ func _ready():
 	for planet in _planet_data:
 		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
 		planet.setup_trail(planet.trail_color0, planet.trail_color1)
-	_collision_mgr = CollisionManager.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, pm.trigger)
+	_collision_mgr = _COLLISION_MGR.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, pm.trigger)
 
 func _show_planet_popup(planet_node: Node2D):
 	_close_planet_popup()
 	var idx := _find_planet_idx(planet_node)
 	if idx < 0:
 		return
-	var popup := PlanetPopup.new()
+	var popup := _PLANET_POPUP.new()
 	popup.show_for_planet(planet_node, $Camera2D)
 	$UI.add_child(popup)
 	_planet_popup = popup
