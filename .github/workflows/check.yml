@@ -19,4 +19,4 @@ jobs:
           chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
 
       - name: Check scripts
-        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --quit
+        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit
