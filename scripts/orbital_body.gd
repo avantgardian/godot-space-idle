@@ -2,6 +2,7 @@ class_name OrbitalBody
 extends Node2D
 
 const _TEX := preload("res://scripts/texture_utils.gd")
+const _TRAIL := preload("res://scripts/trail_component.gd")
 var _sprite: Sprite2D
 
 @export var orbit_radius: float = 500.0
@@ -15,7 +16,7 @@ var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
 @export var trail_max: int = 1200
-var _trail_component: TrailComponent
+var _trail_component: Node
 
 signal collided_with_sun
 
@@ -39,7 +40,7 @@ func _ready():
 	_reset()
 
 func setup_trail(color0: Color, color1: Color):
-	_trail_component = TrailComponent.new()
+	_trail_component = _TRAIL.new()
 	_trail_component.setup(color0, color1, 1.5, trail_max)
 	add_child(_trail_component)
 

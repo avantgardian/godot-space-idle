@@ -4,6 +4,7 @@ extends Node2D
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
 const PLANET_SOFTENING: float = 150.0
+const _TRAIL := preload("res://scripts/trail_component.gd")
 
 var sun_mass: float = 1.0
 var gm_unit: float = 0.0
@@ -13,7 +14,7 @@ var _pos: Vector2
 var _vel: Vector2
 var _alive: bool = false
 var _sprite: Sprite2D
-var _trail_component: TrailComponent
+var _trail_component: Node
 var _planets: Array[Dictionary] = []
 
 signal collided_with_sun
@@ -35,7 +36,7 @@ func set_vel(v: Vector2):
 
 func _ready():
 	_generate_texture()
-	_trail_component = TrailComponent.new()
+	_trail_component = _TRAIL.new()
 	_trail_component.setup(Color(1.0, 0.2, 0.05, 0.0), Color(1.0, 0.2, 0.05, 0.5), 1.0, 600)
 	add_child(_trail_component)
 
