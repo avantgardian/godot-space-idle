@@ -41,9 +41,9 @@ func fade_out(fade_seconds: float = 4.0):
 	if _fading or not _line:
 		return
 	_fading = true
-	var container := get_parent()
-	if container:
-		reparent(container)
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		reparent(scene_root)
 	var tw := create_tween()
 	tw.tween_property(_line, "self_modulate:a", 0.0, fade_seconds)
 	tw.tween_callback(_line.queue_free)
