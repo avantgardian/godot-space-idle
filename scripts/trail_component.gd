@@ -46,4 +46,4 @@ func fade_out(fade_seconds: float = 4.0):
 		reparent(scene_root)
 	var tw := create_tween()
 	tw.tween_property(_line, "self_modulate:a", 0.0, fade_seconds)
-	tw.tween_callback(_line.queue_free)
+	tw.tween_callback(queue_free)
