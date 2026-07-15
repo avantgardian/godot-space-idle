@@ -25,6 +25,13 @@ jobs:
           unzip godot.zip
           chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
 
+      - name: Install export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -o templates.tpz
+          unzip -q templates.tpz -d /tmp/templates
+          cp /tmp/templates/templates/web_nothreads_*.zip ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+
       - name: Export Web
         run: |
           mkdir -p build/web
