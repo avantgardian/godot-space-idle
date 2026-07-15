@@ -110,12 +110,22 @@ func get_follow_target() -> Node2D:
 	return _follow_target
 
 func zoom_in():
+	var prev_zoom := zoom.x
 	target_zoom = clamp(target_zoom + zoom_step, min_zoom, max_zoom)
+	if prev_zoom == target_zoom:
+		return
+	var cursor_world := get_global_mouse_position()
 	zoom = Vector2(target_zoom, target_zoom)
+	position = cursor_world + (position - cursor_world) * prev_zoom / target_zoom
 
 func zoom_out():
+	var prev_zoom := zoom.x
 	target_zoom = clamp(target_zoom - zoom_step, min_zoom, max_zoom)
+	if prev_zoom == target_zoom:
+		return
+	var cursor_world := get_global_mouse_position()
 	zoom = Vector2(target_zoom, target_zoom)
+	position = cursor_world + (position - cursor_world) * prev_zoom / target_zoom
 
 func start_drag(screen_pos: Vector2):
 	_follow_target = null
