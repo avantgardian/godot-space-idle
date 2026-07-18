@@ -60,7 +60,7 @@ func _process(_delta):
 	$Sun.mass = sun_mass
 
 	if _mass_label:
-		_mass_label.text = "M☉ = %.4f [%s]" % [sun_mass, _star_type]
+		_mass_label.text = "Msun = %.4f [%s]" % [sun_mass, _star_type]
 
 	$StarField.update_parallax($Camera2D.position, $Camera2D.zoom.x)
 	$StarField.set_blur($Camera2D.get_blur_amount())

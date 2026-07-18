@@ -34,10 +34,10 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 40)
 
 [node name="SandboxBtn" type="Button" parent="CenterContainer/MenuContainer"]
-text = "New Game — Sandbox"
+text = "New Game - Sandbox"
 
 [node name="ProgressionBtn" type="Button" parent="CenterContainer/MenuContainer"]
-text = "New Game — Progression"
+text = "New Game - Progression"
 
 [node name="SettingsBtn" type="Button" parent="CenterContainer/MenuContainer"]
 text = "Settings"

@@ -76,7 +76,7 @@ func _process(_delta):
 	$AsteroidSpawner.set_planet_data(planet_data)
 
 	if _mass_label:
-		_mass_label.text = "M☉ = %.7f" % sun_mass
+		_mass_label.text = "Msun = %.7f" % sun_mass
 
 	if _planet_popup and not $Camera2D.is_following():
 		_close_planet_popup()
