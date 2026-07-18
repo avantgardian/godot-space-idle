@@ -8,9 +8,27 @@ var _collision_flash: float = 0.0
 var _glow_outer: Sprite2D
 var _glow_inner: Sprite2D
 
+var _star_core_0 := Color(1.0, 0.95, 0.8)
+var _star_core_1 := Color(1.0, 0.7, 0.2)
+var _star_core_2 := Color(0.8, 0.3, 0.05)
+var _star_glow_tint := Color(1.0, 0.5, 0.1)
+var _star_base_modulate := Color(1.0, 1.0, 0.5)
+var _star_hot_modulate := Color(1.0, 0.35, 0.05)
+var _star_start_mass := 1.0
+var _star_mass_span := 2.0
+
 const _SUN_SHADER := preload("res://shaders/sun_noise.gdshader")
 
-func generate():
+func generate(star_params: Dictionary = {}) -> void:
+	if star_params.has("core_0"):      _star_core_0 = star_params.core_0
+	if star_params.has("core_1"):      _star_core_1 = star_params.core_1
+	if star_params.has("core_2"):      _star_core_2 = star_params.core_2
+	if star_params.has("glow_tint"):   _star_glow_tint = star_params.glow_tint
+	if star_params.has("base_mod"):    _star_base_modulate = star_params.base_mod
+	if star_params.has("hot_mod"):     _star_hot_modulate = star_params.hot_mod
+	if star_params.has("start_mass"):  _star_start_mass = star_params.start_mass
+	if star_params.has("mass_span"):   _star_mass_span = star_params.mass_span
+	if star_params.has("tex_size"):    texture_size = star_params.tex_size
 	_generate_sun_texture()
 	_apply_sun_shader()
 	_generate_sun_glows()
@@ -30,13 +48,13 @@ func _generate_sun_texture():
 				var t := dist / radius
 				var color: Color
 				if t < 0.2:
-					color = Color(1.0, 0.95, 0.8)
+					color = _star_core_0
 				elif t < 0.6:
 					var lt := (t - 0.2) / 0.4
-					color = Color(1.0, 0.95, 0.8).lerp(Color(1.0, 0.7, 0.2), lt)
+					color = _star_core_0.lerp(_star_core_1, lt)
 				else:
 					var lt := (t - 0.6) / 0.4
-					color = Color(1.0, 0.7, 0.2).lerp(Color(0.8, 0.3, 0.05), lt)
+					color = _star_core_1.lerp(_star_core_2, lt)
 				var alpha := 1.0
 				if t > 0.85:
 					alpha = 1.0 - (t - 0.85) / 0.15
@@ -68,7 +86,9 @@ func _generate_sun_glows():
 				var dist := Vector2(x, y).distance_to(center)
 				if dist <= radius:
 					var t := dist / radius
-					image.set_pixel(x, y, Color(1.0, 0.5 + 0.5 * (1.0 - t), 0.1, (1.0 - t * t) * 0.6))
+					var brightness := 0.5 + 0.5 * (1.0 - t)
+					var alpha := (1.0 - t * t) * 0.6
+					image.set_pixel(x, y, Color(_star_glow_tint.r * brightness, _star_glow_tint.g * brightness, _star_glow_tint.b * brightness, alpha))
 		return ImageTexture.create_from_image(image)
 
 	_glow_outer = Sprite2D.new()
@@ -97,8 +117,8 @@ func _process(delta):
 	var breathe := sin(sun_time * 0.5) * 0.04 + 1.0
 	scale = Vector2(breathe, breathe)
 
-	var mass_t: float = clamp((mass - 1.0) / 2.0, 0.0, 1.0)
-	var temp_color: Color = Color(1.0, 1.0, 0.5).lerp(Color(1.0, 0.35, 0.05), mass_t)
+	var mass_t: float = clamp((mass - _star_start_mass) / _star_mass_span, 0.0, 1.0)
+	var temp_color: Color = _star_base_modulate.lerp(_star_hot_modulate, mass_t)
 	modulate = temp_color * (sin(sun_time * 1.2) * 0.05 + 0.95)
 
 	var outer_pulse := sin(sun_time * 0.25) * 0.12 + 1.12

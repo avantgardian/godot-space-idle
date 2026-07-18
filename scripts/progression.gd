@@ -4,21 +4,63 @@ extends Node2D
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 
+const STAR_TYPES: Array[Dictionary] = [
+	{ type="O5V", mass_min=15.0, mass_max=30.0, tex_size=320, weight=3,
+	  core_0=Color(0.7, 0.85, 1.0), core_1=Color(0.5, 0.7, 0.95), core_2=Color(0.3, 0.5, 0.8),
+	  glow_tint=Color(0.6, 0.8, 1.0), base_mod=Color(0.5, 0.7, 1.0), hot_mod=Color(0.7, 0.9, 1.0) },
+	{ type="B5V", mass_min=4.0, mass_max=12.0, tex_size=288, weight=7,
+	  core_0=Color(0.8, 0.9, 1.0), core_1=Color(0.7, 0.8, 0.95), core_2=Color(0.5, 0.65, 0.85),
+	  glow_tint=Color(0.7, 0.8, 1.0), base_mod=Color(0.65, 0.8, 0.95), hot_mod=Color(0.8, 0.9, 1.0) },
+	{ type="A5V", mass_min=1.8, mass_max=3.5, tex_size=272, weight=12,
+	  core_0=Color(1.0, 1.0, 1.0), core_1=Color(0.95, 0.95, 0.9), core_2=Color(0.85, 0.85, 0.7),
+	  glow_tint=Color(0.95, 0.95, 0.85), base_mod=Color(0.9, 0.9, 0.85), hot_mod=Color(0.85, 0.9, 1.0) },
+	{ type="F5V", mass_min=1.1, mass_max=1.8, tex_size=264, weight=18,
+	  core_0=Color(1.0, 1.0, 0.9), core_1=Color(1.0, 0.95, 0.8), core_2=Color(0.9, 0.8, 0.5),
+	  glow_tint=Color(1.0, 0.95, 0.7), base_mod=Color(1.0, 0.95, 0.7), hot_mod=Color(0.95, 0.95, 0.9) },
+	{ type="G2V", mass_min=0.8, mass_max=1.3, tex_size=256, weight=20,
+	  core_0=Color(1.0, 0.95, 0.8), core_1=Color(1.0, 0.7, 0.2), core_2=Color(0.8, 0.3, 0.05),
+	  glow_tint=Color(1.0, 0.5, 0.1), base_mod=Color(1.0, 1.0, 0.5), hot_mod=Color(1.0, 0.35, 0.05) },
+	{ type="K5V", mass_min=0.4, mass_max=0.9, tex_size=224, weight=22,
+	  core_0=Color(1.0, 0.8, 0.5), core_1=Color(1.0, 0.55, 0.2), core_2=Color(0.7, 0.2, 0.05),
+	  glow_tint=Color(1.0, 0.5, 0.1), base_mod=Color(1.0, 0.7, 0.3), hot_mod=Color(1.0, 0.3, 0.05) },
+	{ type="M4V", mass_min=0.1, mass_max=0.5, tex_size=192, weight=18,
+	  core_0=Color(1.0, 0.5, 0.25), core_1=Color(0.9, 0.3, 0.1), core_2=Color(0.5, 0.1, 0.02),
+	  glow_tint=Color(1.0, 0.3, 0.05), base_mod=Color(0.95, 0.4, 0.15), hot_mod=Color(0.6, 0.1, 0.02) },
+]
+
 var sun_mass: float = 1.0
+var _star_type: String = "G2V"
 var _mass_label: Label
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
-	$Sun.generate()
+	var star_data := _pick_star_type()
+	sun_mass = randf_range(star_data.mass_min, star_data.mass_max)
+	_star_type = star_data.type
+	star_data["start_mass"] = sun_mass
+	star_data["mass_span"] = sun_mass
+	$Sun.generate(star_data)
 	_mass_label = $UI/MassLabel as Label
 	($UI as CanvasLayer).layer = 2
+
+func _pick_star_type() -> Dictionary:
+	var total := 0
+	for entry in STAR_TYPES:
+		total += entry.weight
+	var roll := randf() * total
+	var cumulative := 0.0
+	for entry in STAR_TYPES:
+		cumulative += entry.weight
+		if roll <= cumulative:
+			return entry.duplicate(true)
+	return STAR_TYPES[-1]
 
 func _process(_delta):
 	$Sun.mass = sun_mass
 
 	if _mass_label:
-		_mass_label.text = "M☉ = %.7f" % sun_mass
+		_mass_label.text = "M☉ = %.4f [%s]" % [sun_mass, _star_type]
 
 	$StarField.update_parallax($Camera2D.position, $Camera2D.zoom.x)
 	$StarField.set_blur($Camera2D.get_blur_amount())
