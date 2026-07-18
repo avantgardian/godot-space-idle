@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=5 format=3]
+[gd_resource type="Theme" load_steps=6 format=3]
+
+[ext_resource type="FontFile" path="res://resources/fonts/Orbitron-Medium.ttf" id="font_orbitron"]
 
 [sub_resource type="StyleBoxFlat" id="sb_btn_normal"]
 bg_color = Color(0.05, 0.05, 0.15, 0.7)
@@ -81,6 +83,7 @@ content_margin_right = 8.0
 content_margin_bottom = 6.0
 
 [resource]
+default_font = ExtResource("font_orbitron")
 Button/styles/normal = SubResource("sb_btn_normal")
 Button/styles/hover = SubResource("sb_btn_hover")
 Button/styles/pressed = SubResource("sb_btn_pressed")

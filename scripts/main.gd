@@ -20,6 +20,10 @@ func _ready():
 	$StarField.generate(star_seed, $Camera2D.min_zoom)
 	$Sun.generate()
 	_mass_label = $UI/MassLabel as Label
+	var game_theme := load("res://resources/game_theme.tres") as Theme
+	$UI/EventLog/EventLogPanel.theme = game_theme
+	$UI/PauseButton.theme = game_theme
+	_mass_label.theme = game_theme
 	($UI as CanvasLayer).layer = 2
 	var pm := _POST_PROCESS.new()
 	pm.name = "PostProcessManager"

@@ -1,10 +1,8 @@
 extends Control
 
 func _ready():
-	var font := FontFile.new()
-	font.load_dynamic_font("res://resources/fonts/Orbitron-Medium.ttf")
 	var game_theme := load("res://resources/game_theme.tres") as Theme
-	game_theme.default_font = font
+	self.theme = game_theme
 
 	var title := $CenterContainer/MenuContainer/Title as Label
 	title.add_theme_font_size_override("font_size", 48)

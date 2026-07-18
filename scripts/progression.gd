@@ -42,6 +42,10 @@ func _ready():
 	star_data["mass_span"] = sun_mass
 	$Sun.generate(star_data)
 	_mass_label = $UI/MassLabel as Label
+	var game_theme := load("res://resources/game_theme.tres") as Theme
+	$UI/EventLog/EventLogPanel.theme = game_theme
+	$UI/PauseButton.theme = game_theme
+	_mass_label.theme = game_theme
 	($UI as CanvasLayer).layer = 2
 
 func _pick_star_type() -> Dictionary:
