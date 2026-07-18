@@ -16,23 +16,6 @@ func setup():
 	panel.position = Vector2(16, get_viewport().get_visible_rect().size.y - 155)
 	panel.size = Vector2(300, 135)
 	panel.clip_contents = true
-
-	var psb := StyleBoxFlat.new()
-	psb.bg_color = Color(0.04, 0.04, 0.1, 0.88)
-	psb.border_color = Color(0.35, 0.45, 0.65, 0.6)
-	psb.border_width_left = 1
-	psb.border_width_top = 1
-	psb.border_width_right = 1
-	psb.border_width_bottom = 1
-	psb.corner_radius_top_left = 4
-	psb.corner_radius_top_right = 4
-	psb.corner_radius_bottom_right = 4
-	psb.corner_radius_bottom_left = 4
-	psb.content_margin_left = 8
-	psb.content_margin_right = 8
-	psb.content_margin_top = 6
-	psb.content_margin_bottom = 6
-	panel.add_theme_stylebox_override("panel", psb)
 	add_child(panel)
 
 	_container = VBoxContainer.new()
