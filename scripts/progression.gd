@@ -3,6 +3,7 @@ extends Node2D
 @export var star_seed: int = 42
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
+const GM_UNIT := 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (25.0 * 25.0)
 
 const STAR_TYPES: Array[Dictionary] = [
 	{ type="O5V", mass_min=15.0, mass_max=30.0, tex_size=320, weight=3,
@@ -31,6 +32,12 @@ const STAR_TYPES: Array[Dictionary] = [
 var sun_mass: float = 1.0
 var _star_type: String = "G2V"
 var _mass_label: Label
+var _collision_mgr: RefCounted
+
+const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
+const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
+const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
+const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
@@ -48,6 +55,20 @@ func _ready():
 	_mass_label.theme = game_theme
 	($UI as CanvasLayer).layer = 2
 
+	var pm := _POST_PROCESS.new()
+	pm.name = "PostProcessManager"
+	add_child(pm)
+
+	var spawner := _ASTEROID_SPAWNER.new()
+	spawner.name = "AsteroidSpawner"
+	spawner.init(_ASTEROID_SCRIPT, GM_UNIT, _on_asteroid_collided)
+	add_child(spawner)
+
+	_collision_mgr = _COLLISION_MGR.new([], _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _dummy_planet_idx, pm.trigger)
+
+func _dummy_planet_idx(_node: Node2D) -> int:
+	return -1
+
 func _pick_star_type() -> Dictionary:
 	var total := 0
 	for entry in STAR_TYPES:
@@ -63,11 +84,25 @@ func _pick_star_type() -> Dictionary:
 func _process(_delta):
 	$Sun.mass = sun_mass
 
+	$AsteroidSpawner.sun_mass = sun_mass
+	$AsteroidSpawner.set_planet_data([] as Array[Dictionary])
+	_collision_mgr.check_collisions($AsteroidSpawner._asteroids)
+
 	if _mass_label:
 		_mass_label.text = "Msun = %.4f [%s]" % [sun_mass, _star_type]
 
 	$StarField.update_parallax($Camera2D.position, $Camera2D.zoom.x)
 	$StarField.set_blur($Camera2D.get_blur_amount())
+
+func _on_asteroid_collided(ast: Node2D):
+	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
+
+func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String):
+	sun_mass += mass
+	$Sun.flash(flash)
+	$ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
+	$PostProcessManager.trigger()
+	$UI/EventLog.log_message(message)
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
@@ -92,3 +127,5 @@ func _unhandled_input(event):
 			$Camera2D.zoom_in()
 		elif event.keycode == KEY_MINUS:
 			$Camera2D.zoom_out()
+		elif event.keycode == KEY_L:
+			$AsteroidSpawner.spawn()
