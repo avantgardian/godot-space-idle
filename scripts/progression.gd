@@ -38,6 +38,8 @@ const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
 const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
+const _SPACESHIP := preload("res://scripts/spaceship.gd")
+const _ORBITAL_BODY := preload("res://scripts/orbital_body.gd")
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
@@ -66,6 +68,17 @@ func _ready():
 
 	_collision_mgr = _COLLISION_MGR.new([], _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _dummy_planet_idx, pm.trigger)
 
+	var ship := _SPACESHIP.new()
+	ship.name = "Spaceship"
+	ship.init(Vector2(500, 0))
+	add_child(ship)
+
+func _check_ship_click(screen_pos: Vector2) -> bool:
+	var ship_screen: Vector2 = $Camera2D.get_canvas_transform() * $Spaceship.position
+	var d := ship_screen.distance_to(screen_pos)
+	var hit_r: float = max(28.0 * $Camera2D.zoom.x, 14.0)
+	return d < hit_r
+
 func _dummy_planet_idx(_node: Node2D) -> int:
 	return -1
 
@@ -87,6 +100,11 @@ func _process(_delta):
 	$AsteroidSpawner.sun_mass = sun_mass
 	$AsteroidSpawner.set_planet_data([] as Array[Dictionary])
 	_collision_mgr.check_collisions($AsteroidSpawner._asteroids)
+
+	var cam_following_ship: bool = $Camera2D.is_following() and $Camera2D.get_follow_target() == $Spaceship
+	$Spaceship.input_active = cam_following_ship
+	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + $Spaceship.collision_radius + 50.0
+	$Spaceship.enforce_sun_barrier(barrier_r)
 
 	if _mass_label:
 		_mass_label.text = "Msun = %.4f [%s]" % [sun_mass, _star_type]
@@ -112,6 +130,10 @@ func _unhandled_input(event):
 			sun_mass += 0.1
 			return
 
+		if event.button_index == MOUSE_BUTTON_LEFT and _check_ship_click(event.position):
+			$Camera2D.follow_node($Spaceship)
+			return
+
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
 			$Camera2D.start_drag(event.position)
 
@@ -129,3 +151,8 @@ func _unhandled_input(event):
 			$Camera2D.zoom_out()
 		elif event.keycode == KEY_L:
 			$AsteroidSpawner.spawn()
+		elif event.keycode == KEY_SPACE:
+			if $Camera2D.is_following() and $Camera2D.get_follow_target() == $Spaceship:
+				$Camera2D.unfollow()
+			else:
+				$Camera2D.follow_node($Spaceship)

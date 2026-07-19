@@ -41,19 +41,19 @@ func _process(delta):
 		else:
 			_follow_target = null
 
-	var move := Vector2.ZERO
-	if Input.is_action_pressed("ui_right"):
-		move.x += 1
-	if Input.is_action_pressed("ui_left"):
-		move.x -= 1
-	if Input.is_action_pressed("ui_down"):
-		move.y += 1
-	if Input.is_action_pressed("ui_up"):
-		move.y -= 1
-	if move != Vector2.ZERO:
-		_follow_target = null
-		move = move.normalized() * move_speed * real_delta / zoom.x
-		position += move
+	if not _follow_target:
+		var move := Vector2.ZERO
+		if Input.is_action_pressed("ui_right"):
+			move.x += 1
+		if Input.is_action_pressed("ui_left"):
+			move.x -= 1
+		if Input.is_action_pressed("ui_down"):
+			move.y += 1
+		if Input.is_action_pressed("ui_up"):
+			move.y -= 1
+		if move != Vector2.ZERO:
+			move = move.normalized() * move_speed * real_delta / zoom.x
+			position += move
 
 	if shake_intensity > 0.0:
 		shake_intensity = max(shake_intensity - 15.0 * delta, 0.0)
