@@ -8,6 +8,15 @@ const ROTATION_SPEED: float = 3.0
 const DAMPING: float = 0.8
 const COLLISION_RADIUS: float = 14.0
 
+# TRON-inspired palette (cyan + orange accent on near-black).
+const HULL_GLOW := Color(0.18, 0.55, 1.00, 0.45)
+const HULL_LINE := Color(0.55, 0.95, 1.00, 1.00)
+const HULL_BRIGHT := Color(0.92, 1.00, 1.00, 1.00)
+const ACCENT := Color(1.00, 0.55, 0.15, 1.00)
+const ACCENT_GLOW := Color(1.00, 0.45, 0.10, 0.55)
+const COCKPIT := Color(0.92, 1.00, 1.00, 1.00)
+const COCKPIT_GLOW := Color(0.25, 0.75, 1.00, 0.55)
+
 var mass: float = 0.001
 var collision_radius: float = COLLISION_RADIUS
 var input_active: bool = false
@@ -17,14 +26,22 @@ var _vel: Vector2 = Vector2.ZERO
 var _angle: float = 0.0
 var _alive: bool = true
 
-var _thrust_sprite: Sprite2D
+var _thrust_node: Node2D
+var _ring_node: Node2D
+var _flicker: float = 0.0
+var _pulse_phase: float = 0.0
+const _PULSE_SPEED: float = 2.5  # rad/s pulsation when not selected
 
 func _ready():
-	_generate_body_texture()
-	_generate_indicator_ring()
-	_generate_thrust_flame()
-	_thrust_sprite = $ThrustFlame
-	_thrust_sprite.visible = false
+	_ring_node = _RingLayer.new()
+	_ring_node.name = "IndicatorRing"
+	add_child(_ring_node)
+
+	_thrust_node = _GlowLayer.new()
+	_thrust_node.name = "ThrustFlame"
+	add_child(_thrust_node)
+	_thrust_node.visible = false
+
 	position = _pos
 
 func init(start_pos: Vector2):
@@ -56,9 +73,13 @@ func _process(delta):
 			_vel -= thrust_dir * REVERSE_FORCE * delta
 			thrusting = true
 
-		_thrust_sprite.visible = thrusting
+		_thrust_node.visible = thrusting
+		if _thrust_node is _GlowLayer:
+			(_thrust_node as _GlowLayer).thrusting = thrusting
 	else:
-		_thrust_sprite.visible = false
+		_thrust_node.visible = false
+		if _thrust_node is _GlowLayer:
+			(_thrust_node as _GlowLayer).thrusting = false
 
 	_vel *= max(1.0 - DAMPING * delta, 0.0)
 
@@ -69,6 +90,21 @@ func _process(delta):
 	_pos += _vel * delta
 	position = _pos
 	rotation = _angle
+
+	_flicker += delta * 22.0
+	if _thrust_node is _GlowLayer:
+		(_thrust_node as _GlowLayer)._phase = _flicker
+		_thrust_node.queue_redraw()
+
+	# Indicator ring pulses only when the ship is not selected (input_active
+	# == false), to hint at clickability. When selected, it holds steady.
+	_pulse_phase += delta * _PULSE_SPEED
+	if _ring_node is _RingLayer:
+		(_ring_node as _RingLayer).pulsate = not input_active
+		(_ring_node as _RingLayer).pulse_phase = _pulse_phase
+		_ring_node.queue_redraw()
+
+	queue_redraw()
 
 func enforce_sun_barrier(min_dist: float):
 	var r := _pos.length()
@@ -99,119 +135,172 @@ func disable():
 	_alive = false
 	visible = false
 
-func _generate_body_texture():
-	var size: int = 32
-	var image: Image = Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var cx: float = size / 2.0
-	var tip_y: float = 3.0
-	var base_y: float = 23.0
-	var engine_y: float = 29.0
-	var half_base: float = 11.0
-	var half_engine: float = 12.0
+# ---------------------------------------------------------------------------
+# Vector hull rendering (TRON-style neon wireframe)
+# ---------------------------------------------------------------------------
 
-	for x in range(size):
-		for y in range(size):
-			var fx: float = float(x)
-			var fy: float = float(y)
-			var dx: float = abs(fx - cx)
+func _hull_points() -> PackedVector2Array:
+	# Pointed nose up, swept-back wings, twin engine pods, notched tail.
+	# Closed polyline (last point == first) so draw_polyline closes cleanly.
+	return PackedVector2Array([
+		Vector2(0.0,   -18.0),  # nose tip
+		Vector2(-5.0,   -8.0),  # shoulder left
+		Vector2(-13.0,   6.0),  # outer wing tip left
+		Vector2(-9.0,    7.0),  # wing root left
+		Vector2(-9.0,   11.0),  # engine outer left
+		Vector2(-5.0,  11.0),  # engine inner left
+		Vector2(-5.0,   7.0),  # notch back left
+		Vector2(0.0,    9.0),  # tail center
+		Vector2(5.0,    7.0),  # notch back right
+		Vector2(5.0,  11.0),  # engine inner right
+		Vector2(9.0,   11.0),  # engine outer right
+		Vector2(9.0,    7.0),  # wing root right
+		Vector2(13.0,   6.0),  # outer wing tip right
+		Vector2(5.0,   -8.0),  # shoulder right
+		Vector2(0.0,  -18.0),  # close
+	])
 
-			if fy >= tip_y and fy <= base_y:
-				var half_w: float = (fy - tip_y) / (base_y - tip_y) * half_base
-				if dx <= half_w:
-					var edge_dist: float = half_w - dx
-					if edge_dist < 2.0:
-						image.set_pixel(x, y, Color(0.45, 0.6, 0.75, 1.0))
-					else:
-						image.set_pixel(x, y, Color(0.2, 0.3, 0.5, 1.0))
+func _accent_quad(side: int) -> PackedVector2Array:
+	# Short diagonal stripe hugging the inner wing leading edge.
+	# side = -1 left / +1 right
+	var s := float(side)
+	return PackedVector2Array([
+		Vector2(-2.0 * s, -6.0),
+		Vector2(-4.5 * s,  1.5),
+		Vector2(-2.5 * s,  1.5),
+		Vector2( 1.0 * s, -6.0),
+		Vector2(-2.0 * s, -6.0),  # close
+	])
 
-			elif fy > base_y and fy <= engine_y:
-				if dx <= half_engine * 0.7:
-					if dx <= half_engine * 0.4:
-						image.set_pixel(x, y, Color(0.3, 0.4, 0.55, 1.0))
-					else:
-						image.set_pixel(x, y, Color(0.25, 0.35, 0.5, 1.0))
+func _cockpit_poly() -> PackedVector2Array:
+	return PackedVector2Array([
+		Vector2( 0.0,   -12.5),
+		Vector2( 2.25, -9.0),
+		Vector2( 0.0,   -5.5),
+		Vector2(-2.25, -9.0),
+	])
 
-	var cockpit_y: int = int(tip_y + 4)
-	image.set_pixel(int(cx), cockpit_y, Color(0.7, 0.85, 1.0, 1.0))
-	image.set_pixel(int(cx), cockpit_y + 1, Color(0.7, 0.85, 1.0, 0.8))
+func _draw():
+	# Outer soft glow underlayer (wide, low alpha) -> the TRON bloom feel.
+	draw_polyline(_hull_points(), HULL_GLOW, 5.0, true)
+	# Mid stroke + crisp inner stroke for the neon edge.
+	draw_polyline(_hull_points(), HULL_LINE, 1.5, true)
+	draw_polyline(_hull_points(), HULL_BRIGHT, 0.5, true)
 
-	var body: Sprite2D = Sprite2D.new()
-	body.name = "Body"
-	body.texture = ImageTexture.create_from_image(image)
-	body.centered = true
-	add_child(body)
+	# Orange wing accent stripes (filled quad + thin glowing outline).
+	for side in [-1, 1]:
+		var q := _accent_quad(side)
+		draw_colored_polygon(q, ACCENT)
+		draw_polyline(q, ACCENT_GLOW, 2.0, true)
+		draw_polyline(q, ACCENT, 0.5, true)
 
-func _generate_indicator_ring():
-	var size: int = 56
-	var image: Image = Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var cx: float = size / 2.0
-	var cy: float = size / 2.0
-	var ring_r: float = 22.0
-	var ring_width: float = 2.0
-	var gap_angle: float = PI / 6.0
-	var gap_half: float = gap_angle / 2.0
+	# Inner brace lines (recognizer-style cross-bracing).
+	draw_line(Vector2(0.0, -16.0), Vector2(0.0, -10.0), HULL_LINE, 0.75, true)
+	draw_line(Vector2(-5.0, -2.0), Vector2(5.0, -2.0), HULL_LINE, 0.75, true)
+	draw_line(Vector2(-4.0,  3.0), Vector2(4.0,  3.0), HULL_LINE, 0.75, true)
 
-	for x in range(size):
-		for y in range(size):
-			var dx: float = float(x) - cx
-			var dy: float = float(y) - cy
-			var dist: float = sqrt(dx * dx + dy * dy)
+	# Cockpit core: soft glow halo (larger, dim) + bright filled diamond.
+	var halo := PackedVector2Array([
+		Vector2( 0.0,   -14.0),
+		Vector2( 3.75, -9.0),
+		Vector2( 0.0,   -4.0),
+		Vector2(-3.75, -9.0),
+	])
+	draw_colored_polygon(halo, COCKPIT_GLOW)
+	draw_colored_polygon(_cockpit_poly(), COCKPIT)
 
-			if abs(dist - ring_r) <= ring_width:
-				var angle_from_up: float = abs(atan2(dx, -dy))
-				if angle_from_up > gap_half:
-					var fade_dist: float = angle_from_up - gap_half
-					var alpha: float = 0.8
-					if fade_dist < 0.15:
-						alpha = fade_dist / 0.15 * 0.8
-					image.set_pixel(x, y, Color(0.3, 0.85, 0.95, alpha))
+# ---------------------------------------------------------------------------
+# Additive layers: segmented indicator ring + thrust flame
+# ---------------------------------------------------------------------------
 
-	var chevron_y: int = int(cy - ring_r - ring_width - 1)
-	var chevron_size: int = 5
-	for i in range(chevron_size):
-		for j in range(-i, i + 1):
-			var px: int = int(cx) + j
-			var py: int = chevron_y - i
-			if px >= 0 and px < size and py >= 0 and py < size:
-				image.set_pixel(px, py, Color(0.4, 0.9, 1.0, 0.9))
+class _GlowLayer extends Node2D:
+	var thrusting := false
+	var _phase := 0.0
+	const _ENGINE_PORT := Color(0.20, 0.60, 1.00, 0.55)
+	const _PORT_CORE  := Color(0.85, 1.00, 1.00, 0.90)
+	const _FLAME_OUT  := Color(0.10, 0.60, 1.00, 0.95)
+	const _FLAME_IN   := Color(0.85, 1.00, 1.00, 0.95)
 
-	var ring: Sprite2D = Sprite2D.new()
-	ring.name = "IndicatorRing"
-	ring.texture = ImageTexture.create_from_image(image)
-	ring.centered = true
-	var mat: CanvasItemMaterial = CanvasItemMaterial.new()
-	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	ring.material = mat
-	add_child(ring)
+	func _init() -> void:
+		var mat := CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		material = mat
 
-func _generate_thrust_flame():
-	var size: int = 24
-	var image: Image = Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var cx: float = size / 2.0
+	func _draw() -> void:
+		# Twin engine port glows (always-on small halos).
+		for port in [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]:
+			draw_circle(port, 3.5, _ENGINE_PORT)
+			draw_circle(port, 1.5, _PORT_CORE)
 
-	for x in range(size):
-		for y in range(size):
-			var dx: float = float(x) - cx
-			var dy: float = float(y)
-			if dy > 0 and dy < 18:
-				var width: float = 3.0 + dy * 0.4
-				if abs(dx) < width:
-					var t: float = dy / 18.0
-					var inner: float = abs(dx) / width
-					var alpha: float = (1.0 - t) * (1.0 - inner * inner) * 0.85
-					var g: float = clampf(0.7 - t * 0.6, 0.05, 0.7)
-					image.set_pixel(x, y, Color(1.0, g, 0.0, clampf(alpha, 0.0, 1.0)))
+		if not thrusting:
+			return
 
-	var flame: Sprite2D = Sprite2D.new()
-	flame.name = "ThrustFlame"
-	flame.texture = ImageTexture.create_from_image(image)
-	flame.centered = true
-	flame.position = Vector2(0, 14)
-	var mat: CanvasItemMaterial = CanvasItemMaterial.new()
-	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	flame.material = mat
-	flame.visible = false
-	add_child(flame)
+		# Dual twin-jet exhausts (TRON jet-blue, additive).
+		for port in [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]:
+			var length := 22.0 + sin(_phase) * 6.0
+			var hf := 2.5
+			var outer := PackedVector2Array([
+				port + Vector2(-hf,       0.0),
+				port + Vector2( hf,       0.0),
+				port + Vector2( hf * 0.6, length),
+				port + Vector2(-hf * 0.6, length),
+			])
+			draw_colored_polygon(outer, _FLAME_OUT)
+			var inner := PackedVector2Array([
+				port + Vector2(-hf * 0.45, 0.0),
+				port + Vector2( hf * 0.45, 0.0),
+				port + Vector2( hf * 0.20, length * 0.85),
+				port + Vector2(-hf * 0.20, length * 0.85),
+			])
+			draw_colored_polygon(inner, _FLAME_IN)
+
+class _RingLayer extends Node2D:
+	# GUI-element feel: alpha capped at 0.5 so the ring reads as an overlay,
+	# not part of the ship hull.
+	const _GLOW   := Color(0.18, 0.55, 1.00, 0.15)
+	const _LINE   := Color(0.45, 0.95, 1.00, 0.475)
+	const _BRIGHT := Color(0.85, 1.00, 1.00, 0.50)
+	# Pulse envelope when not selected: swings alpha between ~35% and 100%
+	# of the (already capped) base values above.
+	const _PULSE_MIN := 0.35
+
+	var pulsate: bool = true
+	var pulse_phase: float = 0.0
+
+	func _init() -> void:
+		var mat := CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		material = mat
+
+	static func _mod(c: Color, factor: float) -> Color:
+		return Color(c.r, c.g, c.b, c.a * factor)
+
+	func _draw() -> void:
+		var r := 29.0
+		# Four arc segments with symmetric gaps (no heading marker; the
+		# pointed hull already conveys direction).
+		var segments := 4
+		var gap := 0.28
+		var arc_len := (TAU - segments * gap) / segments
+		var start := -PI * 0.5 + gap * 0.5  # first arc starts just below top
+
+		var alpha_mult := 1.0
+		if pulsate:
+			# Smooth sinusoidal pulse in [0.35, 1.0].
+			alpha_mult = _PULSE_MIN + (1.0 - _PULSE_MIN) * (sin(pulse_phase) * 0.5 + 0.5)
+
+		var glow_c   := _mod(_GLOW,   alpha_mult)
+		var line_c   := _mod(_LINE,   alpha_mult)
+		var bright_c := _mod(_BRIGHT, alpha_mult)
+
+		for i in range(segments):
+			var a0 := start + (arc_len + gap) * i
+			var a1 := a0 + arc_len
+			var pts := PackedVector2Array()
+			var n := 18
+			for j in range(n + 1):
+				var a := lerpf(a0, a1, float(j) / float(n))
+				pts.append(Vector2(cos(a) * r, sin(a) * r))
+			draw_polyline(pts, glow_c,   5.0, true)
+			draw_polyline(pts, line_c,   1.5, true)
+			draw_polyline(pts, bright_c, 0.5, true)
