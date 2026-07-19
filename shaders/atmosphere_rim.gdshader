@@ -9,7 +9,7 @@ uniform vec3  u_light_dir = vec3(1.0, 0.0, 0.0);
 uniform vec3  u_atm_color        = vec3(0.4, 0.65, 1.0);
 uniform float u_atm_intensity    : hint_range(0.0, 4.0) = 1.0;
 uniform float u_atm_ambient      : hint_range(0.0, 1.0) = 0.15;
-uniform float u_atm_thickness    : hint_range(0.05, 1.0) = 0.18;  // outward halo falloff in UV units
+uniform float u_atm_thickness    : hint_range(0.02, 1.0) = 0.06;  // outward halo falloff in UV units (tight = hugging limb)
 uniform float u_planet_radius_uv : hint_range(0.1, 1.0) = 0.8;    // planet disk radius in this sprite's UV (1 / atm_thickness_mult)
 
 void fragment() {
@@ -34,9 +34,10 @@ void fragment() {
 		float rim = 0.0;
 		if (r > u_planet_radius_uv) {
 			float dr = r - u_planet_radius_uv;
-			// e^-dr/thickness -> smooth halo. Add a touch of rim emphasis just
-			// outside the disk so the brightest part is at the limb itself.
-			rim = exp(-dr / u_atm_thickness) * (1.0 + 0.5 * exp(-dr * 8.0));
+			// e^-dr/thickness -> smooth halo. Tight thickness keeps the glow
+			// hugging the limb like a real thin atmosphere rather than
+			// dispersing far into space.
+			rim = exp(-dr / u_atm_thickness);
 		}
 
 		// Day/ambient mix.
