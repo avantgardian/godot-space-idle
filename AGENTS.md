@@ -41,7 +41,7 @@ Every feature or fix follows this sequence:
 | Script | Extends | Role |
 |--------|---------|------|
 | `main.gd` | `Node2D` | Root controller — owns all state, orchestrates planets, asteroids, star field, camera, UI, collisions |
-| `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection |
+| `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection. Optional `@export use_shader` (default false) gates the `planet_surface.gdshader` path: when true, `_generate_texture` builds a flat-white disk mask and `_apply_planet_shader` attaches a `ShaderMaterial` feeding `u_time`, `u_light_dir`, `u_axial_tilt`, `u_spin_rate`, `u_seed`, `u_base_color` (defaults to the planet's identity `planet_color`). `_process` advances `u_time` and recomputes `u_light_dir = -position.normalized()` each frame. Other `@export` fields: `planet_type: StringName`, `planet_seed` (0 = hash from node name), `axial_tilt_deg`, `rotation_rate`. Per-biome issues #104–#109 opt each planet in and layer biome-specific uniforms on top. |
 | `mercury.gd` | `orbital_body.gd` | Orbit radius 350, period 25s, mass 1.65e-7, grey |
 | `venus.gd` | `orbital_body.gd` | Orbit radius 500, period 47s, mass 2.45e-6, golden |
 | `earth.gd` | `orbital_body.gd` | Orbit radius 700, period 78s, mass 3.0e-6, blue-green |
@@ -61,7 +61,9 @@ Every feature or fix follows this sequence:
 | Shader | Type | Role |
 |--------|------|------|
 | `shaders/star_blur.gdshader` | `canvas_item` | Per-layer blur for the parallax star field; `blur_amount` driven by camera zoom |
-| `shaders/sun_noise.gdshader` | `canvas_item` | Runtime noise texture for the sun core; `time` parameter advanced each frame |
+| `shaders/sun_noise.gdshader` | `canvas_item` | Legacy/unused noise texture shader for the sun core (superseded by `sun_surface.gdshader`; kept in tree) |
+| `shaders/sun_surface.gdshader` | `canvas_item` | Current stellar surface shader: fbm/ridged/granulation noise in spherical lat/lon space, Eddington-Milne limb darkening, per-spot array uniforms (spots currently force-disabled in `sun.gd:69-70`), 3-stop core color ramp, flicker |
+| `shaders/planet_surface.gdshader` | `canvas_item` | Planet surface foundation shader (issue #102): spherical pole projection via `mu = sqrt(1 - r²)`, axial tilt around X, longitude spin via `u_time * u_spin_rate`, Lambert diffuse with `u_ambient` floor, optional limb darkening, `u_night_rim` dark-side silhouette brighten, 4-octave fbm tint over `u_base_color`. Per-biome issues #104–#109 layer biome-specific uniforms on top. |
 | `shaders/post_process.gdshader` | `canvas_item` | Screen-space chromatic aberration + scanline tint triggered by sun impacts |
 | `shaders/menu_grid.gdshader` | `canvas_item` | TRON grid plane behind the main menu — repeating cyan lines over `BG`; tunables `line_color`, `cell_size`, `line_width` |
 
@@ -90,7 +92,7 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 - **Body-body collisions** — `main.gd` checks planet-planet, planet-asteroid overlaps each frame. The larger body absorbs the smaller with momentum conservation; collision effects (impact rings + additive glow sprites) spawn at the merge point.
 - **Asteroids** spawn every ~35–55s (max 3 alive), feel softened gravity from all planets, and despawn when >4000 units from origin.
 - **Star field** — procedural parallax with canvas-item shaders (6 layers, edge-wrapping, seeded by `star_seed`). Blur amount driven by camera zoom via shader parameter.
-- **Sun** — runtime-generated noise texture + shader (`sun_noise.gdshader`), 4 additive-blend glow sprites, pulsating `breathe` animation, collision flash on any impact.
+- **Sun** — runtime-generated white-disk mask texture + realism shader (`sun_surface.gdshader`), sibling additive-blend glow sprites (corona), pulsating `breathe` animation, collision flash on any impact. Spot machinery exists in `sun.gd` but is force-disabled per user feedback (`sun.gd:69-70`).
 - **Camera** — `Camera2D` with position smoothing and lerp-smoothed zoom (clamped 0.3–1.3×). Zoom level mapped to star-field blur.
 - **Textures** — all generated in code (`Image.create` → `ImageTexture`); no imported assets beyond `icon.svg`
 - **UI** — sun mass label, planet mass panel (`VBoxContainer` with per-planet mass/%/status), orbit trail lines (gradient-colored `Line2D`)
