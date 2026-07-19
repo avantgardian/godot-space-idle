@@ -162,7 +162,7 @@ func _seed_craters(seed_val: int):
 	_crater_lons.clear()
 	_crater_sizes.clear()
 	_crater_strengths.clear()
-	var count := clamp(crater_count, 0, _MAX_CRATERS)
+	var count: int = clamp(crater_count, 0, _MAX_CRATERS)
 	if count == 0:
 		return
 	var rng := RandomNumberGenerator.new()
