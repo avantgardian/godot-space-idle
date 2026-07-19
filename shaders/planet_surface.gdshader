@@ -19,8 +19,8 @@ uniform vec3  u_base_color  = vec3(0.5);
 uniform float u_noise_scale = 4.0;
 uniform float u_noise_amp   : hint_range(0.0, 1.0) = 0.15;
 
-// Biome selector. 0 = none (use u_base_color path), 1 = rocky (#104).
-// Subsequent biomes will add 2..N.
+// Biome selector. 0 = none (use u_base_color path), 1 = rocky (#104),
+// 2 = greenhouse (#105).
 uniform int u_biome_mode = 0;
 
 // Rocky biome uniforms (#104).
@@ -34,6 +34,16 @@ uniform float u_crater_strength[16];
 uniform float u_polar_cap_lat  : hint_range(0.0, 1.5708) = 0.0;  // 0 = no caps
 uniform float u_polar_softness : hint_range(0.01, 0.5) = 0.1;
 uniform vec3  u_polar_cap_color = vec3(0.90, 0.85, 0.80);
+
+// Greenhouse biome uniforms (#105).
+uniform vec3  u_venus_cloud_hi = vec3(0.95, 0.85, 0.55);
+uniform vec3  u_venus_cloud_lo = vec3(0.65, 0.45, 0.20);
+uniform float u_cloud_swirl_amp   : hint_range(0.0, 0.5) = 0.15;
+uniform float u_cloud_swirl_freq  : hint_range(1.0, 16.0) = 6.0;
+uniform float u_cloud_contrast    : hint_range(0.0, 1.0) = 0.6;
+uniform float u_limb_brighten     : hint_range(0.0, 1.0) = 0.0;   // additive limb brighten (greenhouse only)
+uniform float u_surface_lava_leak  : hint_range(0.0, 1.0) = 0.0;   // 0 = no leak
+uniform vec3  u_lava_color = vec3(0.60, 0.15, 0.05);
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(0.1031, 0.1030));
@@ -155,6 +165,44 @@ void fragment() {
 				cap_mask *= smoothstep(0.3, 0.7, fray);
 				base = mix(base, u_polar_cap_color, cap_mask * 0.85);
 			}
+		} else if (u_biome_mode == 2) {
+			// Greenhouse (#105). The surface IS the cloud tops — no regolith
+			// visible anywhere on the disk.
+			float warp = sin(lon * u_cloud_swirl_freq) * u_cloud_swirl_amp;
+			float warped_lat = lat + warp;
+			float cloud_val = fbm(vec2(lon, warped_lat) * 2.5 + seed_off);
+			float c = u_cloud_contrast * 0.5;
+			float cloud_t = smoothstep(0.5 - c, 0.5 + c, cloud_val);
+			base = mix(u_venus_cloud_lo, u_venus_cloud_hi, cloud_t);
+
+			// Optional hot-glow leak (off by default — Venus's surface is
+			// never actually visible through the cloud deck). 3 deterministic
+			// spot positions derived from u_seed via hash21. Gated by
+			// u_surface_lava_leak > 0 so the entire branch is a no-op (and
+			// skips the acos work) when disabled.
+			if (u_surface_lava_leak > 0.0) {
+				float s1 = hash21(vec2(float(u_seed) * 0.137, 1.7));
+				float s2 = hash21(vec2(float(u_seed) * 0.319, 2.3));
+				float s3 = hash21(vec2(float(u_seed) * 0.523, 3.1));
+				float s4 = hash21(vec2(float(u_seed) * 0.731, 4.4));
+				float s5 = hash21(vec2(float(u_seed) * 0.913, 5.7));
+				float s6 = hash21(vec2(float(u_seed) * 0.197, 6.9));
+				float la1 = (s1 - 0.5) * 2.4;
+				float lo1 = (s2 - 0.5) * 6.2832;
+				float la2 = (s3 - 0.5) * 2.4;
+				float lo2 = (s4 - 0.5) * 6.2832;
+				float la3 = (s5 - 0.5) * 2.4;
+				float lo3 = (s6 - 0.5) * 6.2832;
+				vec3 lp1 = vec3(cos(la1) * sin(lo1), sin(la1), cos(la1) * cos(lo1));
+				vec3 lp2 = vec3(cos(la2) * sin(lo2), sin(la2), cos(la2) * cos(lo2));
+				vec3 lp3 = vec3(cos(la3) * sin(lo3), sin(la3), cos(la3) * cos(lo3));
+				float lava_r = 0.12;
+				float leak1 = smoothstep(lava_r, 0.0, acos(clamp(dot(n, lp1), -1.0, 1.0)));
+				float leak2 = smoothstep(lava_r, 0.0, acos(clamp(dot(n, lp2), -1.0, 1.0)));
+				float leak3 = smoothstep(lava_r, 0.0, acos(clamp(dot(n, lp3), -1.0, 1.0)));
+				float leak = max(leak1, max(leak2, leak3)) * u_surface_lava_leak;
+				base = mix(base, u_lava_color, leak * 0.7);
+			}
 		} else {
 			// Default (#102) path — base color tinted +/- u_noise_amp by fbm.
 			float noise_val = fbm(vec2(lon, lat) * u_noise_scale + seed_off);
@@ -163,9 +211,18 @@ void fragment() {
 			           noise_val);
 		}
 
+		// Additive limb brighten for greenhouse biomes (Venus photographs
+		// brighter at the limb because we're looking through a longer column
+		// of scattering cloud). Scaled by lighting so the brighten picks up
+		// the ambient floor on the night side.
+		float limb_brighten_amount = 0.0;
+		if (u_biome_mode == 2 && u_limb_brighten > 0.0) {
+			limb_brighten_amount = u_limb_brighten * pow(1.0 - mu, 2.0);
+		}
+
 		// Night-side ambient-ish glow uses base color so the silhouette still
 		// reads in the planet's own hue (Mars red, Mercury grey).
-		vec3 col = base * lighting * limb + base * night_rim;
+		vec3 col = base * lighting * limb + base * night_rim + base * limb_brighten_amount * lighting;
 		COLOR = vec4(col, tex.a * edge_aa);
 	}
 }
