@@ -7,9 +7,9 @@ uniform vec3  u_light_dir = vec3(1.0, 0.0, 0.0);
 
 // Per-instance (set in OrbitalBody._apply_atmosphere_shader).
 uniform vec3  u_atm_color        = vec3(0.4, 0.65, 1.0);
-uniform float u_atm_intensity    : hint_range(0.0, 4.0) = 1.0;
-uniform float u_atm_ambient      : hint_range(0.0, 1.0) = 0.15;
-uniform float u_atm_thickness    : hint_range(0.02, 1.0) = 0.06;  // outward halo falloff in UV units (tight = hugging limb)
+uniform float u_atm_intensity    : hint_range(0.0, 4.0) = 1.2;
+uniform float u_atm_ambient      : hint_range(0.0, 1.0) = 0.05;
+uniform float u_atm_thickness    : hint_range(0.01, 1.0) = 0.03;  // outward halo falloff in UV units (tight = hugging limb)
 uniform float u_planet_radius_uv : hint_range(0.1, 1.0) = 0.8;    // planet disk radius in this sprite's UV (1 / atm_thickness_mult)
 
 void fragment() {

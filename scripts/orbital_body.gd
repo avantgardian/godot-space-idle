@@ -47,8 +47,8 @@ var _trail_component: Node
 # boundary becomes visible as a hard clip).
 @export var atm_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 @export var atm_thickness_mult: float = 2.5
-@export var atm_intensity: float = 1.0
-@export var atm_ambient: float = 0.15
+@export var atm_intensity: float = 1.2
+@export var atm_ambient: float = 0.05
 
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
