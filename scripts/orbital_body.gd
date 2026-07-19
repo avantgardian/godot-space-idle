@@ -219,16 +219,24 @@ func _apply_atmosphere_shader(tex_size: int):
 	# Gated by atm_color.a > 0 — Mercury and dead moons produce no rim sprite.
 	if atm_color.a <= 0.0:
 		return
-	# Limb texture: a flat-white disk mask slightly larger than the planet
-	# so the rim has the outer rim_pixels to glow through. The shader does
-	# the actual falloff — the texture just defines the silhouette.
+	# The rim sprite is a square slightly larger than the planet disk.
+	# We use a fully-opaque white texture (no disk mask) so the shader has
+	# pixels to glow through OUTSIDE the planet silhouette — the shader
+	# itself does all the geometric falloff. We need the planet's apparent
+	# disk radius inside the rim sprite's UV to equal 1.0 in shader UV
+	# space, so the rim sprite must be sized as planet_tex / (1.0 / thickness_mult)
+	# -> planet_tex * thickness_mult. Centered + same scale as planet sprite.
 	var atm_tex_size: int = int(tex_size * atm_thickness_mult)
 	if atm_tex_size < 4:
 		return
 	_atm_sprite = Sprite2D.new()
-	_atm_sprite.texture = _make_white_disk_mask(atm_tex_size)
+	_atm_sprite.texture = _make_opaque_white_square(atm_tex_size)
 	_atm_sprite.centered = true
-	_atm_sprite.z_index = -1
+	# Z above the planet so the halo draws OVER the orbit line (trail) and
+	# over the planet disk — atmospheres render both in front of and around
+	# the disk on the day side. Additive blend won't blow out the surface
+	# because the rim kernel is 0 inside r < 1.0 (the planet disk).
+	_atm_sprite.z_index = 1
 	add_child(_atm_sprite)
 	_atm_mat = ShaderMaterial.new()
 	_atm_mat.shader = _ATM_SHADER
@@ -236,9 +244,14 @@ func _apply_atmosphere_shader(tex_size: int):
 	_atm_mat.set_shader_parameter("u_atm_color", Vector3(atm_color.r, atm_color.g, atm_color.b))
 	_atm_mat.set_shader_parameter("u_atm_intensity", atm_intensity)
 	_atm_mat.set_shader_parameter("u_atm_ambient", atm_ambient)
-	_atm_mat.set_shader_parameter("u_atm_thickness", 0.07)
-	_atm_mat.set_shader_parameter("u_atm_outer_falloff", 1.2)
+	_atm_mat.set_shader_parameter("u_atm_thickness", 0.18)
+	_atm_mat.set_shader_parameter("u_planet_radius_uv", 1.0 / atm_thickness_mult)
 	_atm_sprite.material = _atm_mat
+
+func _make_opaque_white_square(size: int) -> ImageTexture:
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color(1.0, 1.0, 1.0, 1.0))
+	return ImageTexture.create_from_image(image)
 
 func _get_shader_base_color() -> Color:
 	# Per-biome issues (#104-#109) override this to return a PlanetPalette
