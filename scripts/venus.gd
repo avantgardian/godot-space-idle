@@ -16,7 +16,8 @@ func _ready():
 	cloud_swirl_freq = 6.0
 	cloud_contrast = 0.6
 	limb_brighten = 0.3
-	surface_lava_leak = 0.0
+	# surface_lava_leak omitted — inherits @export default (0.0) so the
+	# editor export can be set non-zero for QA testing (lava leak spots).
 	atm_color = PAL.ATM_RIM_VENUS
 	super()
 
