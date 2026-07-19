@@ -41,8 +41,12 @@ var _trail_component: Node
 # Atmosphere rim glow (#110). Per-planet scripts opt in by setting
 # atm_color to a non-transparent PlanetPalette token. Default alpha 0
 # → no rim sprite is generated at all (Mercury, dead moons).
+# atm_thickness_mult controls the size of the rim sprite relative to
+# the planet disk — needs a generous buffer (>= 2.0) so the halo fades
+# to ~0 well inside the sprite's edge (otherwise the square texture
+# boundary becomes visible as a hard clip).
 @export var atm_color: Color = Color(0.0, 0.0, 0.0, 0.0)
-@export var atm_thickness_mult: float = 1.25
+@export var atm_thickness_mult: float = 2.5
 @export var atm_intensity: float = 1.0
 @export var atm_ambient: float = 0.15
 
