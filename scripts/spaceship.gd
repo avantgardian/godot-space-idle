@@ -205,6 +205,9 @@ func _draw():
 # ---------------------------------------------------------------------------
 
 class _GlowLayer extends Node2D:
+	# Inner classes don't inherit the outer-class preload aliases, so each
+	# inner class references TronPalette / DrawUtils via its own preload.
+	const PAL := preload("res://scripts/tron_palette.gd")
 	var thrusting := false
 	var _phase := 0.0
 
@@ -216,8 +219,8 @@ class _GlowLayer extends Node2D:
 	func _draw() -> void:
 		# Twin engine port glows (always-on small halos).
 		for port in [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]:
-			draw_circle(port, 3.5, TronPalette.ENGINE_PORT)
-			draw_circle(port, 1.5, TronPalette.PORT_CORE)
+			draw_circle(port, 3.5, PAL.ENGINE_PORT)
+			draw_circle(port, 1.5, PAL.PORT_CORE)
 
 		if not thrusting:
 			return
@@ -232,16 +235,20 @@ class _GlowLayer extends Node2D:
 				port + Vector2( hf * 0.6, length),
 				port + Vector2(-hf * 0.6, length),
 			])
-			draw_colored_polygon(outer, TronPalette.FLAME_OUTER)
+			draw_colored_polygon(outer, PAL.FLAME_OUTER)
 			var inner := PackedVector2Array([
 				port + Vector2(-hf * 0.45, 0.0),
 				port + Vector2( hf * 0.45, 0.0),
 				port + Vector2( hf * 0.20, length * 0.85),
 				port + Vector2(-hf * 0.20, length * 0.85),
 			])
-			draw_colored_polygon(inner, TronPalette.FLAME_INNER)
+			draw_colored_polygon(inner, PAL.FLAME_INNER)
 
 class _RingLayer extends Node2D:
+	# Inner classes don't inherit the outer-class preload aliases, so each
+	# inner class references TronPalette / DrawUtils via its own preload.
+	const PAL := preload("res://scripts/tron_palette.gd")
+	const DU  := preload("res://scripts/draw_utils.gd")
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 
@@ -261,10 +268,10 @@ class _RingLayer extends Node2D:
 		# RING_PULSE_MIN and 1.0 of the (already capped) base values.
 		var alpha_mult := 1.0
 		if pulsate:
-			alpha_mult = DrawUtils.pulsate_factor(pulse_phase, TronPalette.RING_PULSE_MIN)
+			alpha_mult = DU.pulsate_factor(pulse_phase, PAL.RING_PULSE_MIN)
 
-		var glow_c   := DrawUtils.modulate_alpha(TronPalette.RING_GLOW,   alpha_mult)
-		var line_c   := DrawUtils.modulate_alpha(TronPalette.RING_LINE,   alpha_mult)
-		var bright_c := DrawUtils.modulate_alpha(TronPalette.RING_BRIGHT, alpha_mult)
+		var glow_c   := DU.modulate_alpha(PAL.RING_GLOW,   alpha_mult)
+		var line_c   := DU.modulate_alpha(PAL.RING_LINE,   alpha_mult)
+		var bright_c := DU.modulate_alpha(PAL.RING_BRIGHT, alpha_mult)
 
-		DrawUtils.neon_segmented_ring(self, Vector2.ZERO, r, segments, gap, glow_c, line_c, bright_c)
+		DU.neon_segmented_ring(self, Vector2.ZERO, r, segments, gap, glow_c, line_c, bright_c)
