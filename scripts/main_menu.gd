@@ -1,12 +1,14 @@
 extends Control
 
 const PAL := preload("res://scripts/tron_palette.gd")
+const FONT_BOLD := preload("res://resources/fonts/Orbitron-Bold.ttf")
 
 func _ready():
 	var game_theme := load("res://resources/game_theme.tres") as Theme
 	self.theme = game_theme
 
 	var title := $CenterContainer/MenuContainer/Title as Label
+	title.add_theme_font_override("font", FONT_BOLD)
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	title.add_theme_color_override("font_outline_color", PAL.HULL_GLOW)

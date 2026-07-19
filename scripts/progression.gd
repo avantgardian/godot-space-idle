@@ -40,6 +40,7 @@ const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
 const _SPACESHIP := preload("res://scripts/spaceship.gd")
 const _ORBITAL_BODY := preload("res://scripts/orbital_body.gd")
+const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
@@ -55,6 +56,7 @@ func _ready():
 	$UI/EventLog/EventLogPanel.theme = game_theme
 	$UI/PauseButton.theme = game_theme
 	_mass_label.theme = game_theme
+	_mass_label.add_theme_font_override("font", FONT_MONO)
 	($UI as CanvasLayer).layer = 2
 
 	var pm := _POST_PROCESS.new()
