@@ -167,12 +167,19 @@ void fragment() {
 			}
 		} else if (u_biome_mode == 2) {
 			// Greenhouse (#105). The surface IS the cloud tops — no regolith
-			// visible anywhere on the disk.
+			// visible anywhere on the disk. Latitudinal belts+zones with
+			// zonal wind shear (chevron "V" pattern) + fbm cloud detail.
 			float warp = sin(lon * u_cloud_swirl_freq) * u_cloud_swirl_amp;
 			float warped_lat = lat + warp;
-			float cloud_val = fbm(vec2(lon, warped_lat) * 2.5 + seed_off);
-			float c = u_cloud_contrast * 0.5;
-			float cloud_t = smoothstep(0.5 - c, 0.5 + c, cloud_val);
+			// Zonal banding: alternating bright zones and darker belts.
+			// sin(lon*2) shears the bands longitudinally → chevron pattern.
+			float bands = sin(warped_lat * 5.5 + sin(lon * 2.0) * 0.4);
+			bands = bands * 0.5 + 0.5;
+			// Fine cloud texture within bands.
+			float cloud_noise = fbm(vec2(lon, warped_lat) * 3.0 + seed_off);
+			float combined = mix(bands, cloud_noise, 0.35);
+			float c = u_cloud_contrast * 0.2;
+			float cloud_t = smoothstep(0.5 - c, 0.5 + c, combined);
 			base = mix(u_venus_cloud_lo, u_venus_cloud_hi, cloud_t);
 
 			// Optional hot-glow leak (off by default — Venus's surface is
