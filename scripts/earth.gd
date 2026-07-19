@@ -2,8 +2,6 @@ extends OrbitalBody
 
 var planet_name: String = "Earth"
 var planet_color: Color = Color(0.3, 0.6, 1.0)
-@export var trail_color0: Color = Color(0.3, 0.6, 1.0, 0.0)
-@export var trail_color1: Color = Color(0.3, 0.6, 1.0, 0.4)
 @export var collision_flash: float = 1.0
 @export var collision_ring_color: Color = Color(0.3, 0.7, 1.0, 0.7)
 @export var collision_ring_width: float = 3.5

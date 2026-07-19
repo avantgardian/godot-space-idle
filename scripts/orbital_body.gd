@@ -3,6 +3,7 @@ extends Node2D
 
 const _TEX := preload("res://scripts/texture_utils.gd")
 const _TRAIL := preload("res://scripts/trail_component.gd")
+const DU := preload("res://scripts/draw_utils.gd")
 var _sprite: Sprite2D
 
 @export var orbit_radius: float = 500.0
@@ -39,9 +40,11 @@ func _ready():
 	_generate_texture()
 	_reset()
 
-func setup_trail(color0: Color, color1: Color):
+func setup_trail(color: Color):
 	_trail_component = _TRAIL.new()
-	_trail_component.setup(color0, color1, 1.5, trail_max)
+	var head := DU.trail_head(color)
+	var tail := DU.trail_tail(color)
+	_trail_component.setup(tail, head, 1.5, trail_max)
 	add_child(_trail_component)
 
 func _generate_texture():

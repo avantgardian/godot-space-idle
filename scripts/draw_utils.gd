@@ -1,6 +1,8 @@
 class_name DrawUtils
 extends RefCounted
 
+const PAL := preload("res://scripts/tron_palette.gd")
+
 # ---------------------------------------------------------------------------
 # TRON neon rendering helpers. Pure-draw utilities; callers own state
 # (pulsation, animation phases) and pass already-modulated colors in so the
@@ -19,6 +21,16 @@ const ACCENT_LINE_WIDTH := 0.5
 
 # Default per-arc sampling resolution. Higher = smoother curved strokes.
 const ARC_RESOLUTION := 18
+
+# Orbit trail tint + alpha tuning (issue #85).
+# 2-stop cyan gradient: head = HULL_BRIGHT tinted toward the planet's
+# identity color (gradient stop 1, the newest end of the trail); tail =
+# HULL_LINE tinted toward identity with low alpha (stop 0, oldest end).
+# All trails render with additive blending (configured by TrailComponent).
+const TRAIL_HEAD_TINT  := 0.55
+const TRAIL_HEAD_ALPHA := 0.85
+const TRAIL_TAIL_TINT  := 0.35
+const TRAIL_TAIL_ALPHA := 0.0
 
 
 # 3-stroke neon passage. Pass any closed or open polyline; if you want a
@@ -109,3 +121,30 @@ static func pulsate_factor(phase: float, min_val: float = 0.35) -> float:
 # for applying a pulsate_factor to a base TronPalette color.
 static func modulate_alpha(c: Color, factor: float) -> Color:
 	return Color(c.r, c.g, c.b, c.a * factor)
+
+
+# ---------------------------------------------------------------------------
+# Orbit trail color helpers (issue #85).
+# Trails use a 2-stop cyan gradient drawn from TronPalette tokens. To keep
+# planets visually distinguishable, the head and tail colors are a lerp from
+# the canonical TRON cyan toward the planet's identity color.
+# Head = HULL_BRIGHT tinted up to 55% toward planet_color (bright, drawn at
+# gradient stop 1 — the newest end of the trail). Tail = HULL_LINE tinted
+# 35% toward planet_color with low alpha (gradient stop 0 — the oldest end,
+# fades away). All trails render with additive blending (set up by
+# TrailComponent), so head brightness stacks against the near-black BG.
+static func trail_head(planet_color: Color) -> Color:
+	return Color(
+		lerpf(PAL.HULL_BRIGHT.r, planet_color.r, TRAIL_HEAD_TINT),
+		lerpf(PAL.HULL_BRIGHT.g, planet_color.g, TRAIL_HEAD_TINT),
+		lerpf(PAL.HULL_BRIGHT.b, planet_color.b, TRAIL_HEAD_TINT),
+		TRAIL_HEAD_ALPHA
+	)
+
+static func trail_tail(planet_color: Color) -> Color:
+	return Color(
+		lerpf(PAL.HULL_LINE.r, planet_color.r, TRAIL_TAIL_TINT),
+		lerpf(PAL.HULL_LINE.g, planet_color.g, TRAIL_TAIL_TINT),
+		lerpf(PAL.HULL_LINE.b, planet_color.b, TRAIL_TAIL_TINT),
+		TRAIL_TAIL_ALPHA
+	)
