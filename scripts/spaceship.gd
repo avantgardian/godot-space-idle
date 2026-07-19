@@ -8,14 +8,11 @@ const ROTATION_SPEED: float = 3.0
 const DAMPING: float = 0.8
 const COLLISION_RADIUS: float = 14.0
 
-# TRON-inspired palette (cyan + orange accent on near-black).
-const HULL_GLOW := Color(0.18, 0.55, 1.00, 0.45)
-const HULL_LINE := Color(0.55, 0.95, 1.00, 1.00)
-const HULL_BRIGHT := Color(0.92, 1.00, 1.00, 1.00)
-const ACCENT := Color(1.00, 0.55, 0.15, 1.00)
-const ACCENT_GLOW := Color(1.00, 0.45, 0.10, 0.55)
-const COCKPIT := Color(0.92, 1.00, 1.00, 1.00)
-const COCKPIT_GLOW := Color(0.25, 0.75, 1.00, 0.55)
+# TRON palette + neon drawing helpers — see scripts/tron_palette.gd and
+# scripts/draw_utils.gd. All visual tokens live there; this file should not
+# introduce new inline colors.
+const PAL := preload("res://scripts/tron_palette.gd")
+const DU  := preload("res://scripts/draw_utils.gd")
 
 var mass: float = 0.001
 var collision_radius: float = COLLISION_RADIUS
@@ -30,7 +27,7 @@ var _thrust_node: Node2D
 var _ring_node: Node2D
 var _flicker: float = 0.0
 var _pulse_phase: float = 0.0
-const _PULSE_SPEED: float = 2.5  # rad/s pulsation when not selected
+const _PULSE_SPEED: float = PAL.RING_PULSE_SPEED  # rad/s pulsation when not selected
 
 func _ready():
 	_ring_node = _RingLayer.new()
@@ -181,23 +178,17 @@ func _cockpit_poly() -> PackedVector2Array:
 	])
 
 func _draw():
-	# Outer soft glow underlayer (wide, low alpha) -> the TRON bloom feel.
-	draw_polyline(_hull_points(), HULL_GLOW, 5.0, true)
-	# Mid stroke + crisp inner stroke for the neon edge.
-	draw_polyline(_hull_points(), HULL_LINE, 1.5, true)
-	draw_polyline(_hull_points(), HULL_BRIGHT, 0.5, true)
+	# Hull outline (3-stroke neon triple-stack: glow -> line -> bright core).
+	DU.neon_polyline(self, _hull_points(), PAL.HULL_GLOW, PAL.HULL_LINE, PAL.HULL_BRIGHT)
 
-	# Orange wing accent stripes (filled quad + thin glowing outline).
+	# Orange wing accent stripes (filled accent quad + glowing outline).
 	for side in [-1, 1]:
-		var q := _accent_quad(side)
-		draw_colored_polygon(q, ACCENT)
-		draw_polyline(q, ACCENT_GLOW, 2.0, true)
-		draw_polyline(q, ACCENT, 0.5, true)
+		DU.neon_filled_accent(self, _accent_quad(side), PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
 
 	# Inner brace lines (recognizer-style cross-bracing).
-	draw_line(Vector2(0.0, -16.0), Vector2(0.0, -10.0), HULL_LINE, 0.75, true)
-	draw_line(Vector2(-5.0, -2.0), Vector2(5.0, -2.0), HULL_LINE, 0.75, true)
-	draw_line(Vector2(-4.0,  3.0), Vector2(4.0,  3.0), HULL_LINE, 0.75, true)
+	draw_line(Vector2(0.0, -16.0), Vector2(0.0, -10.0), PAL.HULL_LINE, 0.75, true)
+	draw_line(Vector2(-5.0, -2.0), Vector2(5.0, -2.0), PAL.HULL_LINE, 0.75, true)
+	draw_line(Vector2(-4.0,  3.0), Vector2(4.0,  3.0), PAL.HULL_LINE, 0.75, true)
 
 	# Cockpit core: soft glow halo (larger, dim) + bright filled diamond.
 	var halo := PackedVector2Array([
@@ -206,8 +197,8 @@ func _draw():
 		Vector2( 0.0,   -4.0),
 		Vector2(-3.75, -9.0),
 	])
-	draw_colored_polygon(halo, COCKPIT_GLOW)
-	draw_colored_polygon(_cockpit_poly(), COCKPIT)
+	draw_colored_polygon(halo, PAL.COCKPIT_GLOW)
+	draw_colored_polygon(_cockpit_poly(), PAL.COCKPIT)
 
 # ---------------------------------------------------------------------------
 # Additive layers: segmented indicator ring + thrust flame
@@ -216,10 +207,6 @@ func _draw():
 class _GlowLayer extends Node2D:
 	var thrusting := false
 	var _phase := 0.0
-	const _ENGINE_PORT := Color(0.20, 0.60, 1.00, 0.55)
-	const _PORT_CORE  := Color(0.85, 1.00, 1.00, 0.90)
-	const _FLAME_OUT  := Color(0.10, 0.60, 1.00, 0.95)
-	const _FLAME_IN   := Color(0.85, 1.00, 1.00, 0.95)
 
 	func _init() -> void:
 		var mat := CanvasItemMaterial.new()
@@ -229,8 +216,8 @@ class _GlowLayer extends Node2D:
 	func _draw() -> void:
 		# Twin engine port glows (always-on small halos).
 		for port in [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]:
-			draw_circle(port, 3.5, _ENGINE_PORT)
-			draw_circle(port, 1.5, _PORT_CORE)
+			draw_circle(port, 3.5, TronPalette.ENGINE_PORT)
+			draw_circle(port, 1.5, TronPalette.PORT_CORE)
 
 		if not thrusting:
 			return
@@ -245,25 +232,16 @@ class _GlowLayer extends Node2D:
 				port + Vector2( hf * 0.6, length),
 				port + Vector2(-hf * 0.6, length),
 			])
-			draw_colored_polygon(outer, _FLAME_OUT)
+			draw_colored_polygon(outer, TronPalette.FLAME_OUTER)
 			var inner := PackedVector2Array([
 				port + Vector2(-hf * 0.45, 0.0),
 				port + Vector2( hf * 0.45, 0.0),
 				port + Vector2( hf * 0.20, length * 0.85),
 				port + Vector2(-hf * 0.20, length * 0.85),
 			])
-			draw_colored_polygon(inner, _FLAME_IN)
+			draw_colored_polygon(inner, TronPalette.FLAME_INNER)
 
 class _RingLayer extends Node2D:
-	# GUI-element feel: alpha capped at 0.5 so the ring reads as an overlay,
-	# not part of the ship hull.
-	const _GLOW   := Color(0.18, 0.55, 1.00, 0.15)
-	const _LINE   := Color(0.45, 0.95, 1.00, 0.475)
-	const _BRIGHT := Color(0.85, 1.00, 1.00, 0.50)
-	# Pulse envelope when not selected: swings alpha between ~35% and 100%
-	# of the (already capped) base values above.
-	const _PULSE_MIN := 0.35
-
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 
@@ -272,35 +250,21 @@ class _RingLayer extends Node2D:
 		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		material = mat
 
-	static func _mod(c: Color, factor: float) -> Color:
-		return Color(c.r, c.g, c.b, c.a * factor)
-
 	func _draw() -> void:
 		var r := 29.0
 		# Four arc segments with symmetric gaps (no heading marker; the
 		# pointed hull already conveys direction).
 		var segments := 4
 		var gap := 0.28
-		var arc_len := (TAU - segments * gap) / segments
-		var start := -PI * 0.5 + gap * 0.5  # first arc starts just below top
 
+		# Pulsation: when not selected the ring's alpha swings between
+		# RING_PULSE_MIN and 1.0 of the (already capped) base values.
 		var alpha_mult := 1.0
 		if pulsate:
-			# Smooth sinusoidal pulse in [0.35, 1.0].
-			alpha_mult = _PULSE_MIN + (1.0 - _PULSE_MIN) * (sin(pulse_phase) * 0.5 + 0.5)
+			alpha_mult = DrawUtils.pulsate_factor(pulse_phase, TronPalette.RING_PULSE_MIN)
 
-		var glow_c   := _mod(_GLOW,   alpha_mult)
-		var line_c   := _mod(_LINE,   alpha_mult)
-		var bright_c := _mod(_BRIGHT, alpha_mult)
+		var glow_c   := DrawUtils.modulate_alpha(TronPalette.RING_GLOW,   alpha_mult)
+		var line_c   := DrawUtils.modulate_alpha(TronPalette.RING_LINE,   alpha_mult)
+		var bright_c := DrawUtils.modulate_alpha(TronPalette.RING_BRIGHT, alpha_mult)
 
-		for i in range(segments):
-			var a0 := start + (arc_len + gap) * i
-			var a1 := a0 + arc_len
-			var pts := PackedVector2Array()
-			var n := 18
-			for j in range(n + 1):
-				var a := lerpf(a0, a1, float(j) / float(n))
-				pts.append(Vector2(cos(a) * r, sin(a) * r))
-			draw_polyline(pts, glow_c,   5.0, true)
-			draw_polyline(pts, line_c,   1.5, true)
-			draw_polyline(pts, bright_c, 0.5, true)
+		DrawUtils.neon_segmented_ring(self, Vector2.ZERO, r, segments, gap, glow_c, line_c, bright_c)
