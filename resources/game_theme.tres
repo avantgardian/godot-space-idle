@@ -1,6 +1,8 @@
-[gd_resource type="Theme" load_steps=7 format=3]
+[gd_resource type="Theme" load_steps=9 format=3]
 
 [ext_resource type="FontFile" path="res://resources/fonts/Orbitron-Medium.ttf" id="font_orbitron"]
+[ext_resource type="FontFile" path="res://resources/fonts/Orbitron-Bold.ttf" id="font_orbitron_bold"]
+[ext_resource type="FontFile" path="res://resources/fonts/ShareTechMono-Regular.ttf" id="font_share_tech_mono"]
 
 [sub_resource type="StyleBoxFlat" id="sb_btn_normal"]
 bg_color = Color(0.04, 0.04, 0.102, 0.7)
@@ -99,4 +101,6 @@ Label/colors/font_color = Color(0.92, 1.0, 1.0, 1.0)
 Label/colors/font_outline_color = Color(0.18, 0.55, 1.0, 0.45)
 Label/constants/font_outline_size = 1
 Label/font_sizes/font_size = 18
+Label/fonts/font_bold = ExtResource("font_orbitron_bold")
+Label/fonts/font_mono = ExtResource("font_share_tech_mono")
 Panel/styles/panel = SubResource("sb_panel")

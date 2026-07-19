@@ -3,6 +3,7 @@ extends Panel
 
 const PAL := preload("res://scripts/tron_palette.gd")
 const DU := preload("res://scripts/draw_utils.gd")
+const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 var _planet_node: Node2D
 var _camera: Camera2D
@@ -78,6 +79,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 		lbl.custom_minimum_size = Vector2(48, 0)
 		hbox.add_child(lbl)
 		var val := Label.new()
+		val.add_theme_font_override("font", FONT_MONO)
 		val.add_theme_font_size_override("font_size", 11)
 		val.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 		hbox.add_child(val)
