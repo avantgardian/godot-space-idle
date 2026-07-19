@@ -7,6 +7,7 @@ uniform vec3  u_light_dir = vec3(1.0, 0.0, 0.0);   // world-space, normalized, p
 
 // Set once per-instance in OrbitalBody._apply_planet_shader from @export fields.
 uniform float u_ambient   : hint_range(0.0, 0.5) = 0.06;
+uniform float u_night_rim : hint_range(0.0, 1.0) = 0.4;
 uniform float u_limb      : hint_range(0.0, 1.0) = 0.35;
 uniform float u_axial_tilt = 0.0;                   // radians
 uniform float u_spin_rate = 0.05;                   // rad/s of surface texture "spin"
@@ -79,14 +80,22 @@ void fragment() {
 
 		// Lambert diffuse; ambient floor keeps the night side readable.
 		vec3 L = normalize(u_light_dir);
-		float diff = max(dot(normalize(n), L), 0.0);
+		float diff = max(dot(n, L), 0.0);
 		float lighting = mix(u_ambient, 1.0, diff);
 
 		// Limb darkening (matches sun_surface.gdshader form).
 		float limb = (1.0 + 1.5 * mu) / 2.5;
 		limb = mix(1.0, limb, u_limb);
 
-		vec3 col = base * lighting * limb;
+		// Dark-side limb brighten: a thin rim of scattered light around the
+		// planet's night silhouette so the full outline reads against the BG.
+		// Falls off where the surface faces the camera and vanishes on the day
+		// side (where the lit surface already dominates).
+		float dark_side = 1.0 - diff;
+		float rim = pow(1.0 - mu, 3.0);
+		float night_rim = rim * dark_side * u_night_rim;
+
+		vec3 col = base * lighting * limb + base * night_rim;
 		COLOR = vec4(col, tex.a * edge_aa);
 	}
 }

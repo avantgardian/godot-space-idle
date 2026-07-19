@@ -95,6 +95,7 @@ func _apply_planet_shader():
 	_shader_mat.set_shader_parameter("u_time", 0.0)
 	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
 	_shader_mat.set_shader_parameter("u_ambient", 0.06)
+	_shader_mat.set_shader_parameter("u_night_rim", 0.4)
 	_shader_mat.set_shader_parameter("u_limb", 0.35)
 	_shader_mat.set_shader_parameter("u_axial_tilt", deg_to_rad(axial_tilt_deg))
 	_shader_mat.set_shader_parameter("u_spin_rate", rotation_rate)
