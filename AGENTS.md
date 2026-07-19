@@ -52,6 +52,9 @@ Every feature or fix follows this sequence:
 | `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 1599s, mass 5.14e-5, deep blue |
 | `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave reddish trails, despawn >4000u |
 | `texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
+| `tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens |
+| `draw_utils.gd` | `RefCounted` | `class_name DrawUtils` — static neon drawing helpers (`neon_polyline`, `neon_arc`, `neon_segmented_ring`, `neon_circle`, `neon_filled_accent`, `pulsate_factor`, `modulate_alpha`) |
+| `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
 
 ## Architecture
 
@@ -64,3 +67,70 @@ Every feature or fix follows this sequence:
 - **Camera** — `Camera2D` with position smoothing and lerp-smoothed zoom (clamped 0.3–1.3×). Zoom level mapped to star-field blur.
 - **Textures** — all generated in code (`Image.create` → `ImageTexture`); no imported assets beyond `icon.svg`
 - **UI** — sun mass label, planet mass panel (`VBoxContainer` with per-planet mass/%/status), orbit trail lines (gradient-colored `Line2D`)
+
+## Visual language
+
+The game uses a single, shared TRON-inspired design language. All visual tokens live in `scripts/tron_palette.gd` (`class_name TronPalette`) and all neon-drawing recipes live in `scripts/draw_utils.gd` (`class_name DrawUtils`). **Never introduce new inline `Color` constants in component scripts** — pull from `TronPalette` so the look stays tunable from one place. Issues #81–#90 track the rollout.
+
+### Palette (`TronPalette`)
+
+| Token | Use |
+|-------|-----|
+| `BG` | Near-black navy background (clear color, panel fills) |
+| `HULL_GLOW` / `HULL_LINE` / `HULL_BRIGHT` | Cyan 3-stroke triple-stack — primary wireframe color |
+| `ACCENT` / `ACCENT_GLOW` | Orange — wing trims, asteroid strokes, sun crowns, engine highlights |
+| `COCKPIT` / `COCKPIT_GLOW` | Bright cyan diamond + soft halo — focal bright accents |
+| `ENGINE_PORT` / `PORT_CORE` / `FLAME_OUTER` / `FLAME_INNER` | Additive teal exhaust |
+| `RING_GLOW` / `RING_LINE` / `RING_BRIGHT` | Segmented HUD-overlay rings (alpha already capped — see GUI-overlay rule) |
+| `RING_ALPHA_MAX` (0.5), `RING_PULSE_MIN` (0.35), `RING_PULSE_SPEED` (2.5 rad/s) | Indicator-ring tuning |
+
+### Stroke triple-stack — the TRON look
+
+Every neon stroke is **three layered `draw_polyline` calls** — this recipe *is* the look:
+
+| Layer | Width | Alpha | Role |
+|-------|-------|-------|------|
+| Glow  | 5.0 px | ~0.15-0.45 (token-dependent) | Wide soft underlayer → the bloom feel |
+| Line  | 1.5 px | ~0.5-1.0 | Mid stroke — the visible edge |
+| Bright | 0.5 px | ~0.5-1.0 | Crisp inner core — the " filament" highlight |
+
+Call `DrawUtils.neon_polyline(canvas, points, glow, line, bright)` to apply all three in one call. Do not invent new widths — change `DrawUtils.NEON_*_WIDTH` constants if a global retune is needed. Similarly `neon_arc` / `neon_segmented_ring` / `neon_circle` apply the same triple-stack to curved geometry.
+
+### Additive blending
+
+All glow-bearing layers (spaceship thrust, indicator ring, impact fx, sun glow sprites) use `CanvasItemMaterial.BLEND_MODE_ADD` against the near-black `BG`. Additive math is what makes thin strokes "pop" without resorting to a heavy bloom pass. New glowy elements should follow the same pattern — instantiate a `CanvasItemMaterial`, set `blend_mode = BLEND_MODE_ADD`, assign to the node's `material`.
+
+### GUI-overlay alpha cap (PR #80 rule)
+
+Rings, reticles, HUD markers, and other overlay elements that should read as *GUI on top of the world* (not part of the ship/planet structure) **cap alpha at 50%**. The spaceship indicator ring (`TronPalette.RING_*` constants are already pre-capped at 0.15 / 0.475 / 0.50) is the reference implementation. Solid neon strokes (hull, sun crown, asteroid wireframe) are exempt — those use `HULL_*` / `ACCENT` at full alpha and read as physical structure.
+
+### Pulsation convention
+
+Any element that needs to "breathe" to hint at clickability (or other state) should swing alpha between `TronPalette.RING_PULSE_MIN` (0.35) and 1.0 of its capped base values at `TronPalette.RING_PULSE_SPEED` (2.5 rad/s ≈ 0.4 Hz). Use:
+
+```gdscript
+var alpha_mult := DrawUtils.pulsate_factor(phase, TronPalette.RING_PULSE_MIN)
+var color := DrawUtils.modulate_alpha(TronPalette.RING_LINE, alpha_mult)
+```
+
+The caller advances `phase` itself (no hidden time dependence in the helper). The spaceship ring (`spaceship.gd:_RingLayer`) is the reference implementation — pulses only when not selected, holds steady when selected, phase keeps advancing so resumes are seamless.
+
+### Reference helpers (`DrawUtils`)
+
+| Function | Use for |
+|----------|---------|
+| `neon_polyline(canvas, points, glow, line, bright, antialias=true)` | 3-stroke neon on any polyline (hulls, braces, accents) |
+| `neon_arc(canvas, center, r, a0, a1, segments, glow, line, bright, antialias=true)` | 3-stroke on a single arc segment |
+| `neon_segmented_ring(canvas, center, r, segment_count, gap, glow, line, bright, antialias=true)` | Canonical TRON HUD-overlay ring (N arcs with symmetric gaps; first arc starts at `-PI/2 + gap/2` so the gap pattern is symmetric about the heading axis) |
+| `neon_circle(canvas, center, r, glow, line, bright, segments=64, antialias=true)` | Closed 360° neon arc (planet rims, sun crowns) |
+| `neon_filled_accent(canvas, points, fill, glow, line, antialias=true)` | Filled accent polygon (orange wing trims) — solid fill + 2 outer strokes |
+| `pulsate_factor(phase, min_val=0.35) -> float` | Sine envelope in `[min_val, 1.0]` — for breathing animations |
+| `modulate_alpha(c, factor) -> Color` | Scale a `Color`'s alpha while keeping RGB intact — for applying pulsate to base palette |
+
+### Conventions for new components
+
+1. **No inline `Color` literals** in component scripts — import `const PAL := preload("res://scripts/tron_palette.gd")` (and `DU := preload("res://scripts/draw_utils.gd")` for drawing) and reference `PAL.HULL_LINE` etc.
+2. **Preload via `res://` path**, not via `class_name` global — GDScript rejects `const PAL := TronPalette` as a non-constant expression. The preload form is the codebase convention (see `progression.gd:37-42`, `orbital_body.gd:4-5`).
+3. **Inner classes don't inherit preload aliases** — if a component uses inner classes (e.g. `spaceship.gd:_GlowLayer`), each inner class needs its own `const PAL := preload(...)` binding.
+4. **No new shaders** when a `_draw()` + 3-stroke neon polyline achieves the look. Add a shader only when the effect genuinely needs per-pixel work (noise, blur, bloom — see issue #90).
+5. **No new autoloads** — `TronPalette` and `DrawUtils` are pure `class_name` + preload, no singleton registration in `project.godot`.
