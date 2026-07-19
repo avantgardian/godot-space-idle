@@ -1,6 +1,13 @@
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1"]
+[ext_resource type="Shader" path="res://shaders/menu_grid.gdshader" id="2"]
+
+[sub_resource type="ShaderMaterial" id="shader_menu_grid"]
+shader = ExtResource("2")
+shader_parameter/line_color = Color(0.18, 0.55, 1.0, 0.08)
+shader_parameter/cell_size = 50.0
+shader_parameter/line_width = 1.0
 
 [node name="MainMenu" type="Control"]
 anchor_left = 0.0
@@ -16,6 +23,15 @@ anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.0392, 0.0392, 0.102, 1)
+
+[node name="GridPlane" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+material = SubResource("shader_menu_grid")
+color = Color(0, 0, 0, 0)
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
