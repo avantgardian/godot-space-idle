@@ -97,7 +97,29 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 
 ## Visual language
 
-The game uses a single, shared TRON-inspired design language. All visual tokens live in `scripts/tron_palette.gd` (`class_name TronPalette`) and all neon-drawing recipes live in `scripts/draw_utils.gd` (`class_name DrawUtils`). **Never introduce new inline `Color` constants in component scripts** — pull from `TronPalette` so the look stays tunable from one place. Issues #81–#90 track the rollout.
+The project uses **two distinct visual languages** that should not be mixed:
+
+1. **TRON neon** — GUI chrome only: menus, buttons, panels, the spaceship, HUD overlay rings (e.g. the spaceship indicator ring, selection reticles), mouse-over highlights, and the **trail lines** asteroids/planets leave behind. All TRON visual tokens live in `scripts/tron_palette.gd` (`class_name TronPalette`) and all neon-drawing recipes live in `scripts/draw_utils.gd` (`class_name DrawUtils`). **Never introduce new inline `Color` constants in TRON-scoped component scripts** — pull from `TronPalette` so the look stays tunable from one place. Issues #81–#90 track the rollout.
+
+2. **Realism** — the celestial bodies themselves: the sun's surface, planet surfaces/atmospheres, and asteroid bodies. These render with physically-motivated shading (Lambert diffuse, limb darkening, atmospheric scattering, fbm noise) and photometric colors. Do **not** force-fit celestial body colors into the TRON cyan/orange palette. Realism colors belong either inline in the body's own shader/script or — preferably once the planet shader pipeline lands — in a sibling `PlanetPalette` class (see issue #103). The TRON rules (triple-stack neon, GUI-alpha cap, additive bloom glows) do **not** apply to body surfaces; they only apply to TRON-scoped elements (so a planet may have a realistic Earth-blue surface + a TRON-cyan mouse-over ring stacked on top — both languages coexisting on one node).
+
+The sun is the reference implementation of the split: its surface is a realism shader (`shaders/sun_surface.gdshader`), while its corona crown and impact rings are TRON neon overlays.
+
+### Scope table — which language applies where
+
+| Element | Language | Tokens live in |
+|---------|----------|----------------|
+| Menus, buttons, panels, MassLabel, EventLog | TRON | `TronPalette` + `game_theme.tres` |
+| Spaceship (hull, cockpit, ring, engines) | TRON | `TronPalette` |
+| HUD overlay rings (selection, mouse-over, reticles) | TRON | `TronPalette` (`RING_*`) |
+| Trail Line2Ds (planet/asteroid trails) | TRON | `TronPalette` + `DrawUtils.trail_head/tail` |
+| Sun surface (granulation, spots, limb darkening) | Realism | `sun_surface.gdshader` uniforms |
+| Sun corona crown + impact ring | TRON overlay | `TronPalette` |
+| Planet surfaces (rocky, greenhouse, terrestrial, gas, ice) | Realism | (planned) `planet_surface.gdshader` + `PlanetPalette` |
+| Planet atmospheres / rim glow | Realism | shader uniforms |
+| Planet rings (Saturn-style) | Realism | shader uniforms |
+| Asteroid bodies | Realism | TBD (shader or procedural texture) |
+| Asteroid trails | TRON | `TronPalette` + `DrawUtils.trail_head/tail` |
 
 ### Palette (`TronPalette`)
 
