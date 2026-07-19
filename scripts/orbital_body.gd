@@ -5,6 +5,7 @@ const _TEX := preload("res://scripts/texture_utils.gd")
 const _TRAIL := preload("res://scripts/trail_component.gd")
 const DU := preload("res://scripts/draw_utils.gd")
 const _PLANET_SHADER := preload("res://shaders/planet_surface.gdshader")
+const PAL := preload("res://scripts/planet_palette.gd")
 var _sprite: Sprite2D
 
 @export var orbit_radius: float = 500.0
@@ -107,10 +108,16 @@ func _apply_planet_shader():
 	_sprite.material = _shader_mat
 
 func _get_shader_base_color() -> Color:
+	# Per-biome issues (#104-#109) override this to return a PlanetPalette
+	# token appropriate to their biome. The default path here preserves the
+	# pre-shader identity color (set by each planet script) so the day/night
+	# terminator reads against a familiar tint during the rollout.
 	var pc = get("planet_color")
 	if pc is Color:
 		return pc
-	return Color.WHITE
+	# Fallback: photometric Earth-ocean blue, so a planet with no identity
+	# color still renders as a plausible sphere rather than flat white.
+	return PAL.TERRA_OCEAN_DEEP
 
 func _get_planet_texture_size() -> int:
 	return 32
