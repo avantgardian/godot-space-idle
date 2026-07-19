@@ -11,7 +11,7 @@ var planet_color: Color = Color(0.95, 0.85, 0.5, 1.0)
 func _ready():
 	use_shader = true
 	planet_type = &"greenhouse"
-	rotation_rate = 0.02  # very slow retrograde feel
+	rotation_rate = 0.08  # animated cloud bands visible (~79s full rotation)
 	cloud_swirl_amp = 0.15
 	cloud_swirl_freq = 6.0
 	cloud_contrast = 0.6
