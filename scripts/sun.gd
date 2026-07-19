@@ -191,11 +191,10 @@ func _generate_sun_glows():
 		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		return m
 
-# Per-type corona. Falloff is gentle so the aura stays visible and the
-	# bloom pass (#90) amplifies it convincingly. Original look used
-	# brightness = 0.5 + 0.5*(1-t), alpha = (1-t^2)*0.6 — keep that as the
-	# base and apply corona_falloff as a *gentle* extra decay so differences
-	# between O/B and M are visible without killing the aura entirely.
+# Per-type corona. Game-convention glow: visible aura extending past the
+	# photosphere, amplified by the bloom pass (#90). Brightness decays
+	# gently per corona_falloff so per-type differences read (M compact, O/B
+	# extended) without collapsing the aura.
 	var glow_tex := func(size_ratio: float, falloff: float) -> Texture2D:
 		var size := int(texture_size * size_ratio)
 		var radius := size / 2.0
@@ -207,11 +206,12 @@ func _generate_sun_glows():
 				var dist := Vector2(x, y).distance_to(center)
 				if dist <= radius:
 					var t := dist / radius
-					# Base extended falloff (matches pre-issue-99 look).
-					var brightness := 0.5 + 0.5 * (1.0 - t)
-					# Apply per-type decay as additional softness — gentle, not a cliff.
-					brightness *= pow(1.0 - t, falloff * 0.3)
-					var alpha := (1.0 - t * t) * 0.6
+					# Bright core fading to soft outer halo. Quadratic base + per-type
+					# decay keeps the inner halo bright while extending the outer reach.
+					var brightness := (1.0 - t * t) * (1.0 - 0.5 * t)
+					brightness *= pow(1.0 - t, falloff * 0.25)
+					brightness *= 1.4  # boost so the aura reads at-a-glance
+					var alpha := (1.0 - t * t) * 0.85
 					image.set_pixel(x, y, Color(_star_glow_tint.r * brightness,
 												_star_glow_tint.g * brightness,
 												_star_glow_tint.b * brightness, alpha))
@@ -219,7 +219,7 @@ func _generate_sun_glows():
 
 	# Bump minimum radius so every type has a visible aura. corona_radius_mult
 	# still varies per type (M compact ~1.8, O/B extended ~2.6) but never collapses.
-	var outer_radius: float = max(_corona_radius_mult, 1.8)
+	var outer_radius: float = max(_corona_radius_mult, 2.0)
 	_glow_outer = Sprite2D.new()
 	_glow_outer.texture = glow_tex.call(outer_radius, _corona_falloff)
 	_glow_outer.centered = true
@@ -229,7 +229,7 @@ func _generate_sun_glows():
 	add_child(_glow_outer)
 
 	_glow_inner = Sprite2D.new()
-	_glow_inner.texture = glow_tex.call(1.25, _corona_falloff)
+	_glow_inner.texture = glow_tex.call(1.4, _corona_falloff)
 	_glow_inner.centered = true
 	_glow_inner.name = "GlowInner"
 	_glow_inner.z_index = -1

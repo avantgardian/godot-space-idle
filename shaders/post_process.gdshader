@@ -5,7 +5,7 @@ uniform float u_vignette_radius : hint_range(0.0, 1.0) = 0.55;
 
 uniform float u_ca_impact = 0.0;
 
-uniform float u_bloom_intensity : hint_range(0.0, 2.0) = 0.0;
+uniform float u_bloom_intensity : hint_range(0.0, 2.0) = 0.7;
 uniform float u_bloom_threshold : hint_range(0.0, 2.0) = 0.85;
 uniform float u_bloom_blur_radius : hint_range(1.0, 16.0) = 5.0;
 uniform vec3 u_bloom_tint : source_color = vec3(0.55, 0.85, 1.0);
