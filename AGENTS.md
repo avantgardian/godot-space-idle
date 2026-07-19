@@ -56,6 +56,15 @@ Every feature or fix follows this sequence:
 | `draw_utils.gd` | `RefCounted` | `class_name DrawUtils` — static neon drawing helpers (`neon_polyline`, `neon_arc`, `neon_segmented_ring`, `neon_circle`, `neon_filled_accent`, `pulsate_factor`, `modulate_alpha`) |
 | `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
 
+## Shaders
+
+| Shader | Type | Role |
+|--------|------|------|
+| `shaders/star_blur.gdshader` | `canvas_item` | Per-layer blur for the parallax star field; `blur_amount` driven by camera zoom |
+| `shaders/sun_noise.gdshader` | `canvas_item` | Runtime noise texture for the sun core; `time` parameter advanced each frame |
+| `shaders/post_process.gdshader` | `canvas_item` | Screen-space chromatic aberration + scanline tint triggered by sun impacts |
+| `shaders/menu_grid.gdshader` | `canvas_item` | TRON grid plane behind the main menu — repeating cyan lines over `BG`; tunables `line_color`, `cell_size`, `line_width` |
+
 ## Architecture
 
 - **No autoloads/singletons** — `main.gd` owns all state and coordinates child nodes via `$` paths
