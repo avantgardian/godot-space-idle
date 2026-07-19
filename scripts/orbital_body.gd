@@ -248,7 +248,7 @@ func _apply_atmosphere_shader(tex_size: int):
 	_atm_mat.set_shader_parameter("u_atm_color", Vector3(atm_color.r, atm_color.g, atm_color.b))
 	_atm_mat.set_shader_parameter("u_atm_intensity", atm_intensity)
 	_atm_mat.set_shader_parameter("u_atm_ambient", atm_ambient)
-	_atm_mat.set_shader_parameter("u_atm_thickness", 0.18)
+	_atm_mat.set_shader_parameter("u_atm_thickness", 0.03)
 	_atm_mat.set_shader_parameter("u_planet_radius_uv", 1.0 / atm_thickness_mult)
 	_atm_sprite.material = _atm_mat
 
