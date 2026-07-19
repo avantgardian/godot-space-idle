@@ -14,6 +14,7 @@ func _ready():
 	crater_count = 6
 	polar_cap_lat_deg = 65.0
 	polar_softness = 0.12
+	atm_color = PAL.ATM_RIM_MARS
 	super()
 
 func _get_planet_texture_size() -> int:

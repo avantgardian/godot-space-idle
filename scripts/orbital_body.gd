@@ -5,8 +5,11 @@ const _TEX := preload("res://scripts/texture_utils.gd")
 const _TRAIL := preload("res://scripts/trail_component.gd")
 const DU := preload("res://scripts/draw_utils.gd")
 const _PLANET_SHADER := preload("res://shaders/planet_surface.gdshader")
+const _ATM_SHADER := preload("res://shaders/atmosphere_rim.gdshader")
 const PAL := preload("res://scripts/planet_palette.gd")
 var _sprite: Sprite2D
+var _atm_sprite: Sprite2D
+var _atm_mat: ShaderMaterial
 
 @export var orbit_radius: float = 500.0
 @export var orbit_period: float = 48.0
@@ -34,6 +37,18 @@ var _trail_component: Node
 @export var crater_size_max_deg: float = 9.0
 @export var polar_cap_lat_deg: float = 0.0
 @export var polar_softness: float = 0.1
+
+# Atmosphere rim glow (#110). Per-planet scripts opt in by setting
+# atm_color to a non-transparent PlanetPalette token. Default alpha 0
+# → no rim sprite is generated at all (Mercury, dead moons).
+# atm_thickness_mult controls the size of the rim sprite relative to
+# the planet disk — needs a generous buffer (>= 2.0) so the halo fades
+# to ~0 well inside the sprite's edge (otherwise the square texture
+# boundary becomes visible as a hard clip).
+@export var atm_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var atm_thickness_mult: float = 2.5
+@export var atm_intensity: float = 1.2
+@export var atm_ambient: float = 0.05
 
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
@@ -86,6 +101,7 @@ func _generate_texture():
 	add_child(_sprite)
 	if use_shader:
 		_apply_planet_shader()
+		_apply_atmosphere_shader(tex_size)
 
 func _make_white_disk_mask(size: int) -> ImageTexture:
 	var radius := size / 2.0
@@ -203,6 +219,44 @@ func _sync_crater_uniforms():
 	_shader_mat.set_shader_parameter("u_crater_size", sizes)
 	_shader_mat.set_shader_parameter("u_crater_strength", strengths)
 
+func _apply_atmosphere_shader(tex_size: int):
+	# Gated by atm_color.a > 0 — Mercury and dead moons produce no rim sprite.
+	if atm_color.a <= 0.0:
+		return
+	# The rim sprite is a square slightly larger than the planet disk.
+	# We use a fully-opaque white texture (no disk mask) so the shader has
+	# pixels to glow through OUTSIDE the planet silhouette — the shader
+	# itself does all the geometric falloff. We need the planet's apparent
+	# disk radius inside the rim sprite's UV to equal 1.0 in shader UV
+	# space, so the rim sprite must be sized as planet_tex / (1.0 / thickness_mult)
+	# -> planet_tex * thickness_mult. Centered + same scale as planet sprite.
+	var atm_tex_size: int = int(tex_size * atm_thickness_mult)
+	if atm_tex_size < 4:
+		return
+	_atm_sprite = Sprite2D.new()
+	_atm_sprite.texture = _make_opaque_white_square(atm_tex_size)
+	_atm_sprite.centered = true
+	# Z above the planet so the halo draws OVER the orbit line (trail) and
+	# over the planet disk — atmospheres render both in front of and around
+	# the disk on the day side. Additive blend won't blow out the surface
+	# because the rim kernel is 0 inside r < 1.0 (the planet disk).
+	_atm_sprite.z_index = 1
+	add_child(_atm_sprite)
+	_atm_mat = ShaderMaterial.new()
+	_atm_mat.shader = _ATM_SHADER
+	_atm_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
+	_atm_mat.set_shader_parameter("u_atm_color", Vector3(atm_color.r, atm_color.g, atm_color.b))
+	_atm_mat.set_shader_parameter("u_atm_intensity", atm_intensity)
+	_atm_mat.set_shader_parameter("u_atm_ambient", atm_ambient)
+	_atm_mat.set_shader_parameter("u_atm_thickness", 0.03)
+	_atm_mat.set_shader_parameter("u_planet_radius_uv", 1.0 / atm_thickness_mult)
+	_atm_sprite.material = _atm_mat
+
+func _make_opaque_white_square(size: int) -> ImageTexture:
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color(1.0, 1.0, 1.0, 1.0))
+	return ImageTexture.create_from_image(image)
+
 func _get_shader_base_color() -> Color:
 	# Per-biome issues (#104-#109) override this to return a PlanetPalette
 	# token appropriate to their biome. The default path here preserves the
@@ -258,7 +312,10 @@ func _process(delta):
 		var dir := -position
 		if dir.length_squared() > 0.0:
 			dir = dir.normalized()
-		_shader_mat.set_shader_parameter("u_light_dir", Vector3(dir.x, dir.y, 0.0))
+		var light_vec := Vector3(dir.x, dir.y, 0.0)
+		_shader_mat.set_shader_parameter("u_light_dir", light_vec)
+		if _atm_mat:
+			_atm_mat.set_shader_parameter("u_light_dir", light_vec)
 
 	var sun_r := sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
