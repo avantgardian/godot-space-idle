@@ -4,6 +4,7 @@ extends Node2D
 const _TEX := preload("res://scripts/texture_utils.gd")
 const _TRAIL := preload("res://scripts/trail_component.gd")
 const DU := preload("res://scripts/draw_utils.gd")
+const _PLANET_SHADER := preload("res://shaders/planet_surface.gdshader")
 var _sprite: Sprite2D
 
 @export var orbit_radius: float = 500.0
@@ -18,6 +19,15 @@ var _vel: Vector2
 var _dead: bool = false
 @export var trail_max: int = 1200
 var _trail_component: Node
+
+@export var use_shader: bool = false
+@export var planet_type: StringName = &""
+@export var planet_seed: int = 0
+@export var axial_tilt_deg: float = 0.0
+@export var rotation_rate: float = 0.05
+
+var _planet_time: float = 0.0
+var _shader_mat: ShaderMaterial
 
 signal collided_with_sun
 
@@ -50,9 +60,56 @@ func setup_trail(color: Color):
 func _generate_texture():
 	var tex_size := _get_planet_texture_size()
 	_sprite = Sprite2D.new()
-	_sprite.texture = _TEX.make_circle_texture(tex_size, _get_planet_color)
+	if use_shader:
+		_sprite.texture = _make_white_disk_mask(tex_size)
+	else:
+		_sprite.texture = _TEX.make_circle_texture(tex_size, _get_planet_color)
 	_sprite.centered = true
 	add_child(_sprite)
+	if use_shader:
+		_apply_planet_shader()
+
+func _make_white_disk_mask(size: int) -> ImageTexture:
+	var radius := size / 2.0
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	var center := Vector2(radius, radius)
+	for x in range(size):
+		for y in range(size):
+			var pos := Vector2(x, y)
+			var dist := pos.distance_to(center)
+			if dist <= radius:
+				var t := dist / radius
+				var alpha := 1.0
+				if t > 0.95:
+					alpha = 1.0 - (t - 0.95) / 0.05
+				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
+	return ImageTexture.create_from_image(image)
+
+func _apply_planet_shader():
+	var seed_val := planet_seed
+	if seed_val == 0:
+		seed_val = hash(name)
+	_shader_mat = ShaderMaterial.new()
+	_shader_mat.shader = _PLANET_SHADER
+	_shader_mat.set_shader_parameter("u_time", 0.0)
+	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
+	_shader_mat.set_shader_parameter("u_ambient", 0.06)
+	_shader_mat.set_shader_parameter("u_limb", 0.35)
+	_shader_mat.set_shader_parameter("u_axial_tilt", deg_to_rad(axial_tilt_deg))
+	_shader_mat.set_shader_parameter("u_spin_rate", rotation_rate)
+	_shader_mat.set_shader_parameter("u_seed", seed_val)
+	var bc := _get_shader_base_color()
+	_shader_mat.set_shader_parameter("u_base_color", Vector3(bc.r, bc.g, bc.b))
+	_shader_mat.set_shader_parameter("u_noise_scale", 4.0)
+	_shader_mat.set_shader_parameter("u_noise_amp", 0.15)
+	_sprite.material = _shader_mat
+
+func _get_shader_base_color() -> Color:
+	var pc = get("planet_color")
+	if pc is Color:
+		return pc
+	return Color.WHITE
 
 func _get_planet_texture_size() -> int:
 	return 32
@@ -90,6 +147,14 @@ func _process(delta):
 	_vel += acc * delta
 	_pos += _vel * delta
 	position = _pos
+
+	if _shader_mat:
+		_planet_time += delta
+		_shader_mat.set_shader_parameter("u_time", _planet_time)
+		var dir := -position
+		if dir.length_squared() > 0.0:
+			dir = dir.normalized()
+		_shader_mat.set_shader_parameter("u_light_dir", Vector3(dir.x, dir.y, 0.0))
 
 	var sun_r := sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
