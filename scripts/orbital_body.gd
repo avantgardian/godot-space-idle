@@ -5,8 +5,11 @@ const _TEX := preload("res://scripts/texture_utils.gd")
 const _TRAIL := preload("res://scripts/trail_component.gd")
 const DU := preload("res://scripts/draw_utils.gd")
 const _PLANET_SHADER := preload("res://shaders/planet_surface.gdshader")
+const _ATM_SHADER := preload("res://shaders/atmosphere_rim.gdshader")
 const PAL := preload("res://scripts/planet_palette.gd")
 var _sprite: Sprite2D
+var _atm_sprite: Sprite2D
+var _atm_mat: ShaderMaterial
 
 @export var orbit_radius: float = 500.0
 @export var orbit_period: float = 48.0
@@ -34,6 +37,14 @@ var _trail_component: Node
 @export var crater_size_max_deg: float = 9.0
 @export var polar_cap_lat_deg: float = 0.0
 @export var polar_softness: float = 0.1
+
+# Atmosphere rim glow (#110). Per-planet scripts opt in by setting
+# atm_color to a non-transparent PlanetPalette token. Default alpha 0
+# → no rim sprite is generated at all (Mercury, dead moons).
+@export var atm_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+@export var atm_thickness_mult: float = 1.25
+@export var atm_intensity: float = 1.0
+@export var atm_ambient: float = 0.15
 
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
@@ -86,6 +97,7 @@ func _generate_texture():
 	add_child(_sprite)
 	if use_shader:
 		_apply_planet_shader()
+		_apply_atmosphere_shader(tex_size)
 
 func _make_white_disk_mask(size: int) -> ImageTexture:
 	var radius := size / 2.0
@@ -203,6 +215,31 @@ func _sync_crater_uniforms():
 	_shader_mat.set_shader_parameter("u_crater_size", sizes)
 	_shader_mat.set_shader_parameter("u_crater_strength", strengths)
 
+func _apply_atmosphere_shader(tex_size: int):
+	# Gated by atm_color.a > 0 — Mercury and dead moons produce no rim sprite.
+	if atm_color.a <= 0.0:
+		return
+	# Limb texture: a flat-white disk mask slightly larger than the planet
+	# so the rim has the outer rim_pixels to glow through. The shader does
+	# the actual falloff — the texture just defines the silhouette.
+	var atm_tex_size: int = int(tex_size * atm_thickness_mult)
+	if atm_tex_size < 4:
+		return
+	_atm_sprite = Sprite2D.new()
+	_atm_sprite.texture = _make_white_disk_mask(atm_tex_size)
+	_atm_sprite.centered = true
+	_atm_sprite.z_index = -1
+	add_child(_atm_sprite)
+	_atm_mat = ShaderMaterial.new()
+	_atm_mat.shader = _ATM_SHADER
+	_atm_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
+	_atm_mat.set_shader_parameter("u_atm_color", Vector3(atm_color.r, atm_color.g, atm_color.b))
+	_atm_mat.set_shader_parameter("u_atm_intensity", atm_intensity)
+	_atm_mat.set_shader_parameter("u_atm_ambient", atm_ambient)
+	_atm_mat.set_shader_parameter("u_atm_thickness", 0.07)
+	_atm_mat.set_shader_parameter("u_atm_outer_falloff", 1.2)
+	_atm_sprite.material = _atm_mat
+
 func _get_shader_base_color() -> Color:
 	# Per-biome issues (#104-#109) override this to return a PlanetPalette
 	# token appropriate to their biome. The default path here preserves the
@@ -258,7 +295,10 @@ func _process(delta):
 		var dir := -position
 		if dir.length_squared() > 0.0:
 			dir = dir.normalized()
-		_shader_mat.set_shader_parameter("u_light_dir", Vector3(dir.x, dir.y, 0.0))
+		var light_vec := Vector3(dir.x, dir.y, 0.0)
+		_shader_mat.set_shader_parameter("u_light_dir", light_vec)
+		if _atm_mat:
+			_atm_mat.set_shader_parameter("u_light_dir", light_vec)
 
 	var sun_r := sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
