@@ -1,6 +1,8 @@
 class_name EventLog
 extends Node
 
+const PAL := preload("res://scripts/tron_palette.gd")
+
 const DURATION := 60.0
 const MAX_ENTRIES := 30
 
@@ -29,7 +31,7 @@ func log_message(msg: String):
 	var lbl := Label.new()
 	lbl.text = msg
 	lbl.add_theme_font_size_override("font_size", 11)
-	lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	lbl.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	_container.add_child(lbl)
 	_container.move_child(lbl, 0)
 	_entries.append({ label = lbl, age = 0.0 })

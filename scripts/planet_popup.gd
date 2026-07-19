@@ -1,28 +1,35 @@
 class_name PlanetPopup
 extends Panel
 
+const PAL := preload("res://scripts/tron_palette.gd")
+const DU := preload("res://scripts/draw_utils.gd")
+
 var _planet_node: Node2D
 var _camera: Camera2D
 var _popup_labels: Dictionary = {}
+var _planet_color: Color
 
 func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	_planet_node = planet_node
 	_camera = camera
+	_planet_color = planet_node.planet_color
 
 	mouse_filter = MOUSE_FILTER_IGNORE
 
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.04, 0.1, 0.88)
-	sb.border_color = planet_node.planet_color
-	sb.border_width_left = 3
-	sb.border_width_top = 1
-	sb.border_width_right = 1
-	sb.border_width_bottom = 1
-	sb.corner_radius_top_left = 6
-	sb.corner_radius_top_right = 6
-	sb.corner_radius_bottom_right = 6
-	sb.corner_radius_bottom_left = 6
-	add_theme_stylebox_override("panel", sb)
+	theme = load("res://resources/game_theme.tres") as Theme
+
+	var stripe := ColorRect.new()
+	stripe.name = "AccentStripe"
+	stripe.color = DU.modulate_alpha(_planet_color, 0.9)
+	stripe.anchor_left = 0.0
+	stripe.anchor_top = 0.0
+	stripe.anchor_right = 0.0
+	stripe.anchor_bottom = 1.0
+	stripe.offset_left = 4.0
+	stripe.offset_top = 8.0
+	stripe.offset_right = 7.0
+	stripe.offset_bottom = -8.0
+	add_child(stripe)
 
 	var margin := MarginContainer.new()
 	margin.anchor_left = 0.0
@@ -46,13 +53,13 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	var name_label := Label.new()
 	name_label.text = planet_node.planet_name
 	name_label.add_theme_font_size_override("font_size", 18)
-	name_label.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0, 1.0))
+	name_label.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	vbox.add_child(name_label)
 
 	var sep := ColorRect.new()
 	sep.custom_minimum_size = Vector2(0, 1)
 	sep.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	sep.color = Color(0.3, 0.4, 0.6, 0.25)
+	sep.color = DU.modulate_alpha(PAL.HULL_LINE, 0.3)
 	vbox.add_child(sep)
 
 	var fields := [
@@ -67,12 +74,12 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 		var lbl := Label.new()
 		lbl.text = f.label
 		lbl.add_theme_font_size_override("font_size", 11)
-		lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7, 1.0))
+		lbl.add_theme_color_override("font_color", DU.modulate_alpha(PAL.HULL_LINE, 0.7))
 		lbl.custom_minimum_size = Vector2(48, 0)
 		hbox.add_child(lbl)
 		var val := Label.new()
 		val.add_theme_font_size_override("font_size", 11)
-		val.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0, 1.0))
+		val.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 		hbox.add_child(val)
 		_popup_labels[f.key] = val
 		vbox.add_child(hbox)
