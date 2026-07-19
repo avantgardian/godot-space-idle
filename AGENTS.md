@@ -52,7 +52,8 @@ Every feature or fix follows this sequence:
 | `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 1599s, mass 5.14e-5, deep blue |
 | `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave reddish trails, despawn >4000u |
 | `texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
-| `tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens |
+| `tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens (GUI chrome, trails, HUD overlays) |
+| `planet_palette.gd` | `RefCounted` | `class_name PlanetPalette` — single source of truth for realism-side planet biome photometric color tokens (rocky, greenhouse, terrestrial, gas giant, ice giant, atmospheres, rings). Sibling to `TronPalette` — see Visual language section for the split. |
 | `draw_utils.gd` | `RefCounted` | `class_name DrawUtils` — static neon drawing helpers (`neon_polyline`, `neon_arc`, `neon_segmented_ring`, `neon_circle`, `neon_filled_accent`, `pulsate_factor`, `modulate_alpha`) |
 | `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
 
@@ -103,7 +104,7 @@ The project uses **two distinct visual languages** that should not be mixed:
 
 1. **TRON neon** — GUI chrome only: menus, buttons, panels, the spaceship, HUD overlay rings (e.g. the spaceship indicator ring, selection reticles), mouse-over highlights, and the **trail lines** asteroids/planets leave behind. All TRON visual tokens live in `scripts/tron_palette.gd` (`class_name TronPalette`) and all neon-drawing recipes live in `scripts/draw_utils.gd` (`class_name DrawUtils`). **Never introduce new inline `Color` constants in TRON-scoped component scripts** — pull from `TronPalette` so the look stays tunable from one place. Issues #81–#90 track the rollout.
 
-2. **Realism** — the celestial bodies themselves: the sun's surface, planet surfaces/atmospheres, and asteroid bodies. These render with physically-motivated shading (Lambert diffuse, limb darkening, atmospheric scattering, fbm noise) and photometric colors. Do **not** force-fit celestial body colors into the TRON cyan/orange palette. Realism colors belong either inline in the body's own shader/script or — preferably once the planet shader pipeline lands — in a sibling `PlanetPalette` class (see issue #103). The TRON rules (triple-stack neon, GUI-alpha cap, additive bloom glows) do **not** apply to body surfaces; they only apply to TRON-scoped elements (so a planet may have a realistic Earth-blue surface + a TRON-cyan mouse-over ring stacked on top — both languages coexisting on one node).
+2. **Realism** — the celestial bodies themselves: the sun's surface, planet surfaces/atmospheres, and asteroid bodies. These render with physically-motivated shading (Lambert diffuse, limb darkening, atmospheric scattering, fbm noise) and photometric colors. Do **not** force-fit celestial body colors into the TRON cyan/orange palette. Realism colors live in `scripts/planet_palette.gd` (`class_name PlanetPalette`, sibling to `TronPalette`) for planets/moons/rings/atmospheres, or inline in `shaders/sun_surface.gdshader` uniforms for the sun. The TRON rules (triple-stack neon, GUI-alpha cap, additive bloom glows) do **not** apply to body surfaces; they only apply to TRON-scoped elements (so a planet may have a realistic Earth-blue surface + a TRON-cyan mouse-over ring stacked on top — both languages coexisting on one node).
 
 The sun is the reference implementation of the split: its surface is a realism shader (`shaders/sun_surface.gdshader`), while its corona crown and impact rings are TRON neon overlays.
 
@@ -134,6 +135,22 @@ The sun is the reference implementation of the split: its surface is a realism s
 | `ENGINE_PORT` / `PORT_CORE` / `FLAME_OUTER` / `FLAME_INNER` | Additive teal exhaust |
 | `RING_GLOW` / `RING_LINE` / `RING_BRIGHT` | Segmented HUD-overlay rings (alpha already capped — see GUI-overlay rule) |
 | `RING_ALPHA_MAX` (0.5), `RING_PULSE_MIN` (0.35), `RING_PULSE_SPEED` (2.5 rad/s) | Indicator-ring tuning |
+
+### Palette (`PlanetPalette`)
+
+Sibling to `TronPalette`, single source of truth for realism-side biome photometric colors (`class_name PlanetPalette`, `scripts/planet_palette.gd`). Token groups:
+
+| Token group | Use |
+|-------------|-----|
+| `ROCKY_MERCURY_HI/LO`, `ROCKY_MARS_HI/LO`, `ROCKY_MARS_ICE`, `ROCKY_CRATER_SHADOW` | Rocky biomes (Mercury, Mars, dead moons) |
+| `VENUS_CLOUD_HI/LO`, `VENUS_SURFACE_LAVA` | Greenhouse / hot thick cloud decks (Venus) |
+| `TERRA_OCEAN_DEEP/SHALLOW`, `TERRA_LAND_TROPICAL/DESERT/TUNDRA`, `TERRA_ICE_CAP`, `TERRA_CLOUD_WHITE`, `TERRA_OCEAN_SPECULAR` | Terrestrial / habitable worlds (Earth) |
+| `GAS_BAND_TAN_HI/LO`, `GAS_STORM_RUST`, `GAS_STORM_WHITE`, `SATURN_BAND_HI/LO` | Gas giants (Jupiter base + Saturn) |
+| `ICE_METHANE_BLUE`, `ICE_DEEP_BLUE`, `ICE_STORM_DARK`, `ICE_HAZE_WHITE` | Ice giants (Uranus, Neptune) |
+| `ATM_RIM_EARTH/VENUS/MARS/ICE` | Atmospheric rim glow (sibling additive limb sprite, #110) |
+| `RING_SATURN_TAN`, `RING_SATURN_DARK` | Saturn-style ring system (#108) |
+
+**Convention**: planet shaders and biome issues (#104–#109) consume these via `const PAL := preload("res://scripts/planet_palette.gd")` and feed the resulting RGB into shader uniforms as `Vector3(color.r, color.g, color.b)`. Do **not** inline `Color(...)` literals in biome-specific shader / script code — add new biome tokens to `PlanetPalette` instead. Unlike `TronPalette`, `PlanetPalette` does **not** need a `game_theme.tres` mirror (no Button/Label/Panel consumes biome colors — only shader uniforms).
 
 ### Stroke triple-stack — the TRON look
 
@@ -180,7 +197,7 @@ The caller advances `phase` itself (no hidden time dependence in the helper). Th
 
 ### Conventions for new components
 
-1. **No inline `Color` literals** in component scripts — import `const PAL := preload("res://scripts/tron_palette.gd")` (and `DU := preload("res://scripts/draw_utils.gd")` for drawing) and reference `PAL.HULL_LINE` etc.
+1. **No inline `Color` literals** in component scripts — for TRON-scoped elements import `const PAL := preload("res://scripts/tron_palette.gd")` and reference `PAL.HULL_LINE` etc. For realism-scoped celestial body surfaces import `const PAL := preload("res://scripts/planet_palette.gd")` and reference `PAL.TERRA_OCEAN_DEEP` etc. (See Visual language section for the TRON vs Realism split.) Add `DU := preload("res://scripts/draw_utils.gd")` only when the component actually draws neon.
 2. **Preload via `res://` path**, not via `class_name` global — GDScript rejects `const PAL := TronPalette` as a non-constant expression. The preload form is the codebase convention (see `progression.gd:37-42`, `orbital_body.gd:4-5`).
 3. **Inner classes don't inherit preload aliases** — if a component uses inner classes (e.g. `spaceship.gd:_GlowLayer`), each inner class needs its own `const PAL := preload(...)` binding.
 4. **No new shaders** when a `_draw()` + 3-stroke neon polyline achieves the look. Add a shader only when the effect genuinely needs per-pixel work (noise, blur, bloom — see issue #90).
