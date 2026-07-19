@@ -9,12 +9,12 @@
 [ext_resource type="Script" uid="uid://lc3qs481xodg" path="res://scripts/saturn.gd" id="7_3cexz"]
 [ext_resource type="Script" uid="uid://dmo50hd20mo5e" path="res://scripts/uranus.gd" id="8_3ceyx"]
 [ext_resource type="Script" uid="uid://dj80qwr7odxpq" path="res://scripts/neptune.gd" id="9_3ceyz"]
-[ext_resource type="Script" path="res://scripts/camera_controller.gd" id="10"]
-[ext_resource type="Script" path="res://scripts/star_field.gd" id="11"]
-[ext_resource type="Script" path="res://scripts/sun.gd" id="12"]
-[ext_resource type="Script" path="res://scripts/event_log.gd" id="13"]
-[ext_resource type="Script" path="res://scripts/impact_fx.gd" id="14"]
-[ext_resource type="Script" path="res://scripts/pause_button.gd" id="15"]
+[ext_resource type="Script" uid="uid://ubljjmb24abf" path="res://scripts/camera_controller.gd" id="10"]
+[ext_resource type="Script" uid="uid://duxpmxdqg4jng" path="res://scripts/star_field.gd" id="11"]
+[ext_resource type="Script" uid="uid://531pf6utgrcp" path="res://scripts/sun.gd" id="12"]
+[ext_resource type="Script" uid="uid://cum2b52dq3j6h" path="res://scripts/event_log.gd" id="13"]
+[ext_resource type="Script" uid="uid://l5vhvj6q7umw" path="res://scripts/impact_fx.gd" id="14"]
+[ext_resource type="Script" uid="uid://dwo3cbib1gc1" path="res://scripts/pause_button.gd" id="15"]
 
 [node name="Main" type="Node2D" unique_id=1112431360]
 script = ExtResource("1_3ceyx")
@@ -28,25 +28,22 @@ script = ExtResource("11")
 [node name="Sun" type="Sprite2D" parent="." unique_id=1227695083]
 script = ExtResource("12")
 
-[node name="ImpactFX" type="Node" parent="."]
+[node name="ImpactFX" type="Node" parent="." unique_id=148378122]
 script = ExtResource("14")
-
 
 [node name="Mercury" type="Node2D" parent="." unique_id=1820550349]
 script = ExtResource("2_3ceyz")
 orbit_radius = 350.0
 orbit_period = 25.0
-start_angle = 0.0
-mass = 1.65e-7
+mass = 1.65e-07
 collision_radius = 18.0
 trail_max = 750
 
 [node name="Venus" type="Node2D" parent="." unique_id=20539749]
 script = ExtResource("3_bfxyz")
-orbit_radius = 500.0
 orbit_period = 47.0
 start_angle = 2.5
-mass = 2.45e-6
+mass = 2.45e-06
 collision_radius = 22.0
 trail_max = 1410
 
@@ -55,7 +52,7 @@ script = ExtResource("4_3cexz")
 orbit_radius = 700.0
 orbit_period = 78.0
 start_angle = 1.0
-mass = 3.0e-6
+mass = 3e-06
 collision_radius = 24.0
 trail_max = 2340
 
@@ -64,7 +61,7 @@ script = ExtResource("5_3ceyx")
 orbit_radius = 950.0
 orbit_period = 131.0
 start_angle = 4.0
-mass = 3.21e-7
+mass = 3.21e-07
 collision_radius = 13.0
 trail_max = 3930
 
@@ -73,7 +70,7 @@ script = ExtResource("6_3ceyz")
 orbit_radius = 1400.0
 orbit_period = 355.0
 start_angle = 0.5
-mass = 9.54e-4
+mass = 0.000954
 collision_radius = 50.0
 trail_max = 10650
 
@@ -82,7 +79,7 @@ script = ExtResource("7_3cexz")
 orbit_radius = 1800.0
 orbit_period = 616.0
 start_angle = 3.0
-mass = 2.86e-4
+mass = 0.000286
 collision_radius = 44.0
 trail_max = 18480
 
@@ -91,7 +88,7 @@ script = ExtResource("8_3ceyx")
 orbit_radius = 2200.0
 orbit_period = 1074.0
 start_angle = 1.5
-mass = 4.35e-5
+mass = 4.35e-05
 collision_radius = 28.0
 trail_max = 32220
 
@@ -100,7 +97,7 @@ script = ExtResource("9_3ceyz")
 orbit_radius = 2600.0
 orbit_period = 1599.0
 start_angle = 4.5
-mass = 5.14e-5
+mass = 5.14e-05
 collision_radius = 27.0
 trail_max = 47970
 
@@ -111,8 +108,8 @@ offset_left = 16.0
 offset_top = 16.0
 text = "Msun = 1.000"
 
-[node name="EventLog" type="Node" parent="UI"]
+[node name="EventLog" type="Node" parent="UI" unique_id=1291667855]
 script = ExtResource("13")
 
-[node name="PauseButton" type="Button" parent="UI"]
+[node name="PauseButton" type="Button" parent="UI" unique_id=1781696997]
 script = ExtResource("15")

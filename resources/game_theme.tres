@@ -1,104 +1,104 @@
-[gd_resource type="Theme" load_steps=9 format=3]
+[gd_resource type="Theme" format=3 uid="uid://cuj6m57rfj3k2"]
 
-[ext_resource type="FontFile" path="res://resources/fonts/Orbitron-Medium.ttf" id="font_orbitron"]
-[ext_resource type="FontFile" path="res://resources/fonts/Orbitron-Bold.ttf" id="font_orbitron_bold"]
-[ext_resource type="FontFile" path="res://resources/fonts/ShareTechMono-Regular.ttf" id="font_share_tech_mono"]
-
-[sub_resource type="StyleBoxFlat" id="sb_btn_normal"]
-bg_color = Color(0.04, 0.04, 0.102, 0.7)
-border_color = Color(0.55, 0.95, 1.0, 0.5)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-content_margin_left = 16.0
-content_margin_top = 8.0
-content_margin_right = 16.0
-content_margin_bottom = 8.0
-
-[sub_resource type="StyleBoxFlat" id="sb_btn_hover"]
-bg_color = Color(0.18, 0.55, 1.0, 0.18)
-border_color = Color(0.92, 1.0, 1.0, 0.5)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-content_margin_left = 16.0
-content_margin_top = 8.0
-content_margin_right = 16.0
-content_margin_bottom = 8.0
-
-[sub_resource type="StyleBoxFlat" id="sb_btn_pressed"]
-bg_color = Color(0.18, 0.55, 1.0, 0.3)
-border_color = Color(0.92, 1.0, 1.0, 0.65)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-content_margin_left = 16.0
-content_margin_top = 8.0
-content_margin_right = 16.0
-content_margin_bottom = 8.0
+[ext_resource type="FontFile" uid="uid://8s1grku7bx4a" path="res://resources/fonts/Orbitron-Medium.ttf" id="font_orbitron"]
+[ext_resource type="FontFile" uid="uid://525a7q2hpg5t" path="res://resources/fonts/Orbitron-Bold.ttf" id="font_orbitron_bold"]
+[ext_resource type="FontFile" uid="uid://c5s7pf32stpra" path="res://resources/fonts/ShareTechMono-Regular.ttf" id="font_share_tech_mono"]
 
 [sub_resource type="StyleBoxFlat" id="sb_btn_disabled"]
-bg_color = Color(0.04, 0.04, 0.102, 0.4)
-border_color = Color(0.55, 0.95, 1.0, 0.2)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
+bg_color = Color(0.04, 0.04, 0.102, 0.4)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.95, 1, 0.2)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="sb_btn_hover"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.18, 0.55, 1, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 1, 1, 0.5)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="sb_btn_normal"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.04, 0.04, 0.102, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.95, 1, 0.5)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="sb_btn_pressed"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.18, 0.55, 1, 0.3)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 1, 1, 0.65)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="sb_panel"]
-bg_color = Color(0.04, 0.04, 0.102, 0.85)
-border_color = Color(0.55, 0.95, 1.0, 0.5)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
 content_margin_left = 8.0
 content_margin_top = 6.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
+bg_color = Color(0.04, 0.04, 0.102, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.95, 1, 0.5)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [resource]
 default_font = ExtResource("font_orbitron")
-Button/styles/normal = SubResource("sb_btn_normal")
-Button/styles/hover = SubResource("sb_btn_hover")
-Button/styles/pressed = SubResource("sb_btn_pressed")
-Button/styles/disabled = SubResource("sb_btn_disabled")
-Button/colors/font_color = Color(0.92, 1.0, 1.0, 1.0)
-Button/colors/font_hover_color = Color(0.92, 1.0, 1.0, 1.0)
-Button/colors/font_pressed_color = Color(0.92, 1.0, 1.0, 1.0)
-Button/colors/font_disabled_color = Color(0.55, 0.95, 1.0, 0.4)
-Button/colors/font_outline_color = Color(0.18, 0.55, 1.0, 0.45)
+Button/colors/font_color = Color(0.92, 1, 1, 1)
+Button/colors/font_disabled_color = Color(0.55, 0.95, 1, 0.4)
+Button/colors/font_hover_color = Color(0.92, 1, 1, 1)
+Button/colors/font_outline_color = Color(0.18, 0.55, 1, 0.45)
+Button/colors/font_pressed_color = Color(0.92, 1, 1, 1)
 Button/constants/font_outline_size = 1
 Button/font_sizes/font_size = 20
-Label/colors/font_color = Color(0.92, 1.0, 1.0, 1.0)
-Label/colors/font_outline_color = Color(0.18, 0.55, 1.0, 0.45)
+Button/styles/disabled = SubResource("sb_btn_disabled")
+Button/styles/hover = SubResource("sb_btn_hover")
+Button/styles/normal = SubResource("sb_btn_normal")
+Button/styles/pressed = SubResource("sb_btn_pressed")
+Label/colors/font_color = Color(0.92, 1, 1, 1)
+Label/colors/font_outline_color = Color(0.18, 0.55, 1, 0.45)
 Label/constants/font_outline_size = 1
 Label/font_sizes/font_size = 18
 Label/fonts/font_bold = ExtResource("font_orbitron_bold")
