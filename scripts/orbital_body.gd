@@ -44,7 +44,11 @@ var _trail_component: Node
 @export var cloud_swirl_freq: float = 6.0
 @export var cloud_contrast: float = 0.6
 @export var limb_brighten: float = 0.0
-@export var surface_lava_leak: float = 0.0
+@export var surface_lava_leak: float = 0.0:
+	set(val):
+		surface_lava_leak = val
+		if _shader_mat:
+			_shader_mat.set_shader_parameter("u_surface_lava_leak", val)
 
 # Atmosphere rim glow (#110). Per-planet scripts opt in by setting
 # atm_color to a non-transparent PlanetPalette token. Default alpha 0
