@@ -134,3 +134,13 @@ The caller advances `phase` itself (no hidden time dependence in the helper). Th
 3. **Inner classes don't inherit preload aliases** — if a component uses inner classes (e.g. `spaceship.gd:_GlowLayer`), each inner class needs its own `const PAL := preload(...)` binding.
 4. **No new shaders** when a `_draw()` + 3-stroke neon polyline achieves the look. Add a shader only when the effect genuinely needs per-pixel work (noise, blur, bloom — see issue #90).
 5. **No new autoloads** — `TronPalette` and `DrawUtils` are pure `class_name` + preload, no singleton registration in `project.godot`.
+6. **`resources/game_theme.tres` mirrors `TronPalette` literals** — `.tres` files cannot `preload()` a script, so the theme hardcodes the same RGB values as `TronPalette` (e.g. `Color(0.55, 0.95, 1.0, 0.5)` ≡ `TronPalette.HULL_LINE` at 50% alpha). When changing a token in `tron_palette.gd`, also update the corresponding literal in `game_theme.tres` and keep both rows of the table below in sync:
+
+   | `TronPalette` token | `game_theme.tres` literal (RGB only) | Used as |
+   |---------------------|-------------------------------------|---------|
+   | `BG`                | `Color(0.04, 0.04, 0.102, …)`       | Panel + button bg |
+   | `HULL_LINE`         | `Color(0.55, 0.95, 1.0, …)`         | Button + panel border (alpha 0.5 = GUI-cap) |
+   | `HULL_BRIGHT`       | `Color(0.92, 1.0, 1.0, …)`         | Button + Label `font_color`, hover/pressed border |
+   | `HULL_GLOW`         | `Color(0.18, 0.55, 1.0, 0.45)`     | `font_outline_color` (Button + Label) |
+
+   The exported theme applies to: `Button`, `Label`, `Panel`. The MassLabel in `main.tscn` / `progression.tscn` uses no inline `theme_override_*` — it picks up `Label/font_sizes/font_size = 18` from the theme (a deliberate headline weight; other Labels all override to 11 in-script and are unaffected).
