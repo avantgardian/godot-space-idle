@@ -27,8 +27,25 @@ var _trail_component: Node
 @export var axial_tilt_deg: float = 0.0
 @export var rotation_rate: float = 0.05
 
+# Rocky biome params (#104). Per-planet scripts override these to taste.
+# Default u_polar_cap_lat = 0 → no caps.
+@export var crater_count: int = 0
+@export var crater_size_min_deg: float = 3.0
+@export var crater_size_max_deg: float = 9.0
+@export var polar_cap_lat_deg: float = 0.0
+@export var polar_softness: float = 0.1
+
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
+
+const BIOME_NONE  := 0
+const BIOME_ROCKY := 1
+const _MAX_CRATERS := 16
+
+var _crater_lats: Array[float] = []
+var _crater_lons: Array[float] = []
+var _crater_sizes: Array[float] = []
+var _crater_strengths: Array[float] = []
 
 signal collided_with_sun
 
@@ -93,6 +110,8 @@ func _apply_planet_shader():
 		seed_val = hash(name)
 	_shader_mat = ShaderMaterial.new()
 	_shader_mat.shader = _PLANET_SHADER
+	var biome := _get_biome_mode()
+	_shader_mat.set_shader_parameter("u_biome_mode", biome)
 	_shader_mat.set_shader_parameter("u_time", 0.0)
 	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
 	_shader_mat.set_shader_parameter("u_ambient", 0.06)
@@ -105,7 +124,84 @@ func _apply_planet_shader():
 	_shader_mat.set_shader_parameter("u_base_color", Vector3(bc.r, bc.g, bc.b))
 	_shader_mat.set_shader_parameter("u_noise_scale", 4.0)
 	_shader_mat.set_shader_parameter("u_noise_amp", 0.15)
+	# Rocky biome (#104) uniforms. Defaults are harmless (no caps, no craters)
+	# so non-rocky planets remain pixel-identical to the #102 path.
+	var rocky_hi := _get_rocky_hi()
+	var rocky_lo := _get_rocky_lo()
+	_shader_mat.set_shader_parameter("u_rocky_hi", Vector3(rocky_hi.r, rocky_hi.g, rocky_hi.b))
+	_shader_mat.set_shader_parameter("u_rocky_lo", Vector3(rocky_lo.r, rocky_lo.g, rocky_lo.b))
+	_shader_mat.set_shader_parameter("u_surface_grain_amp", 0.15)
+	_shader_mat.set_shader_parameter("u_polar_cap_lat", deg_to_rad(polar_cap_lat_deg))
+	_shader_mat.set_shader_parameter("u_polar_softness", polar_softness)
+	var polar_col := _get_polar_cap_color()
+	_shader_mat.set_shader_parameter("u_polar_cap_color", Vector3(polar_col.r, polar_col.g, polar_col.b))
+	# Crater uniforms seeded in _seed_craters; zeros here as placeholders.
+	_shader_mat.set_shader_parameter("u_crater_count", 0)
 	_sprite.material = _shader_mat
+	if biome == BIOME_ROCKY:
+		_seed_craters(seed_val)
+		_sync_crater_uniforms()
+
+func _get_biome_mode() -> int:
+	match planet_type:
+		&"rocky": return BIOME_ROCKY
+		_:
+			return BIOME_NONE
+
+func _get_rocky_hi() -> Color:
+	return PAL.ROCKY_MERCURY_HI
+
+func _get_rocky_lo() -> Color:
+	return PAL.ROCKY_MERCURY_LO
+
+func _get_polar_cap_color() -> Color:
+	return PAL.ROCKY_MARS_ICE
+
+func _seed_craters(seed_val: int):
+	_crater_lats.clear()
+	_crater_lons.clear()
+	_crater_sizes.clear()
+	_crater_strengths.clear()
+	var count: int = clamp(crater_count, 0, _MAX_CRATERS)
+	if count == 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_val * 31 + 7
+	for i in range(count):
+		var lat := rng.randf_range(-1.4, 1.4)
+		var lon := rng.randf_range(-PI, PI)
+		var size := deg_to_rad(rng.randf_range(crater_size_min_deg, crater_size_max_deg))
+		var strength := rng.randf_range(0.45, 0.80)
+		_crater_lats.append(lat)
+		_crater_lons.append(lon)
+		_crater_sizes.append(size)
+		_crater_strengths.append(strength)
+
+func _sync_crater_uniforms():
+	if not _shader_mat:
+		return
+	var count := _crater_lats.size()
+	_shader_mat.set_shader_parameter("u_crater_count", count)
+	if count == 0:
+		return
+	var pos := PackedVector2Array()
+	var sizes := PackedFloat32Array()
+	var strengths := PackedFloat32Array()
+	pos.resize(_MAX_CRATERS)
+	sizes.resize(_MAX_CRATERS)
+	strengths.resize(_MAX_CRATERS)
+	for i in range(_MAX_CRATERS):
+		if i < count:
+			pos[i] = Vector2(_crater_lats[i], _crater_lons[i])
+			sizes[i] = _crater_sizes[i]
+			strengths[i] = _crater_strengths[i]
+		else:
+			pos[i] = Vector2.ZERO
+			sizes[i] = 0.0
+			strengths[i] = 0.0
+	_shader_mat.set_shader_parameter("u_crater_pos", pos)
+	_shader_mat.set_shader_parameter("u_crater_size", sizes)
+	_shader_mat.set_shader_parameter("u_crater_strength", strengths)
 
 func _get_shader_base_color() -> Color:
 	# Per-biome issues (#104-#109) override this to return a PlanetPalette

@@ -94,7 +94,7 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 - **Asteroids** spawn every ~35–55s (max 3 alive), feel softened gravity from all planets, and despawn when >4000 units from origin.
 - **Star field** — procedural parallax with canvas-item shaders (6 layers, edge-wrapping, seeded by `star_seed`). Blur amount driven by camera zoom via shader parameter.
 - **Sun** — runtime-generated white-disk mask texture + realism shader (`sun_surface.gdshader`), sibling additive-blend glow sprites (corona), pulsating `breathe` animation, collision flash on any impact. Spot machinery exists in `sun.gd` but is force-disabled per user feedback (`sun.gd:69-70`).
-- **Camera** — `Camera2D` with position smoothing and lerp-smoothed zoom (clamped 0.3–1.3×). Zoom level mapped to star-field blur.
+- **Camera** — `Camera2D` with position smoothing and lerp-smoothed zoom (clamped 0.3–4.0×). Zoom level mapped to star-field blur.
 - **Textures** — all generated in code (`Image.create` → `ImageTexture`); no imported assets beyond `icon.svg`
 - **UI** — sun mass label, planet mass panel (`VBoxContainer` with per-planet mass/%/status), orbit trail lines (gradient-colored `Line2D`)
 
