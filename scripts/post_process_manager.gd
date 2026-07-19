@@ -3,7 +3,7 @@ extends Node
 
 var _mat: ShaderMaterial
 var _ca_impact: float = 0.0
-var _bloom_intensity: float = 0.7
+var _bloom_intensity: float = 0.0
 
 func _ready():
 	var pp_layer := CanvasLayer.new()
