@@ -1,6 +1,7 @@
 class_name Asteroid
 extends Node2D
 
+const PAL := preload("res://scripts/tron_palette.gd")
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
 const PLANET_SOFTENING: float = 150.0
@@ -37,7 +38,11 @@ func set_vel(v: Vector2):
 func _ready():
 	_generate_texture()
 	_trail_component = _TRAIL.new()
-	_trail_component.setup(Color(1.0, 0.2, 0.05, 0.0), Color(1.0, 0.2, 0.05, 0.5), 1.0, 600)
+	var accent := PAL.ACCENT
+	_trail_component.setup(
+		Color(accent.r, accent.g, accent.b, 0.0),
+		Color(accent.r, accent.g, accent.b, 0.5),
+		1.0, 600)
 	add_child(_trail_component)
 
 func _generate_texture():

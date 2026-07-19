@@ -14,6 +14,14 @@ func setup(color0: Color, color1: Color, width: float, max_points: int):
 	_line.width = width
 	_line.antialiased = true
 	_line.z_index = -1
+	_line.joint_mode = Line2D.LINE_JOINT_ROUND
+	_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	# Additive blend so trail brightness stacks against the near-black BG
+	# (TRON-design convention — see AGENTS.md "Additive blending").
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_line.material = mat
 	var grad := Gradient.new()
 	grad.set_color(0, color0)
 	grad.set_color(1, color1)

@@ -46,7 +46,7 @@ func _ready():
 	]
 	for planet in _planet_data:
 		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
-		planet.setup_trail(planet.trail_color0, planet.trail_color1)
+		planet.setup_trail(planet.planet_color)
 	_collision_mgr = _COLLISION_MGR.new(_planet_data, _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _find_planet_idx, pm.trigger)
 
 func _show_planet_popup(planet_node: Node2D):
