@@ -38,6 +38,18 @@ var _trail_component: Node
 @export var polar_cap_lat_deg: float = 0.0
 @export var polar_softness: float = 0.1
 
+# Greenhouse biome params (#105). All default to inert values; per-planet
+# scripts (e.g. Venus) opt in via planet_type = &"greenhouse".
+@export var cloud_swirl_amp: float = 0.15
+@export var cloud_swirl_freq: float = 6.0
+@export var cloud_contrast: float = 0.6
+@export var limb_brighten: float = 0.0
+@export var surface_lava_leak: float = 0.0:
+	set(val):
+		surface_lava_leak = val
+		if _shader_mat:
+			_shader_mat.set_shader_parameter("u_surface_lava_leak", val)
+
 # Atmosphere rim glow (#110). Per-planet scripts opt in by setting
 # atm_color to a non-transparent PlanetPalette token. Default alpha 0
 # → no rim sprite is generated at all (Mercury, dead moons).
@@ -53,8 +65,9 @@ var _trail_component: Node
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
 
-const BIOME_NONE  := 0
-const BIOME_ROCKY := 1
+const BIOME_NONE       := 0
+const BIOME_ROCKY      := 1
+const BIOME_GREENHOUSE := 2
 const _MAX_CRATERS := 16
 
 var _crater_lats: Array[float] = []
@@ -151,6 +164,19 @@ func _apply_planet_shader():
 	_shader_mat.set_shader_parameter("u_polar_softness", polar_softness)
 	var polar_col := _get_polar_cap_color()
 	_shader_mat.set_shader_parameter("u_polar_cap_color", Vector3(polar_col.r, polar_col.g, polar_col.b))
+	# Greenhouse biome (#105) uniforms. Defaults are inert (no limb brighten,
+	# no lava leak) so non-greenhouse planets see no change.
+	var v_hi := _get_greenhouse_cloud_hi()
+	var v_lo := _get_greenhouse_cloud_lo()
+	_shader_mat.set_shader_parameter("u_venus_cloud_hi", Vector3(v_hi.r, v_hi.g, v_hi.b))
+	_shader_mat.set_shader_parameter("u_venus_cloud_lo", Vector3(v_lo.r, v_lo.g, v_lo.b))
+	_shader_mat.set_shader_parameter("u_cloud_swirl_amp", cloud_swirl_amp)
+	_shader_mat.set_shader_parameter("u_cloud_swirl_freq", cloud_swirl_freq)
+	_shader_mat.set_shader_parameter("u_cloud_contrast", cloud_contrast)
+	_shader_mat.set_shader_parameter("u_limb_brighten", limb_brighten)
+	_shader_mat.set_shader_parameter("u_surface_lava_leak", surface_lava_leak)
+	var lava_col := _get_lava_color()
+	_shader_mat.set_shader_parameter("u_lava_color", Vector3(lava_col.r, lava_col.g, lava_col.b))
 	# Crater uniforms seeded in _seed_craters; zeros here as placeholders.
 	_shader_mat.set_shader_parameter("u_crater_count", 0)
 	_sprite.material = _shader_mat
@@ -161,6 +187,7 @@ func _apply_planet_shader():
 func _get_biome_mode() -> int:
 	match planet_type:
 		&"rocky": return BIOME_ROCKY
+		&"greenhouse": return BIOME_GREENHOUSE
 		_:
 			return BIOME_NONE
 
@@ -172,6 +199,15 @@ func _get_rocky_lo() -> Color:
 
 func _get_polar_cap_color() -> Color:
 	return PAL.ROCKY_MARS_ICE
+
+func _get_greenhouse_cloud_hi() -> Color:
+	return PAL.VENUS_CLOUD_HI
+
+func _get_greenhouse_cloud_lo() -> Color:
+	return PAL.VENUS_CLOUD_LO
+
+func _get_lava_color() -> Color:
+	return PAL.VENUS_SURFACE_LAVA
 
 func _seed_craters(seed_val: int):
 	_crater_lats.clear()
