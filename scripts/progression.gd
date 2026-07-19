@@ -5,28 +5,54 @@ extends Node2D
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 const GM_UNIT := 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (25.0 * 25.0)
 
+# Per-type physical parameters (rooted in Eddington-Milne limb darkening,
+# Snodgrass-Ulrich differential rotation, and observed convective features):
+#   limb_strength       - limb darkening coefficient (O/B faint, M strong)
+#   granulation_scale   - relative spatial frequency of convective cells
+#                         (G2V ref ~1.0, F/A finer, K/M coarser, O/B ~invisible)
+#   spot_regime         - "none" | "equatorial" | "polar"
+#                         O/B/A: no convection-driven magnetic spots
+#                         F/G/K: equatorial band |lat| < 35deg
+#                         M: large polar spots (fully convective dwarfs)
+#   spot_count          - number of spot seeds to seed into the u_spots array
+#   corona_falloff      - glow sprite falloff power (M compact, O/B extended)
+#   corona_radius_mult   - outer corona radius multiplier per type
 const STAR_TYPES: Array[Dictionary] = [
 	{ type="O5V", mass_min=15.0, mass_max=30.0, tex_size=320, weight=3,
 	  core_0=Color(0.7, 0.85, 1.0), core_1=Color(0.5, 0.7, 0.95), core_2=Color(0.3, 0.5, 0.8),
-	  glow_tint=Color(0.6, 0.8, 1.0), base_mod=Color(0.5, 0.7, 1.0), hot_mod=Color(0.7, 0.9, 1.0) },
+	  glow_tint=Color(0.6, 0.8, 1.0), base_mod=Color(0.5, 0.7, 1.0), hot_mod=Color(0.7, 0.9, 1.0),
+	  limb_strength=0.20, granulation_scale=1.6, spot_regime="none",    spot_count=0,
+	  corona_falloff=1.0, corona_radius_mult=2.6 },
 	{ type="B5V", mass_min=4.0, mass_max=12.0, tex_size=288, weight=7,
 	  core_0=Color(0.8, 0.9, 1.0), core_1=Color(0.7, 0.8, 0.95), core_2=Color(0.5, 0.65, 0.85),
-	  glow_tint=Color(0.7, 0.8, 1.0), base_mod=Color(0.65, 0.8, 0.95), hot_mod=Color(0.8, 0.9, 1.0) },
+	  glow_tint=Color(0.7, 0.8, 1.0), base_mod=Color(0.65, 0.8, 0.95), hot_mod=Color(0.8, 0.9, 1.0),
+	  limb_strength=0.30, granulation_scale=1.6, spot_regime="none",    spot_count=0,
+	  corona_falloff=1.2, corona_radius_mult=2.3 },
 	{ type="A5V", mass_min=1.8, mass_max=3.5, tex_size=272, weight=12,
 	  core_0=Color(1.0, 1.0, 1.0), core_1=Color(0.95, 0.95, 0.9), core_2=Color(0.85, 0.85, 0.7),
-	  glow_tint=Color(0.95, 0.95, 0.85), base_mod=Color(0.9, 0.9, 0.85), hot_mod=Color(0.85, 0.9, 1.0) },
+	  glow_tint=Color(0.95, 0.95, 0.85), base_mod=Color(0.9, 0.9, 0.85), hot_mod=Color(0.85, 0.9, 1.0),
+	  limb_strength=0.50, granulation_scale=1.6, spot_regime="none",    spot_count=0,
+	  corona_falloff=1.6, corona_radius_mult=1.9 },
 	{ type="F5V", mass_min=1.1, mass_max=1.8, tex_size=264, weight=18,
 	  core_0=Color(1.0, 1.0, 0.9), core_1=Color(1.0, 0.95, 0.8), core_2=Color(0.9, 0.8, 0.5),
-	  glow_tint=Color(1.0, 0.95, 0.7), base_mod=Color(1.0, 0.95, 0.7), hot_mod=Color(0.95, 0.95, 0.9) },
+	  glow_tint=Color(1.0, 0.95, 0.7), base_mod=Color(1.0, 0.95, 0.7), hot_mod=Color(0.95, 0.95, 0.9),
+	  limb_strength=0.60, granulation_scale=1.4, spot_regime="equatorial", spot_count=3,
+	  corona_falloff=2.0, corona_radius_mult=1.7 },
 	{ type="G2V", mass_min=0.8, mass_max=1.3, tex_size=256, weight=20,
 	  core_0=Color(1.0, 0.95, 0.8), core_1=Color(1.0, 0.7, 0.2), core_2=Color(0.8, 0.3, 0.05),
-	  glow_tint=Color(1.0, 0.5, 0.1), base_mod=Color(1.0, 1.0, 0.5), hot_mod=Color(1.0, 0.35, 0.05) },
+	  glow_tint=Color(1.0, 0.5, 0.1), base_mod=Color(1.0, 1.0, 0.5), hot_mod=Color(1.0, 0.35, 0.05),
+	  limb_strength=0.65, granulation_scale=1.0, spot_regime="equatorial", spot_count=4,
+	  corona_falloff=2.2, corona_radius_mult=1.6 },
 	{ type="K5V", mass_min=0.4, mass_max=0.9, tex_size=224, weight=22,
 	  core_0=Color(1.0, 0.8, 0.5), core_1=Color(1.0, 0.55, 0.2), core_2=Color(0.7, 0.2, 0.05),
-	  glow_tint=Color(1.0, 0.5, 0.1), base_mod=Color(1.0, 0.7, 0.3), hot_mod=Color(1.0, 0.3, 0.05) },
+	  glow_tint=Color(1.0, 0.5, 0.1), base_mod=Color(1.0, 0.7, 0.3), hot_mod=Color(1.0, 0.3, 0.05),
+	  limb_strength=0.75, granulation_scale=0.7, spot_regime="equatorial", spot_count=5,
+	  corona_falloff=2.5, corona_radius_mult=1.4 },
 	{ type="M4V", mass_min=0.1, mass_max=0.5, tex_size=192, weight=18,
 	  core_0=Color(1.0, 0.5, 0.25), core_1=Color(0.9, 0.3, 0.1), core_2=Color(0.5, 0.1, 0.02),
-	  glow_tint=Color(1.0, 0.3, 0.05), base_mod=Color(0.95, 0.4, 0.15), hot_mod=Color(0.6, 0.1, 0.02) },
+	  glow_tint=Color(1.0, 0.3, 0.05), base_mod=Color(0.95, 0.4, 0.15), hot_mod=Color(0.6, 0.1, 0.02),
+	  limb_strength=0.85, granulation_scale=0.5, spot_regime="polar",     spot_count=4,
+	  corona_falloff=3.0, corona_radius_mult=1.25 },
 ]
 
 var sun_mass: float = 1.0
