@@ -12,8 +12,8 @@ func _ready():
 	use_shader = true
 	planet_type = &"rocky"
 	crater_count = 6
-	polar_cap_lat_deg = 65.0
-	polar_softness = 0.12
+	polar_cap_lat_deg = 60.0
+	polar_softness = 0.20
 	atm_color = PAL.ATM_RIM_MARS
 	super()
 
