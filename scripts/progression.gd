@@ -71,41 +71,47 @@ const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
-	$StarField.generate(star_seed, $Camera2D.min_zoom)
+	%StarField.generate(star_seed, %Camera2D.min_zoom)
 	var star_data := _pick_star_type()
 	sun_mass = randf_range(star_data.mass_min, star_data.mass_max)
 	_star_type = star_data.type
 	star_data["start_mass"] = sun_mass
 	star_data["mass_span"] = sun_mass
-	$Sun.generate(star_data)
-	_mass_label = $UI/MassLabel as Label
+	%Sun.generate(star_data)
+	_mass_label = %MassLabel as Label
 	var game_theme := load("res://resources/game_theme.tres") as Theme
-	$UI/EventLog/EventLogPanel.theme = game_theme
-	$UI/PauseButton.theme = game_theme
+	%EventLogPanel.theme = game_theme
+	%PauseButton.theme = game_theme
 	_mass_label.theme = game_theme
 	_mass_label.add_theme_font_override("font", FONT_MONO)
-	($UI as CanvasLayer).layer = 2
+	(%UI as CanvasLayer).layer = 2
 
 	var pm := _POST_PROCESS.new()
 	pm.name = "PostProcessManager"
 	add_child(pm)
+	pm.owner = self
+	pm.unique_name_in_owner = true
 
 	var spawner := _ASTEROID_SPAWNER.new()
 	spawner.name = "AsteroidSpawner"
 	spawner.init(_ASTEROID_SCRIPT, GM_UNIT, _on_asteroid_collided)
 	add_child(spawner)
+	spawner.owner = self
+	spawner.unique_name_in_owner = true
 
-	_collision_mgr = _COLLISION_MGR.new([], _ASTEROID_SCRIPT, $ImpactFX, $UI/EventLog, _dummy_planet_idx, pm.trigger)
+	_collision_mgr = _COLLISION_MGR.new([], _ASTEROID_SCRIPT, %ImpactFX, %EventLog, _dummy_planet_idx, pm.trigger)
 
 	var ship := _SPACESHIP.new()
 	ship.name = "Spaceship"
 	ship.init(Vector2(500, 0))
 	add_child(ship)
+	ship.owner = self
+	ship.unique_name_in_owner = true
 
 func _check_ship_click(screen_pos: Vector2) -> bool:
-	var ship_screen: Vector2 = $Camera2D.get_canvas_transform() * $Spaceship.position
+	var ship_screen: Vector2 = %Camera2D.get_canvas_transform() * %Spaceship.position
 	var d := ship_screen.distance_to(screen_pos)
-	var hit_r: float = max(28.0 * $Camera2D.zoom.x, 14.0)
+	var hit_r: float = max(28.0 * %Camera2D.zoom.x, 14.0)
 	return d < hit_r
 
 func _dummy_planet_idx(_node: Node2D) -> int:
@@ -124,64 +130,64 @@ func _pick_star_type() -> Dictionary:
 	return STAR_TYPES[-1]
 
 func _process(_delta):
-	$Sun.mass = sun_mass
+	%Sun.mass = sun_mass
 
-	$AsteroidSpawner.sun_mass = sun_mass
-	$AsteroidSpawner.set_planet_data([] as Array[Dictionary])
-	_collision_mgr.check_collisions($AsteroidSpawner._asteroids)
+	%AsteroidSpawner.sun_mass = sun_mass
+	%AsteroidSpawner.set_planet_data([] as Array[Dictionary])
+	_collision_mgr.check_collisions(%AsteroidSpawner._asteroids)
 
-	var cam_following_ship: bool = $Camera2D.is_following() and $Camera2D.get_follow_target() == $Spaceship
-	$Spaceship.input_active = cam_following_ship
-	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + $Spaceship.collision_radius + 50.0
-	$Spaceship.enforce_sun_barrier(barrier_r)
+	var cam_following_ship: bool = %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship
+	%Spaceship.input_active = cam_following_ship
+	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + %Spaceship.collision_radius + 50.0
+	%Spaceship.enforce_sun_barrier(barrier_r)
 
 	if _mass_label:
 		_mass_label.text = "Msun = %.4f [%s]" % [sun_mass, _star_type]
 
-	$StarField.update_parallax($Camera2D.position, $Camera2D.zoom.x)
-	$StarField.set_blur($Camera2D.get_blur_amount())
+	%StarField.update_parallax(%Camera2D.position, %Camera2D.zoom.x)
+	%StarField.set_blur(%Camera2D.get_blur_amount())
 
 func _on_asteroid_collided(ast: Node2D):
 	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
 
 func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String):
 	sun_mass += mass
-	$Sun.flash(flash)
-	$ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
-	$PostProcessManager.trigger()
-	$UI/EventLog.log_message(message)
+	%Sun.flash(flash)
+	%ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
+	%PostProcessManager.trigger()
+	%EventLog.log_message(message)
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
-		var sun_screen: Vector2 = $Camera2D.get_canvas_transform() * $Sun.position
+		var sun_screen: Vector2 = %Camera2D.get_canvas_transform() * %Sun.position
 		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
 		if event.button_index == MOUSE_BUTTON_LEFT and on_sun:
 			sun_mass += CFG.CLICK_MASS_GAIN
 			return
 
 		if event.button_index == MOUSE_BUTTON_LEFT and _check_ship_click(event.position):
-			$Camera2D.follow_node($Spaceship)
+			%Camera2D.follow_node(%Spaceship)
 			return
 
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
-			$Camera2D.start_drag(event.position)
+			%Camera2D.start_drag(event.position)
 
 	if event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
-			$Camera2D.end_drag()
+			%Camera2D.end_drag()
 
 	if event is InputEventMouseMotion and (Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE)):
-		$Camera2D.update_drag(event.position)
+		%Camera2D.update_drag(event.position)
 
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_EQUAL:
-			$Camera2D.zoom_in()
+			%Camera2D.zoom_in()
 		elif event.keycode == KEY_MINUS:
-			$Camera2D.zoom_out()
+			%Camera2D.zoom_out()
 		elif event.keycode == KEY_L:
-			$AsteroidSpawner.spawn()
+			%AsteroidSpawner.spawn()
 		elif event.keycode == KEY_SPACE:
-			if $Camera2D.is_following() and $Camera2D.get_follow_target() == $Spaceship:
-				$Camera2D.unfollow()
+			if %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship:
+				%Camera2D.unfollow()
 			else:
-				$Camera2D.follow_node($Spaceship)
+				%Camera2D.follow_node(%Spaceship)
