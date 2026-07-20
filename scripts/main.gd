@@ -11,6 +11,7 @@ var _planet_data: Array[Node2D]
 var _collision_mgr: RefCounted
 var _planet_popup: Panel
 var _planet_data_cache: Array[Dictionary] = []
+var _last_label_mass: float = -1.0
 const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
 const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
@@ -36,7 +37,7 @@ func _ready():
 	pm.unique_name_in_owner = true
 	var spawner := _ASTEROID_SPAWNER.new()
 	spawner.name = "AsteroidSpawner"
-	spawner.init(_ASTEROID_SCRIPT, %Mercury._initial_gm(), _on_asteroid_collided)
+	spawner.init(_ASTEROID_SCRIPT, %Mercury.get_gm(), _on_asteroid_collided)
 	add_child(spawner)
 	spawner.owner = self
 	spawner.unique_name_in_owner = true
@@ -89,8 +90,9 @@ func _process(_delta):
 		cache.mass = planet.mass if not planet.is_dead() else 0.0
 	%AsteroidSpawner.set_planet_data(_planet_data_cache)
 
-	if _mass_label:
+	if _mass_label and sun_mass != _last_label_mass:
 		_mass_label.text = "Msun = %.7f" % sun_mass
+		_last_label_mass = sun_mass
 
 	if _planet_popup and not %Camera2D.is_following():
 		_close_planet_popup()

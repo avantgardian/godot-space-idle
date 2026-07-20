@@ -15,6 +15,8 @@ var _ring_sprite_front: Sprite2D
 var _ring_mat_back: ShaderMaterial
 var _ring_mat_front: ShaderMaterial
 var _ring_rotation: float = 0.0
+var _cos_ring_rot: float = 1.0
+var _sin_ring_rot: float = 0.0
 
 func _ready():
 	use_shader = true
@@ -54,6 +56,8 @@ func _generate_ring():
 	seed_val = abs(seed_val) % 1023
 
 	_ring_rotation = deg_to_rad(axial_tilt_deg)
+	_cos_ring_rot = cos(-_ring_rotation)
+	_sin_ring_rot = sin(-_ring_rotation)
 
 	# Back half — behind the planet.
 	_ring_sprite_back = Sprite2D.new()
@@ -105,8 +109,6 @@ func _update_ring_light(mat: ShaderMaterial):
 	var dir := -position
 	if dir.length_squared() > 0.0:
 		dir = dir.normalized()
-	var cos_r := cos(-_ring_rotation)
-	var sin_r := sin(-_ring_rotation)
-	var lx := dir.x * cos_r - dir.y * sin_r
-	var ly := dir.x * sin_r + dir.y * cos_r
+	var lx := dir.x * _cos_ring_rot - dir.y * _sin_ring_rot
+	var ly := dir.x * _sin_ring_rot + dir.y * _cos_ring_rot
 	mat.set_shader_parameter("u_light_dir", Vector3(lx, ly, 0.0))
