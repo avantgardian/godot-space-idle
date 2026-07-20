@@ -60,6 +60,7 @@ var sun_mass: float = 1.0
 var _star_type: String = "G2V"
 var _mass_label: Label
 var _collision_mgr: RefCounted
+var _last_label_mass: float = -1.0
 
 const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
@@ -140,8 +141,9 @@ func _process(_delta):
 	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + %Spaceship.collision_radius + 50.0
 	%Spaceship.enforce_sun_barrier(barrier_r)
 
-	if _mass_label:
+	if _mass_label and sun_mass != _last_label_mass:
 		_mass_label.text = "Msun = %.4f [%s]" % [sun_mass, _star_type]
+		_last_label_mass = sun_mass
 
 	%StarField.update_parallax(%Camera2D.position, %Camera2D.zoom.x)
 	%StarField.set_blur(%Camera2D.get_blur_amount())

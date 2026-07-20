@@ -22,6 +22,7 @@ var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
 @export var trail_max: int = 1200
+var _gm: float = 0.0
 var _trail_component: Node
 
 @export var use_shader: bool = false
@@ -135,6 +136,7 @@ func set_vel(v: Vector2):
 	_vel = v
 
 func _ready():
+	_gm = _initial_gm()
 	_generate_texture()
 	_reset()
 
@@ -532,10 +534,9 @@ func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
 	return Color.WHITE
 
 func _reset():
-	var gm := _initial_gm()
 	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
 	var tangent := Vector2(-_pos.y, _pos.x).normalized()
-	_vel = tangent * sqrt(gm / orbit_radius)
+	_vel = tangent * sqrt(_gm / orbit_radius)
 	position = _pos
 	_dead = false
 	visible = true
@@ -548,11 +549,14 @@ static func sun_collision_r(mass_solar: float) -> float:
 func _initial_gm() -> float:
 	return 4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
 
+func get_gm() -> float:
+	return _gm
+
 func _process(delta):
 	if _dead:
 		return
 
-	var gm := _initial_gm() * sun_mass
+	var gm := _gm * sun_mass
 	var r2 := _pos.length_squared()
 	if r2 < 1.0:
 		r2 = 1.0
