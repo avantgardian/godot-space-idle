@@ -8,9 +8,6 @@ var planet_color: Color = Color(0.85, 0.6, 0.3)
 @export var collision_ring_segments: int = 96
 @export var collision_ring_timer: float = 2.5
 
-const _STORM_RUST: int = 0
-const _STORM_WHITE: int = 1
-
 func _ready():
 	use_shader = true
 	planet_type = &"gas_giant"
@@ -28,9 +25,6 @@ func _ready():
 
 func _get_planet_texture_size() -> int:
 	return 100
-
-func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
-	return PAL.GAS_BAND_TAN_HI
 
 func _get_gas_band_hi() -> Color:
 	return PAL.GAS_BAND_TAN_HI
@@ -53,7 +47,7 @@ func _seed_storms(seed_val: int):
 	_storm_lons.append(0.0)
 	_storm_sizes.append(deg_to_rad(10.0))
 	_storm_strengths.append(0.60)
-	_storm_kinds.append(_STORM_RUST)
+	_storm_kinds.append(STORM_RUST)
 	# Remaining 2–3 white ovals placed randomly by seed.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_val * 53 + 11
@@ -66,4 +60,4 @@ func _seed_storms(seed_val: int):
 		_storm_lons.append(lon)
 		_storm_sizes.append(size)
 		_storm_strengths.append(strength)
-		_storm_kinds.append(_STORM_WHITE)
+		_storm_kinds.append(STORM_WHITE)

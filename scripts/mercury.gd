@@ -18,13 +18,6 @@ func _ready():
 func _get_planet_texture_size() -> int:
 	return 36
 
-func _get_planet_color(t: float, _x: int, _y: int) -> Color:
-	var b: float = 0.5 + 0.5 * (1.0 - t)
-	var alpha := 1.0
-	if t > 0.85:
-		alpha = 1.0 - (t - 0.85) / 0.15
-	return Color(0.7 * b, 0.7 * b, 0.72 * b, alpha)
-
 func _get_rocky_hi() -> Color:
 	return PAL.ROCKY_MERCURY_HI
 

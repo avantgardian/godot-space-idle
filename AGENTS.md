@@ -62,8 +62,7 @@ Every feature or fix follows this sequence:
 | Shader | Type | Role |
 |--------|------|------|
 | `shaders/star_blur.gdshader` | `canvas_item` | Per-layer blur for the parallax star field; `blur_amount` driven by camera zoom |
-| `shaders/sun_noise.gdshader` | `canvas_item` | Legacy/unused noise texture shader for the sun core (superseded by `sun_surface.gdshader`; kept in tree) |
-| `shaders/sun_surface.gdshader` | `canvas_item` | Current stellar surface shader: fbm/ridged/granulation noise in spherical lat/lon space, Eddington-Milne limb darkening, per-spot array uniforms (spots currently force-disabled in `sun.gd:69-70`), 3-stop core color ramp, flicker |
+| `shaders/sun_surface.gdshader` | `canvas_item` | Current stellar surface shader: fbm/ridged/granulation noise in spherical lat/lon space, Eddington-Milne limb darkening, 3-stop core color ramp, flicker |
 | `shaders/planet_surface.gdshader` | `canvas_item` | Planet surface foundation shader (issue #102): spherical pole projection via `mu = sqrt(1 - r²)`, axial tilt around X, longitude spin via `u_time * u_spin_rate`, Lambert diffuse with `u_ambient` floor, optional limb darkening, `u_night_rim` dark-side silhouette brighten, 4-octave fbm tint over `u_base_color`. Per-biome issues #104–#109 layer biome-specific uniforms on top. |
 | `shaders/atmosphere_rim.gdshader` | `canvas_item` (+ `blend_add`) | Atmosphere rim glow sibling sprite (#110): additive limb sprite whose alpha is driven by `dot(pixel_dir, u_light_dir)`, peaks at the disk edge via a Gaussian annulus, fades outward exponentially. Gated per-planet by `atm_color.a > 0`. |
 | `shaders/post_process.gdshader` | `canvas_item` | Screen-space chromatic aberration + scanline tint triggered by sun impacts |

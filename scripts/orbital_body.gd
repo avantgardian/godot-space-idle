@@ -45,11 +45,7 @@ var _trail_component: Node
 @export var cloud_swirl_freq: float = 6.0
 @export var cloud_contrast: float = 0.6
 @export var limb_brighten: float = 0.0
-@export var surface_lava_leak: float = 0.0:
-	set(val):
-		surface_lava_leak = val
-		if _shader_mat:
-			_shader_mat.set_shader_parameter("u_surface_lava_leak", val)
+@export var surface_lava_leak: float = 0.0
 
 # Terrestrial biome params (#106). All default to inert values; per-planet
 # scripts (e.g. Earth) opt in via planet_type = &"terrestrial". The polar
