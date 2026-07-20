@@ -1,5 +1,7 @@
 extends Sprite2D
 
+const TEX := preload("res://scripts/texture_utils.gd")
+
 @export var texture_size: int = 256
 
 var sun_time: float = 0.0
@@ -107,9 +109,9 @@ func _apply_sun_shader():
 	shader_mat.set_shader_parameter("time", 0.0)
 	shader_mat.set_shader_parameter("u_limb_strength", _limb_strength)
 	shader_mat.set_shader_parameter("u_granulation_scale", _granulation_scale)
-	shader_mat.set_shader_parameter("u_core_0", Vector3(_star_core_0.r, _star_core_0.g, _star_core_0.b))
-	shader_mat.set_shader_parameter("u_core_1", Vector3(_star_core_1.r, _star_core_1.g, _star_core_1.b))
-	shader_mat.set_shader_parameter("u_core_2", Vector3(_star_core_2.r, _star_core_2.g, _star_core_2.b))
+	shader_mat.set_shader_parameter("u_core_0", TEX.vec3(_star_core_0))
+	shader_mat.set_shader_parameter("u_core_1", TEX.vec3(_star_core_1))
+	shader_mat.set_shader_parameter("u_core_2", TEX.vec3(_star_core_2))
 	# Faculae only for F/G/K (equatorial spot regime). O/B/A: no plage.
 	var faculae_intensity := 0.0
 	if _spot_regime == "equatorial":

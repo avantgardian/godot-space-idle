@@ -88,8 +88,8 @@ func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
 	mat.set_shader_parameter("u_encke", 0.55)
 	mat.set_shader_parameter("u_encke_width", 0.006)
 	mat.set_shader_parameter("u_ring_seed", seed_val)
-	mat.set_shader_parameter("u_ring_bright", Vector3(PAL.RING_SATURN_TAN.r, PAL.RING_SATURN_TAN.g, PAL.RING_SATURN_TAN.b))
-	mat.set_shader_parameter("u_ring_dark", Vector3(PAL.RING_SATURN_DARK.r, PAL.RING_SATURN_DARK.g, PAL.RING_SATURN_DARK.b))
+	mat.set_shader_parameter("u_ring_bright", _TEX.vec3(PAL.RING_SATURN_TAN))
+	mat.set_shader_parameter("u_ring_dark", _TEX.vec3(PAL.RING_SATURN_DARK))
 	mat.set_shader_parameter("u_shadow_strength", 0.4)
 	mat.set_shader_parameter("u_half_mask", half_mask)
 	return mat

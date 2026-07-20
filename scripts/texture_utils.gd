@@ -14,3 +14,6 @@ static func make_circle_texture(size: int, color_fn: Callable) -> ImageTexture:
 				var t := dist / max_r
 				image.set_pixel(x, y, color_fn.call(t, x, y))
 	return ImageTexture.create_from_image(image)
+
+static func vec3(c: Color) -> Vector3:
+	return Vector3(c.r, c.g, c.b)
