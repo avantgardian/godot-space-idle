@@ -20,6 +20,8 @@ func setup():
 	panel.size = Vector2(300, 135)
 	panel.clip_contents = true
 	add_child(panel)
+	panel.owner = get_tree().current_scene
+	panel.unique_name_in_owner = true
 
 	_container = VBoxContainer.new()
 	_container.name = "EventLog"
