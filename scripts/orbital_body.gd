@@ -50,6 +50,18 @@ var _trail_component: Node
 		if _shader_mat:
 			_shader_mat.set_shader_parameter("u_surface_lava_leak", val)
 
+# Terrestrial biome params (#106). All default to inert values; per-planet
+# scripts (e.g. Earth) opt in via planet_type = &"terrestrial". The polar
+# cutoff reuses the rocky #104 polar_cap_lat_deg / polar_softness exports
+# so a single uniform set governs cap placement across biomes.
+@export var sea_level: float = 0.5
+@export var ocean_shelf_depth: float = 0.15
+@export var cloud_coverage: float = 0.45
+@export var cloud_spin_rate: float = 0.15
+@export var cloud_scale: float = 3.0
+@export var specular_power: float = 64.0
+@export var city_lights: float = 0.0
+
 # Atmosphere rim glow (#110). Per-planet scripts opt in by setting
 # atm_color to a non-transparent PlanetPalette token. Default alpha 0
 # → no rim sprite is generated at all (Mercury, dead moons).
@@ -65,9 +77,10 @@ var _trail_component: Node
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
 
-const BIOME_NONE       := 0
-const BIOME_ROCKY      := 1
-const BIOME_GREENHOUSE := 2
+const BIOME_NONE         := 0
+const BIOME_ROCKY        := 1
+const BIOME_GREENHOUSE   := 2
+const BIOME_TERRESTRIAL  := 3
 const _MAX_CRATERS := 16
 
 var _crater_lats: Array[float] = []
@@ -137,6 +150,16 @@ func _apply_planet_shader():
 	var seed_val := planet_seed
 	if seed_val == 0:
 		seed_val = hash(name)
+	# Clamp the seed to a small range before passing to the shader uniform.
+	# The shader builds per-pixel coords as `vec2(lon, lat) * scale +
+	# vec2(u_seed * 1.7, u_seed * 0.93)`. float32 has ~7 decimal digits of
+	# precision, so a multi-billion hash value absorbs the few-unit lon/lat
+	# variation across the disk — and the per-pixel hash21 input becomes
+	# identical everywhere, producing a uniform fbm (flat texture, no
+	# continents/craters/clouds). Clamping to [0, 1023) keeps the offset
+	# within float32 precision while still varying per-instance. (Same bug
+	# silently hid all Mars/Mercury surface texture since #104.)
+	seed_val = abs(seed_val) % 1023
 	_shader_mat = ShaderMaterial.new()
 	_shader_mat.shader = _PLANET_SHADER
 	var biome := _get_biome_mode()
@@ -177,6 +200,32 @@ func _apply_planet_shader():
 	_shader_mat.set_shader_parameter("u_surface_lava_leak", surface_lava_leak)
 	var lava_col := _get_lava_color()
 	_shader_mat.set_shader_parameter("u_lava_color", Vector3(lava_col.r, lava_col.g, lava_col.b))
+	# Terrestrial biome (#106) uniforms. Reuses u_polar_cap_lat and
+	# u_polar_softness (already set above from the rocky #104 exports) so a
+	# single set of polar params governs cap placement across biomes.
+	var ocean_deep := _get_terra_ocean_deep()
+	var ocean_shallow := _get_terra_ocean_shallow()
+	var land_trop := _get_terra_land_tropical()
+	var land_des := _get_terra_land_desert()
+	var land_tun := _get_terra_land_tundra()
+	var ice := _get_terra_ice_cap()
+	var cloud := _get_terra_cloud_white()
+	var spec := _get_terra_ocean_specular()
+	_shader_mat.set_shader_parameter("u_ocean_deep", Vector3(ocean_deep.r, ocean_deep.g, ocean_deep.b))
+	_shader_mat.set_shader_parameter("u_ocean_shallow", Vector3(ocean_shallow.r, ocean_shallow.g, ocean_shallow.b))
+	_shader_mat.set_shader_parameter("u_land_tropical", Vector3(land_trop.r, land_trop.g, land_trop.b))
+	_shader_mat.set_shader_parameter("u_land_desert", Vector3(land_des.r, land_des.g, land_des.b))
+	_shader_mat.set_shader_parameter("u_land_tundra", Vector3(land_tun.r, land_tun.g, land_tun.b))
+	_shader_mat.set_shader_parameter("u_terra_ice_cap", Vector3(ice.r, ice.g, ice.b))
+	_shader_mat.set_shader_parameter("u_terra_cloud_white", Vector3(cloud.r, cloud.g, cloud.b))
+	_shader_mat.set_shader_parameter("u_terra_specular", Vector3(spec.r, spec.g, spec.b))
+	_shader_mat.set_shader_parameter("u_sea_level", sea_level)
+	_shader_mat.set_shader_parameter("u_ocean_shelf_depth", ocean_shelf_depth)
+	_shader_mat.set_shader_parameter("u_cloud_coverage", cloud_coverage)
+	_shader_mat.set_shader_parameter("u_cloud_spin_rate", cloud_spin_rate)
+	_shader_mat.set_shader_parameter("u_cloud_scale", cloud_scale)
+	_shader_mat.set_shader_parameter("u_specular_power", specular_power)
+	_shader_mat.set_shader_parameter("u_city_lights", city_lights)
 	# Crater uniforms seeded in _seed_craters; zeros here as placeholders.
 	_shader_mat.set_shader_parameter("u_crater_count", 0)
 	_sprite.material = _shader_mat
@@ -188,6 +237,7 @@ func _get_biome_mode() -> int:
 	match planet_type:
 		&"rocky": return BIOME_ROCKY
 		&"greenhouse": return BIOME_GREENHOUSE
+		&"terrestrial": return BIOME_TERRESTRIAL
 		_:
 			return BIOME_NONE
 
@@ -208,6 +258,32 @@ func _get_greenhouse_cloud_lo() -> Color:
 
 func _get_lava_color() -> Color:
 	return PAL.VENUS_SURFACE_LAVA
+
+# Terrestrial biome (#106) color hooks. Per-planet scripts override these to
+# swap biome tokens (e.g. an arid terra could swap land_tropical for desert).
+func _get_terra_ocean_deep() -> Color:
+	return PAL.TERRA_OCEAN_DEEP
+
+func _get_terra_ocean_shallow() -> Color:
+	return PAL.TERRA_OCEAN_SHALLOW
+
+func _get_terra_land_tropical() -> Color:
+	return PAL.TERRA_LAND_TROPICAL
+
+func _get_terra_land_desert() -> Color:
+	return PAL.TERRA_LAND_DESERT
+
+func _get_terra_land_tundra() -> Color:
+	return PAL.TERRA_LAND_TUNDRA
+
+func _get_terra_ice_cap() -> Color:
+	return PAL.TERRA_ICE_CAP
+
+func _get_terra_cloud_white() -> Color:
+	return PAL.TERRA_CLOUD_WHITE
+
+func _get_terra_ocean_specular() -> Color:
+	return PAL.TERRA_OCEAN_SPECULAR
 
 func _seed_craters(seed_val: int):
 	_crater_lats.clear()
