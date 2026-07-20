@@ -20,7 +20,8 @@ uniform float u_noise_scale = 4.0;
 uniform float u_noise_amp   : hint_range(0.0, 1.0) = 0.15;
 
 // Biome selector. 0 = none (use u_base_color path), 1 = rocky (#104),
-// 2 = greenhouse (#105), 3 = terrestrial (#106), 4 = gas_giant (#107).
+// 2 = greenhouse (#105), 3 = terrestrial (#106), 4 = gas_giant (#107),
+// 5 = ice_giant (#109).
 uniform int u_biome_mode = 0;
 
 // Rocky biome uniforms (#104).
@@ -81,7 +82,15 @@ uniform int   u_storm_count : hint_range(0, 16) = 0;
 uniform vec2  u_storm_pos[16];    // (lat, lon) radians
 uniform float u_storm_size[16];
 uniform float u_storm_strength[16];
-uniform int   u_storm_kind[16];   // 0 = rust, 1 = white
+uniform int   u_storm_kind[16];   // 0 = rust, 1 = white, 2 = dark
+
+// Ice giant biome uniforms (#109).
+uniform vec3  u_ice_base_color = vec3(0.30, 0.65, 0.85);
+uniform float u_ice_band_contrast : hint_range(0.0, 0.5) = 0.03;
+uniform vec3  u_ice_haze_color = vec3(0.85, 0.92, 1.00);
+uniform float u_ice_haze_strength : hint_range(0.0, 1.0) = 0.0;
+uniform vec3  u_ice_storm_dark = vec3(0.04, 0.10, 0.30);
+uniform int   u_ice_variant : hint_range(0, 1) = 0;
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(0.1031, 0.1030));
@@ -398,6 +407,55 @@ void fragment() {
 				float falloff = 1.0 - smoothstep(0.25, 1.0, t_norm);
 				if (falloff > 0.0) {
 					vec3 storm_col = u_storm_kind[i] == 1 ? u_storm_white : u_storm_rust;
+					float blend = falloff * u_storm_strength[i];
+					base = mix(base, storm_col, blend * 0.7);
+				}
+			}
+		} else if (u_biome_mode == 5) {
+			// Ice giant (#109). Methane-blue base with very faint banding,
+			// optional haze streaks, and optional dark-spot storms.
+			base = u_ice_base_color;
+
+			// Faint banding: clean sin modulation with subtle fbm grain.
+			float si_bands = sin(lat * float(u_band_count) * 0.8) * 0.5 + 0.5;
+			si_bands += fbm(vec2(lon, lat) * 3.0 + seed_off * 1.3) * 0.04 - 0.02;
+			vec3 ice_lo = u_ice_base_color * (1.0 - u_ice_band_contrast);
+			vec3 ice_hi = u_ice_base_color * (1.0 + u_ice_band_contrast);
+			base = mix(ice_lo, ice_hi, si_bands);
+
+			// Methane haze streaks (Neptune only, u_ice_variant == 1).
+			if (u_ice_variant == 1 && u_ice_haze_strength > 0.0) {
+				vec2 haze_uv = vec2(lon, lat) * 4.0 + seed_off * 3.1;
+				// Stretch lon component down → elongated along latitude.
+				float haze_n = fbm(vec2(haze_uv.x * 0.25, haze_uv.y * 2.0));
+				haze_n = smoothstep(0.35, 0.65, haze_n);
+				base = mix(base, u_ice_haze_color, haze_n * u_ice_haze_strength);
+			}
+
+			// Dark-spot storms. Reuses the storm array machinery from the
+			// gas-giant branch; kind 2 = dark spot, kind 1 = white companion.
+			for (int i = 0; i < 16; i++) {
+				if (i >= u_storm_count) break;
+				float slat = u_storm_pos[i].x;
+				float slon = u_storm_pos[i].y;
+				float dlat = lat - slat;
+				float dlon = lon - slon;
+				dlon = mod(dlon + 3.14159, 6.28318) - 3.14159;
+
+				float ellip = sqrt(dlon * dlon + dlat * dlat * u_storm_stretch * u_storm_stretch);
+				float sr = u_storm_size[i];
+				float t_norm = ellip / sr;
+
+				float falloff = 1.0 - smoothstep(0.25, 1.0, t_norm);
+				if (falloff > 0.0) {
+					vec3 storm_col;
+					if (u_storm_kind[i] == 2) {
+						storm_col = u_ice_storm_dark;
+					} else if (u_storm_kind[i] == 1) {
+						storm_col = u_storm_white;
+					} else {
+						storm_col = u_ice_storm_dark;
+					}
 					float blend = falloff * u_storm_strength[i];
 					base = mix(base, storm_col, blend * 0.7);
 				}

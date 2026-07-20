@@ -73,6 +73,12 @@ var _trail_component: Node
 @export var storm_size_max_deg: float = 8.0
 @export var storm_stretch: float = 3.0
 
+# Ice giant biome params (#109). All default to Uranus values (featureless).
+# Per-planet scripts (Neptune) increase contrast/haze/storm counts to taste.
+@export var ice_variant: int = 0           # 0 = Uranus, 1 = Neptune
+@export var ice_band_contrast: float = 0.03
+@export var ice_haze_strength: float = 0.0
+
 # Atmosphere rim glow (#110). Per-planet scripts opt in by setting
 # atm_color to a non-transparent PlanetPalette token. Default alpha 0
 # → no rim sprite is generated at all (Mercury, dead moons).
@@ -93,7 +99,12 @@ const BIOME_ROCKY        := 1
 const BIOME_GREENHOUSE   := 2
 const BIOME_TERRESTRIAL  := 3
 const BIOME_GAS_GIANT    := 4
+const BIOME_ICE_GIANT    := 5
 const _MAX_CRATERS := 16
+
+const STORM_RUST: int = 0
+const STORM_WHITE: int = 1
+const STORM_DARK: int = 2
 
 var _crater_lats: Array[float] = []
 var _crater_lons: Array[float] = []
@@ -104,7 +115,7 @@ var _storm_lats: Array[float] = []
 var _storm_lons: Array[float] = []
 var _storm_sizes: Array[float] = []
 var _storm_strengths: Array[float] = []
-var _storm_kinds: Array[int] = []   # 0 = rust, 1 = white
+var _storm_kinds: Array[int] = []   # 0 = rust, 1 = white, 2 = dark
 
 signal collided_with_sun
 
@@ -259,6 +270,18 @@ func _apply_planet_shader():
 	_shader_mat.set_shader_parameter("u_shear_amp", shear_amp)
 	_shader_mat.set_shader_parameter("u_band_warp", band_warp)
 	_shader_mat.set_shader_parameter("u_storm_stretch", storm_stretch)
+	# Ice giant biome (#109) uniforms. Defaults are Uranus values (inert).
+	var ice_base := _get_ice_base_color()
+	var ice_haze := _get_ice_haze_color()
+	var ice_dark := _get_ice_storm_dark()
+	_shader_mat.set_shader_parameter("u_ice_base_color", Vector3(ice_base.r, ice_base.g, ice_base.b))
+	_shader_mat.set_shader_parameter("u_ice_band_contrast", ice_band_contrast)
+	_shader_mat.set_shader_parameter("u_ice_haze_color", Vector3(ice_haze.r, ice_haze.g, ice_haze.b))
+	_shader_mat.set_shader_parameter("u_ice_haze_strength", ice_haze_strength)
+	_shader_mat.set_shader_parameter("u_ice_storm_dark", Vector3(ice_dark.r, ice_dark.g, ice_dark.b))
+	_shader_mat.set_shader_parameter("u_ice_variant", ice_variant)
+	if biome == BIOME_ICE_GIANT:
+		_shader_mat.set_shader_parameter("u_limb", 0.30)
 	# Crater / storm uniforms seeded below; zeros here as placeholders.
 	_shader_mat.set_shader_parameter("u_crater_count", 0)
 	_shader_mat.set_shader_parameter("u_storm_count", 0)
@@ -269,6 +292,9 @@ func _apply_planet_shader():
 	if biome == BIOME_GAS_GIANT:
 		_seed_storms(seed_val)
 		_sync_storm_uniforms()
+	if biome == BIOME_ICE_GIANT:
+		_seed_storms(seed_val)
+		_sync_storm_uniforms()
 
 func _get_biome_mode() -> int:
 	match planet_type:
@@ -276,6 +302,7 @@ func _get_biome_mode() -> int:
 		&"greenhouse": return BIOME_GREENHOUSE
 		&"terrestrial": return BIOME_TERRESTRIAL
 		&"gas_giant": return BIOME_GAS_GIANT
+		&"ice_giant": return BIOME_ICE_GIANT
 		_:
 			return BIOME_NONE
 
@@ -336,6 +363,17 @@ func _get_storm_rust() -> Color:
 
 func _get_storm_white() -> Color:
 	return PAL.GAS_STORM_WHITE
+
+# Ice giant biome (#109) color hooks. Per-planet scripts override these to
+# swap biome tokens (Uranus vs Neptune color saturation).
+func _get_ice_base_color() -> Color:
+	return PAL.ICE_METHANE_BLUE
+
+func _get_ice_haze_color() -> Color:
+	return PAL.ICE_HAZE_WHITE
+
+func _get_ice_storm_dark() -> Color:
+	return PAL.ICE_STORM_DARK
 
 func _seed_craters(seed_val: int):
 	_crater_lats.clear()
