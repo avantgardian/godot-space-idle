@@ -30,9 +30,6 @@ func _ready():
 func _get_planet_texture_size() -> int:
 	return 54
 
-func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
-	return PAL.ICE_DEEP_BLUE
-
 func _get_ice_base_color() -> Color:
 	return PAL.ICE_DEEP_BLUE
 

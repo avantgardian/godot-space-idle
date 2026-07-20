@@ -35,9 +35,6 @@ func _ready():
 func _get_planet_texture_size() -> int:
 	return 88
 
-func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
-	return PAL.SATURN_BAND_HI
-
 func _get_gas_band_hi() -> Color:
 	return PAL.SATURN_BAND_HI
 
