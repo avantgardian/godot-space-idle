@@ -20,7 +20,7 @@ uniform float u_noise_scale = 4.0;
 uniform float u_noise_amp   : hint_range(0.0, 1.0) = 0.15;
 
 // Biome selector. 0 = none (use u_base_color path), 1 = rocky (#104),
-// 2 = greenhouse (#105), 3 = terrestrial (#106).
+// 2 = greenhouse (#105), 3 = terrestrial (#106), 4 = gas_giant (#107).
 uniform int u_biome_mode = 0;
 
 // Rocky biome uniforms (#104).
@@ -66,6 +66,22 @@ uniform float u_cloud_spin_rate  = 0.15;            // rad/s — ~3x surface spi
 uniform float u_cloud_scale     : hint_range(0.5, 12.0) = 3.0;
 uniform float u_specular_power  : hint_range(1.0, 256.0) = 64.0;
 uniform float u_city_lights     : hint_range(0.0, 1.0) = 0.0;   // 0 = no night-side city lights
+
+// Gas giant biome uniforms (#107).
+uniform vec3  u_gas_band_hi = vec3(0.88, 0.78, 0.55);
+uniform vec3  u_gas_band_lo = vec3(0.50, 0.32, 0.18);
+uniform int   u_band_count : hint_range(1, 20) = 12;
+uniform float u_band_sharp : hint_range(0.01, 0.5) = 0.15;
+uniform float u_shear_amp = 0.10;
+uniform float u_band_warp : hint_range(0.0, 0.2) = 0.05;
+uniform float u_storm_stretch = 3.0;
+uniform vec3  u_storm_rust = vec3(0.85, 0.30, 0.20);
+uniform vec3  u_storm_white = vec3(0.95, 0.95, 0.95);
+uniform int   u_storm_count : hint_range(0, 16) = 0;
+uniform vec2  u_storm_pos[16];    // (lat, lon) radians
+uniform float u_storm_size[16];
+uniform float u_storm_strength[16];
+uniform int   u_storm_kind[16];   // 0 = rust, 1 = white
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(0.1031, 0.1030));
@@ -333,6 +349,59 @@ void fragment() {
 			// wisps instead of opaque ice floes. Lit by the same Lambert
 			// term below, so the day side is still bright.
 			cloud_color_out = u_terra_cloud_white * 0.85;
+		} else if (u_biome_mode == 4) {
+			// Gas giant (#107). Organic zonal banding with multi-color
+			// interpolation, fbm cloud-grain texture, and soft storm ovals.
+			// Differential rotation shear: different latitudes have different
+			// effective longitudes for noise sampling.
+			float sheared_lon = lon + sin(lat * 6.0) * u_shear_amp;
+
+			// Organic band structure: low-freq fbm in latitude produces
+			// irregular band spacing that still follows the zonal direction.
+			float band_fbm = fbm(vec2(sheared_lon * 0.3, lat) * 1.5 + seed_off);
+			float band_sin = sin(lat * float(u_band_count) * 0.8) * 0.5 + 0.5;
+			float bands = band_fbm * 0.5 + band_sin * 0.5;
+
+			// Wide, gentle color interpolation across 4 tones for natural Jupiter look.
+			vec3 deep  = u_gas_band_lo;                                // dark brown belt
+			vec3 mid   = mix(u_gas_band_hi, u_gas_band_lo, 0.45);      // warm transition
+			vec3 pale  = u_gas_band_hi;                                // tan zone
+			vec3 cream = mix(pale, vec3(0.94, 0.92, 0.88), 0.7);       // bright cream zone
+
+		float t = bands;
+		base = deep;
+		base = mix(base, mid,   smoothstep(0.20, 0.32, t));
+		base = mix(base, pale,  smoothstep(0.32, 0.55, t));
+		base = mix(base, cream, smoothstep(0.55, 0.70, t));
+		base = mix(base, pale,  smoothstep(0.70, 0.88, t));
+
+		// Light fbm grain for band detail — subtle, not blurry.
+		float grain = fbm(vec2(sheared_lon, lat) * 4.0 + seed_off * 1.7);
+		base *= (0.93 + grain * 0.14);
+
+			// Storm ovals — soft-edged ellipses that blend gently into the
+			// band texture. No fbm edge warping (avoids ugly penumbra).
+			for (int i = 0; i < 16; i++) {
+				if (i >= u_storm_count) break;
+				float slat = u_storm_pos[i].x;
+				float slon = u_storm_pos[i].y;
+				float dlat = lat - slat;
+				float dlon = lon - slon;
+				dlon = mod(dlon + 3.14159, 6.28318) - 3.14159;
+
+				float ellip = sqrt(dlon * dlon + dlat * dlat * u_storm_stretch * u_storm_stretch);
+				float sr = u_storm_size[i];
+				float t_norm = ellip / sr;
+
+				// Clean soft falloff — wide transition keeps the feature
+				// visible but blending naturally with the surrounding bands.
+				float falloff = 1.0 - smoothstep(0.25, 1.0, t_norm);
+				if (falloff > 0.0) {
+					vec3 storm_col = u_storm_kind[i] == 1 ? u_storm_white : u_storm_rust;
+					float blend = falloff * u_storm_strength[i];
+					base = mix(base, storm_col, blend * 0.7);
+				}
+			}
 		} else {
 			// Default (#102) path — base color tinted +/- u_noise_amp by fbm.
 			float noise_val = fbm(vec2(lon, lat) * u_noise_scale + seed_off);
