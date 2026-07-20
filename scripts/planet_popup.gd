@@ -109,7 +109,8 @@ func _process(_delta):
 	var screen_pos: Vector2 = _camera.get_canvas_transform() * _planet_node.position
 	var ps := size
 
-	position = screen_pos + Vector2(24, -ps.y - 36)
+	var planet_screen_r: float = max(_planet_node.collision_radius * _camera.zoom.x, 12.0)
+	position = screen_pos + Vector2(planet_screen_r + 16, -ps.y - 36)
 	position.x = clamp(position.x, 10, viewport_size.x - ps.x - 10)
 	position.y = clamp(position.y, 10, viewport_size.y - ps.y - 10)
 
