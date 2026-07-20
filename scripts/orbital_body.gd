@@ -62,6 +62,17 @@ var _trail_component: Node
 @export var specular_power: float = 64.0
 @export var city_lights: float = 0.0
 
+# Gas giant biome params (#107). All default to inert values; per-planet
+# scripts (e.g. Jupiter) opt in via planet_type = &"gas_giant".
+@export var band_count: int = 12
+@export var band_sharp: float = 0.15
+@export var shear_amp: float = 0.10
+@export var band_warp: float = 0.05
+@export var storm_count: int = 0
+@export var storm_size_min_deg: float = 2.0
+@export var storm_size_max_deg: float = 8.0
+@export var storm_stretch: float = 3.0
+
 # Atmosphere rim glow (#110). Per-planet scripts opt in by setting
 # atm_color to a non-transparent PlanetPalette token. Default alpha 0
 # → no rim sprite is generated at all (Mercury, dead moons).
@@ -81,12 +92,19 @@ const BIOME_NONE         := 0
 const BIOME_ROCKY        := 1
 const BIOME_GREENHOUSE   := 2
 const BIOME_TERRESTRIAL  := 3
+const BIOME_GAS_GIANT    := 4
 const _MAX_CRATERS := 16
 
 var _crater_lats: Array[float] = []
 var _crater_lons: Array[float] = []
 var _crater_sizes: Array[float] = []
 var _crater_strengths: Array[float] = []
+
+var _storm_lats: Array[float] = []
+var _storm_lons: Array[float] = []
+var _storm_sizes: Array[float] = []
+var _storm_strengths: Array[float] = []
+var _storm_kinds: Array[int] = []   # 0 = rust, 1 = white
 
 signal collided_with_sun
 
@@ -141,8 +159,8 @@ func _make_white_disk_mask(size: int) -> ImageTexture:
 			if dist <= radius:
 				var t := dist / radius
 				var alpha := 1.0
-				if t > 0.95:
-					alpha = 1.0 - (t - 0.95) / 0.05
+				if t > 0.98:
+					alpha = 1.0 - (t - 0.98) / 0.02
 				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
 	return ImageTexture.create_from_image(image)
 
@@ -226,18 +244,38 @@ func _apply_planet_shader():
 	_shader_mat.set_shader_parameter("u_cloud_scale", cloud_scale)
 	_shader_mat.set_shader_parameter("u_specular_power", specular_power)
 	_shader_mat.set_shader_parameter("u_city_lights", city_lights)
-	# Crater uniforms seeded in _seed_craters; zeros here as placeholders.
+	# Gas giant biome (#107) uniforms. Defaults are inert so non-gas-giant
+	# planets see no change.
+	var gb_hi := _get_gas_band_hi()
+	var gb_lo := _get_gas_band_lo()
+	var sr := _get_storm_rust()
+	var sw := _get_storm_white()
+	_shader_mat.set_shader_parameter("u_gas_band_hi", Vector3(gb_hi.r, gb_hi.g, gb_hi.b))
+	_shader_mat.set_shader_parameter("u_gas_band_lo", Vector3(gb_lo.r, gb_lo.g, gb_lo.b))
+	_shader_mat.set_shader_parameter("u_storm_rust", Vector3(sr.r, sr.g, sr.b))
+	_shader_mat.set_shader_parameter("u_storm_white", Vector3(sw.r, sw.g, sw.b))
+	_shader_mat.set_shader_parameter("u_band_count", band_count)
+	_shader_mat.set_shader_parameter("u_band_sharp", band_sharp)
+	_shader_mat.set_shader_parameter("u_shear_amp", shear_amp)
+	_shader_mat.set_shader_parameter("u_band_warp", band_warp)
+	_shader_mat.set_shader_parameter("u_storm_stretch", storm_stretch)
+	# Crater / storm uniforms seeded below; zeros here as placeholders.
 	_shader_mat.set_shader_parameter("u_crater_count", 0)
+	_shader_mat.set_shader_parameter("u_storm_count", 0)
 	_sprite.material = _shader_mat
 	if biome == BIOME_ROCKY:
 		_seed_craters(seed_val)
 		_sync_crater_uniforms()
+	if biome == BIOME_GAS_GIANT:
+		_seed_storms(seed_val)
+		_sync_storm_uniforms()
 
 func _get_biome_mode() -> int:
 	match planet_type:
 		&"rocky": return BIOME_ROCKY
 		&"greenhouse": return BIOME_GREENHOUSE
 		&"terrestrial": return BIOME_TERRESTRIAL
+		&"gas_giant": return BIOME_GAS_GIANT
 		_:
 			return BIOME_NONE
 
@@ -285,6 +323,20 @@ func _get_terra_cloud_white() -> Color:
 func _get_terra_ocean_specular() -> Color:
 	return PAL.TERRA_OCEAN_SPECULAR
 
+# Gas giant biome (#107) color hooks. Per-planet scripts override these to
+# swap band tokens (e.g. Saturn could override to SATURN_BAND_*).
+func _get_gas_band_hi() -> Color:
+	return PAL.GAS_BAND_TAN_HI
+
+func _get_gas_band_lo() -> Color:
+	return PAL.GAS_BAND_TAN_LO
+
+func _get_storm_rust() -> Color:
+	return PAL.GAS_STORM_RUST
+
+func _get_storm_white() -> Color:
+	return PAL.GAS_STORM_WHITE
+
 func _seed_craters(seed_val: int):
 	_crater_lats.clear()
 	_crater_lons.clear()
@@ -330,6 +382,60 @@ func _sync_crater_uniforms():
 	_shader_mat.set_shader_parameter("u_crater_pos", pos)
 	_shader_mat.set_shader_parameter("u_crater_size", sizes)
 	_shader_mat.set_shader_parameter("u_crater_strength", strengths)
+
+func _seed_storms(seed_val: int):
+	_storm_lats.clear()
+	_storm_lons.clear()
+	_storm_sizes.clear()
+	_storm_strengths.clear()
+	_storm_kinds.clear()
+	var count: int = clamp(storm_count, 0, _MAX_CRATERS)
+	if count == 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_val * 53 + 11
+	for i in range(count):
+		var lat := rng.randf_range(-1.4, 1.4)
+		var lon := rng.randf_range(-PI, PI)
+		var size := deg_to_rad(rng.randf_range(storm_size_min_deg, storm_size_max_deg))
+		var strength := rng.randf_range(0.4, 0.75)
+		var kind: int = rng.randi_range(0, 1)
+		_storm_lats.append(lat)
+		_storm_lons.append(lon)
+		_storm_sizes.append(size)
+		_storm_strengths.append(strength)
+		_storm_kinds.append(kind)
+
+func _sync_storm_uniforms():
+	if not _shader_mat:
+		return
+	var count := _storm_lats.size()
+	_shader_mat.set_shader_parameter("u_storm_count", count)
+	if count == 0:
+		return
+	var pos := PackedVector2Array()
+	var sizes := PackedFloat32Array()
+	var strengths := PackedFloat32Array()
+	var kinds := PackedInt32Array()
+	pos.resize(_MAX_CRATERS)
+	sizes.resize(_MAX_CRATERS)
+	strengths.resize(_MAX_CRATERS)
+	kinds.resize(_MAX_CRATERS)
+	for i in range(_MAX_CRATERS):
+		if i < count:
+			pos[i] = Vector2(_storm_lats[i], _storm_lons[i])
+			sizes[i] = _storm_sizes[i]
+			strengths[i] = _storm_strengths[i]
+			kinds[i] = _storm_kinds[i]
+		else:
+			pos[i] = Vector2.ZERO
+			sizes[i] = 0.0
+			strengths[i] = 0.0
+			kinds[i] = 0
+	_shader_mat.set_shader_parameter("u_storm_pos", pos)
+	_shader_mat.set_shader_parameter("u_storm_size", sizes)
+	_shader_mat.set_shader_parameter("u_storm_strength", strengths)
+	_shader_mat.set_shader_parameter("u_storm_kind", kinds)
 
 func _apply_atmosphere_shader(tex_size: int):
 	# Gated by atm_color.a > 0 — Mercury and dead moons produce no rim sprite.
