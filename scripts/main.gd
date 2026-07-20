@@ -3,6 +3,7 @@ extends Node2D
 @export var star_seed: int = 42
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
+const CFG := preload("res://scripts/game_config.gd")
 
 var sun_mass: float = 1.0
 var _mass_label: Label
@@ -129,7 +130,7 @@ func _unhandled_input(event):
 		var sun_screen: Vector2 = $Camera2D.get_canvas_transform() * $Sun.position
 		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
 		if event.button_index == MOUSE_BUTTON_LEFT and on_sun:
-			sun_mass += 0.1
+			sun_mass += CFG.CLICK_MASS_GAIN
 			return
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
