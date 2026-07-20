@@ -33,8 +33,8 @@ func check_collisions(asteroids: Array):
 			var b := all_bodies[j]
 			if not _is_alive(a) or not _is_alive(b):
 				continue
-			var dist := a.position.distance_to(b.position)
-			if dist < a.collision_radius + b.collision_radius:
+			var sum_r: float = a.collision_radius + b.collision_radius
+			if a.position.distance_squared_to(b.position) < sum_r * sum_r:
 				_resolve(a, b)
 
 func _is_alive(body: Node2D) -> bool:

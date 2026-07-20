@@ -10,6 +10,7 @@ var _mass_label: Label
 var _planet_data: Array[Node2D]
 var _collision_mgr: RefCounted
 var _planet_popup: Panel
+var _planet_data_cache: Array[Dictionary] = []
 const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
 const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
@@ -52,6 +53,7 @@ func _ready():
 	for planet in _planet_data:
 		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
 		planet.setup_trail(planet.planet_color)
+		_planet_data_cache.append({ pos = Vector2.ZERO, mass = 0.0 })
 	_collision_mgr = _COLLISION_MGR.new(_planet_data, _ASTEROID_SCRIPT, %ImpactFX, %EventLog, _find_planet_idx, pm.trigger)
 
 func _show_planet_popup(planet_node: Node2D):
@@ -80,11 +82,12 @@ func _process(_delta):
 	%AsteroidSpawner.sun_mass = sun_mass
 	_collision_mgr.check_collisions(%AsteroidSpawner._asteroids)
 
-	var planet_data: Array[Dictionary] = []
-	for planet in _planet_data:
-		if not planet.is_dead():
-			planet_data.append({ pos = planet.position, mass = planet.mass })
-	%AsteroidSpawner.set_planet_data(planet_data)
+	for i in _planet_data.size():
+		var planet := _planet_data[i]
+		var cache := _planet_data_cache[i]
+		cache.pos = planet.position
+		cache.mass = planet.mass if not planet.is_dead() else 0.0
+	%AsteroidSpawner.set_planet_data(_planet_data_cache)
 
 	if _mass_label:
 		_mass_label.text = "Msun = %.7f" % sun_mass
@@ -98,12 +101,14 @@ func _process(_delta):
 func _check_planet_click(screen_pos: Vector2) -> Node2D:
 	var closest: Node2D = null
 	var closest_dist := INF
+	var canvas: Transform2D = %Camera2D.get_canvas_transform()
+	var zoom: float = %Camera2D.zoom.x
 	for planet in _planet_data:
 		if planet.is_dead():
 			continue
-		var planet_screen: Vector2 = %Camera2D.get_canvas_transform() * planet.position
+		var planet_screen: Vector2 = canvas * planet.position
 		var d := planet_screen.distance_to(screen_pos)
-		var hit_r: float = max(planet.collision_radius * %Camera2D.zoom.x, 12.0)
+		var hit_r: float = max(planet.collision_radius * zoom, 12.0)
 		if d < hit_r and d < closest_dist:
 			closest = planet
 			closest_dist = d

@@ -133,7 +133,6 @@ func _process(_delta):
 	%Sun.mass = sun_mass
 
 	%AsteroidSpawner.sun_mass = sun_mass
-	%AsteroidSpawner.set_planet_data([] as Array[Dictionary])
 	_collision_mgr.check_collisions(%AsteroidSpawner._asteroids)
 
 	var cam_following_ship: bool = %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship
