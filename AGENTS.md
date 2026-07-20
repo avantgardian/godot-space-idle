@@ -6,7 +6,7 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 
 - Entry point: `scenes/main.tscn` (run/main_scene)
 - All scripts in `scripts/` — GDScript only, no C# or GDExtension
-- Sun clickable (left-click) to increase mass (+0.01/click); `+`/`-` or scroll to zoom; left/middle drag to pan
+- Sun clickable (left-click) to increase mass (+0.1/click); `+`/`-` or scroll to zoom; left/middle drag to pan
 - `L` key spawns an asteroid manually
 
 ## Dev commands
