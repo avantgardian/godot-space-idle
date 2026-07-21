@@ -21,12 +21,21 @@ static func make_disk_mask(size: int, edge_aa_threshold: float = 0.98) -> ImageT
 	var key := "%d|%.3f" % [size, edge_aa_threshold]
 	if _disk_mask_cache.has(key):
 		return _disk_mask_cache[key]
-	var tex := make_circle_texture(size, func(t, _x, _y) -> Color:
-		var alpha: float = 1.0
-		if t > edge_aa_threshold:
-			alpha = 1.0 - (t - edge_aa_threshold) / (1.0 - edge_aa_threshold)
-		return Color(1.0, 1.0, 1.0, alpha)
-	)
+	var radius := size / 2.0
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	for x in range(size):
+		for y in range(size):
+			var dx := x - radius
+			var dy := y - radius
+			var dist := sqrt(dx * dx + dy * dy)
+			if dist <= radius:
+				var t := dist / radius
+				var alpha: float = 1.0
+				if t > edge_aa_threshold:
+					alpha = 1.0 - (t - edge_aa_threshold) / (1.0 - edge_aa_threshold)
+				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
+	var tex := ImageTexture.create_from_image(image)
 	_disk_mask_cache[key] = tex
 	return tex
 
