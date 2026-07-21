@@ -1,14 +1,13 @@
 extends OrbitalBody
 
-var planet_name: String = "Mars"
-var planet_color: Color = Color(0.85, 0.35, 0.15, 1.0)
-@export var collision_flash: float = 0.7
-@export var collision_ring_color: Color = Color(0.9, 0.4, 0.15, 0.5)
-@export var collision_ring_width: float = 2.0
-@export var collision_ring_segments: int = 40
-@export var collision_ring_timer: float = 0.9
-
 func _ready():
+	planet_name = "Mars"
+	planet_color = Color(0.85, 0.35, 0.15, 1.0)
+	collision_flash = 0.7
+	collision_ring_color = Color(0.9, 0.4, 0.15, 0.5)
+	collision_ring_width = 2.0
+	collision_ring_segments = 40
+	collision_ring_timer = 0.9
 	use_shader = true
 	planet_type = &"rocky"
 	crater_count = 6

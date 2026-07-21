@@ -1,14 +1,13 @@
 extends OrbitalBody
 
-var planet_name: String = "Neptune"
-var planet_color: Color = Color(0.2, 0.3, 0.85)
-@export var collision_flash: float = 1.3
-@export var collision_ring_color: Color = Color(0.2, 0.3, 0.85, 0.6)
-@export var collision_ring_width: float = 3.0
-@export var collision_ring_segments: int = 66
-@export var collision_ring_timer: float = 1.7
-
 func _ready():
+	planet_name = "Neptune"
+	planet_color = Color(0.2, 0.3, 0.85)
+	collision_flash = 1.3
+	collision_ring_color = Color(0.2, 0.3, 0.85, 0.6)
+	collision_ring_width = 3.0
+	collision_ring_segments = 66
+	collision_ring_timer = 1.7
 	use_shader = true
 	planet_type = &"ice_giant"
 	planet_color = PAL.ICE_DEEP_BLUE
