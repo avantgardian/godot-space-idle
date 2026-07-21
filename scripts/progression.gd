@@ -1,9 +1,5 @@
-extends Node2D
+extends "res://scripts/game_controller.gd"
 
-@export var star_seed: int = 42
-
-const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
-const CFG := preload("res://scripts/game_config.gd")
 const GM_UNIT := 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (25.0 * 25.0)
 
 # Per-type physical parameters (rooted in Eddington-Milne limb darkening,
@@ -56,58 +52,50 @@ const STAR_TYPES: Array[Dictionary] = [
 	  corona_falloff=3.0, corona_radius_mult=1.25 },
 ]
 
-var sun_mass: float = 1.0
-var _star_type: String = "G2V"
-var _mass_label: Label
-var _collision_mgr: RefCounted
-var _last_label_mass: float = -1.0
-
-const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
-const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
-const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
-const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
 const _SPACESHIP := preload("res://scripts/spaceship.gd")
-const _ORBITAL_BODY := preload("res://scripts/orbital_body.gd")
-const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
+
+var _star_type: String = "G2V"
 
 func _ready():
-	RenderingServer.set_default_clear_color(BG_COLOR)
-	%StarField.generate(star_seed, %Camera2D.min_zoom)
+	super._ready()
 	var star_data := _pick_star_type()
 	sun_mass = randf_range(star_data.mass_min, star_data.mass_max)
 	_star_type = star_data.type
 	star_data["start_mass"] = sun_mass
 	star_data["mass_span"] = sun_mass
 	%Sun.generate(star_data)
-	_mass_label = %MassLabel as Label
-	var game_theme := load("res://resources/game_theme.tres") as Theme
-	%EventLogPanel.theme = game_theme
-	%PauseButton.theme = game_theme
-	_mass_label.theme = game_theme
-	_mass_label.add_theme_font_override("font", FONT_MONO)
-	(%UI as CanvasLayer).layer = 2
-
-	var pm := _POST_PROCESS.new()
-	pm.name = "PostProcessManager"
-	add_child(pm)
-	pm.owner = self
-	pm.unique_name_in_owner = true
-
-	var spawner := _ASTEROID_SPAWNER.new()
-	spawner.name = "AsteroidSpawner"
-	spawner.init(_ASTEROID_SCRIPT, GM_UNIT, _on_asteroid_collided)
-	add_child(spawner)
-	spawner.owner = self
-	spawner.unique_name_in_owner = true
-
-	_collision_mgr = _COLLISION_MGR.new([], _ASTEROID_SCRIPT, %ImpactFX, %EventLog, _dummy_planet_idx, pm.trigger)
-
+	_collision_mgr = _COLLISION_MGR.new([], _ASTEROID_SCRIPT, %ImpactFX, %EventLog, _dummy_planet_idx, %PostProcessManager.trigger)
 	var ship := _SPACESHIP.new()
 	ship.name = "Spaceship"
 	ship.init(Vector2(500, 0))
 	add_child(ship)
 	ship.owner = self
 	ship.unique_name_in_owner = true
+
+func _process(delta):
+	super._process(delta)
+	var cam_following_ship: bool = %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship
+	%Spaceship.input_active = cam_following_ship
+	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + %Spaceship.collision_radius + 50.0
+	%Spaceship.enforce_sun_barrier(barrier_r)
+
+func _get_asteroid_gm() -> float:
+	return GM_UNIT
+
+func _format_mass_label(mass: float) -> String:
+	return "Msun = %.4f [%s]" % [mass, _star_type]
+
+func _get_click_target(screen_pos: Vector2) -> Node2D:
+	if _check_ship_click(screen_pos):
+		return %Spaceship
+	return null
+
+func _on_key_pressed(event):
+	if event.is_action_pressed("toggle_ship_follow"):
+		if %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship:
+			%Camera2D.unfollow()
+		else:
+			%Camera2D.follow_node(%Spaceship)
 
 func _check_ship_click(screen_pos: Vector2) -> bool:
 	var ship_screen: Vector2 = %Camera2D.get_canvas_transform() * %Spaceship.position
@@ -129,66 +117,3 @@ func _pick_star_type() -> Dictionary:
 		if roll <= cumulative:
 			return entry.duplicate(true)
 	return STAR_TYPES[-1]
-
-func _process(_delta):
-	%Sun.mass = sun_mass
-
-	%AsteroidSpawner.sun_mass = sun_mass
-	_collision_mgr.check_collisions(%AsteroidSpawner._asteroids)
-
-	var cam_following_ship: bool = %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship
-	%Spaceship.input_active = cam_following_ship
-	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + %Spaceship.collision_radius + 50.0
-	%Spaceship.enforce_sun_barrier(barrier_r)
-
-	if _mass_label and sun_mass != _last_label_mass:
-		_mass_label.text = "Msun = %.4f [%s]" % [sun_mass, _star_type]
-		_last_label_mass = sun_mass
-
-	%StarField.update_parallax(%Camera2D.position, %Camera2D.zoom.x)
-	%StarField.set_blur(%Camera2D.get_blur_amount())
-
-func _on_asteroid_collided(ast: Node2D):
-	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
-
-func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String):
-	sun_mass += mass
-	%Sun.flash(flash)
-	%ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
-	%PostProcessManager.trigger()
-	%EventLog.log_message(message)
-
-func _unhandled_input(event):
-	if event is InputEventMouseButton and event.pressed:
-		var sun_screen: Vector2 = %Camera2D.get_canvas_transform() * %Sun.position
-		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
-		if event.is_action_pressed("sun_click") and on_sun:
-			sun_mass += CFG.CLICK_MASS_GAIN
-			return
-
-		if event.is_action_pressed("select") and _check_ship_click(event.position):
-			%Camera2D.follow_node(%Spaceship)
-			return
-
-		if event.is_action_pressed("drag"):
-			%Camera2D.start_drag(event.position)
-
-	if event is InputEventMouseButton and not event.pressed:
-		if event.is_action_released("drag"):
-			%Camera2D.end_drag()
-
-	if event is InputEventMouseMotion and Input.is_action_pressed("drag"):
-		%Camera2D.update_drag(event.position)
-
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.is_action_pressed("zoom_in"):
-			%Camera2D.zoom_in()
-		elif event.is_action_pressed("zoom_out"):
-			%Camera2D.zoom_out()
-		elif event.is_action_pressed("spawn_asteroid"):
-			%AsteroidSpawner.spawn()
-		elif event.is_action_pressed("toggle_ship_follow"):
-			if %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship:
-				%Camera2D.unfollow()
-			else:
-				%Camera2D.follow_node(%Spaceship)
