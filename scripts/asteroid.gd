@@ -1,6 +1,7 @@
 class_name Asteroid
 extends Node2D
 
+const TEX := preload("res://scripts/texture_utils.gd")
 const PAL := preload("res://scripts/tron_palette.gd")
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
@@ -46,30 +47,8 @@ func _ready():
 	add_child(_trail_component)
 
 func _generate_texture():
-	var size := 14
-	var rng := RandomNumberGenerator.new()
-	rng.seed = randi()
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var cx := size / 2.0
-	var cy := size / 2.0
-	var max_r := size / 2.0 - 1
-	for x in range(size):
-		for y in range(size):
-			var dx := x - cx
-			var dy := y - cy
-			var dist := sqrt(dx * dx + dy * dy)
-			if dist <= max_r:
-				var noise := rng.randf_range(0.7, 1.0)
-				if dist <= max_r * noise:
-					var bright := rng.randf_range(0.3, 0.5)
-					var c := Color(bright, bright * 0.95, bright * 0.9)
-					var alpha := 1.0
-					if dist > max_r * noise * 0.7:
-						alpha = 1.0 - (dist - max_r * noise * 0.7) / (max_r * noise * 0.3)
-					image.set_pixel(x, y, Color(c.r, c.g, c.b, alpha))
 	_sprite = Sprite2D.new()
-	_sprite.texture = ImageTexture.create_from_image(image)
+	_sprite.texture = TEX.make_noisy_blob(14, randi())
 	_sprite.centered = true
 	add_child(_sprite)
 

@@ -1,6 +1,8 @@
 class_name ImpactFX
 extends Node
 
+const TEX := preload("res://scripts/texture_utils.gd")
+
 var _rings: Array[Dictionary] = []
 
 func spawn_ring(color: Color, width: float, segments: int, timer: float):
@@ -19,23 +21,12 @@ func spawn_ring(color: Color, width: float, segments: int, timer: float):
 func spawn_glow(pos: Vector2, mass: float, contact_radius: float = 1.0):
 	var t := clampf(mass * 10.0, 0.2, 1.0)
 
-	var tex_size := 64
-	var image := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var half := tex_size / 2.0
-	var max_r := half - 1.0
-	for x in range(tex_size):
-		for y in range(tex_size):
-			var dx := x - half
-			var dy := y - half
-			var dist := sqrt(dx * dx + dy * dy)
-			if dist <= max_r:
-				var nt := dist / max_r
-				var alpha := (1.0 - nt * nt) * t * 0.8
-				image.set_pixel(x, y, Color(1.0, 0.85, 0.3, alpha))
-
+	var glow_alpha := t
 	var glow := Sprite2D.new()
-	glow.texture = ImageTexture.create_from_image(image)
+	glow.texture = TEX.make_circle_texture(64, func(r, _x, _y) -> Color:
+		var alpha: float = (1.0 - r * r) * glow_alpha * 0.8
+		return Color(1.0, 0.85, 0.3, alpha)
+	)
 	glow.centered = true
 	glow.position = pos
 	glow.modulate = Color(1, 1, 1, 1)

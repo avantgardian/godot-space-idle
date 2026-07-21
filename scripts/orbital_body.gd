@@ -147,7 +147,7 @@ func _generate_texture():
 	var tex_size := _get_planet_texture_size()
 	_sprite = Sprite2D.new()
 	if use_shader:
-		_sprite.texture = _make_white_disk_mask(tex_size)
+		_sprite.texture = _TEX.make_disk_mask(tex_size)
 	else:
 		_sprite.texture = _TEX.make_circle_texture(tex_size, _get_planet_color)
 	_sprite.centered = true
@@ -155,23 +155,6 @@ func _generate_texture():
 	if use_shader:
 		_apply_planet_shader()
 		_apply_atmosphere_shader(tex_size)
-
-func _make_white_disk_mask(size: int) -> ImageTexture:
-	var radius := size / 2.0
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	var center := Vector2(radius, radius)
-	for x in range(size):
-		for y in range(size):
-			var pos := Vector2(x, y)
-			var dist := pos.distance_to(center)
-			if dist <= radius:
-				var t := dist / radius
-				var alpha := 1.0
-				if t > 0.98:
-					alpha = 1.0 - (t - 0.98) / 0.02
-				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
-	return ImageTexture.create_from_image(image)
 
 func _apply_planet_shader():
 	var seed_val := planet_seed

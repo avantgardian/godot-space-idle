@@ -46,29 +46,7 @@ func generate(star_params: Dictionary = {}) -> void:
 	_generate_sun_glows()
 
 func _generate_sun_texture():
-	# The texture is just a flat-white disk mask. All color, granulation,
-	# and limb darkening are computed in sun_surface.gdshader.
-	# Anti-aliased silhouette via an alpha fade over the outer 5% so the rim
-	# stays smooth regardless of the shader's edge_aa.
-	var size := texture_size
-	var radius := size / 2.0
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-
-	var center := Vector2(radius, radius)
-	for x in range(size):
-		for y in range(size):
-			var pos := Vector2(x, y)
-			var dist := pos.distance_to(center)
-			if dist <= radius:
-				var t := dist / radius
-				var alpha := 1.0
-				if t > 0.95:
-					alpha = 1.0 - (t - 0.95) / 0.05
-				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
-
-	var tex := ImageTexture.create_from_image(image)
-	self.texture = tex
+	self.texture = TEX.make_disk_mask(texture_size, 0.95)
 
 func _apply_sun_shader():
 	var shader_mat := ShaderMaterial.new()
@@ -87,37 +65,25 @@ func _generate_sun_glows():
 		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		return m
 
-# Per-type corona. Game-convention glow: visible aura extending past the
-	# photosphere, amplified by the bloom pass (#90). Brightness decays
-	# gently per corona_falloff so per-type differences read (M compact, O/B
-	# extended) without collapsing the aura.
-	var glow_tex := func(size_ratio: float, falloff: float) -> Texture2D:
+	var glow_tint := _star_glow_tint
+	var glow_falloff := _corona_falloff
+	var make_glow_tex := func(size_ratio: float) -> Texture2D:
 		var size := int(texture_size * size_ratio)
-		var radius := size / 2.0
-		var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-		image.fill(Color.TRANSPARENT)
-		var center := Vector2(radius, radius)
-		for x in range(size):
-			for y in range(size):
-				var dist := Vector2(x, y).distance_to(center)
-				if dist <= radius:
-					var t := dist / radius
-					# Bright core fading to soft outer halo. Quadratic base + per-type
-					# decay keeps the inner halo bright while extending the outer reach.
-					var brightness := (1.0 - t * t) * (1.0 - 0.5 * t)
-					brightness *= pow(1.0 - t, falloff * 0.25)
-					brightness *= 1.4  # boost so the aura reads at-a-glance
-					var alpha := (1.0 - t * t) * 0.85
-					image.set_pixel(x, y, Color(_star_glow_tint.r * brightness,
-												_star_glow_tint.g * brightness,
-												_star_glow_tint.b * brightness, alpha))
-		return ImageTexture.create_from_image(image)
+		return TEX.make_circle_texture(size, func(t, _x, _y) -> Color:
+			var brightness: float = (1.0 - t * t) * (1.0 - 0.5 * t)
+			brightness *= pow(1.0 - t, glow_falloff * 0.25)
+			brightness *= 1.4
+			var alpha: float = (1.0 - t * t) * 0.85
+			return Color(glow_tint.r * brightness,
+						 glow_tint.g * brightness,
+						 glow_tint.b * brightness, alpha)
+		)
 
 	# Bump minimum radius so every type has a visible aura. corona_radius_mult
 	# still varies per type (M compact ~1.8, O/B extended ~2.6) but never collapses.
 	var outer_radius: float = max(_corona_radius_mult, 2.0)
 	_glow_outer = Sprite2D.new()
-	_glow_outer.texture = glow_tex.call(outer_radius, _corona_falloff)
+	_glow_outer.texture = make_glow_tex.call(outer_radius)
 	_glow_outer.centered = true
 	_glow_outer.name = "GlowOuter"
 	_glow_outer.z_index = -2
@@ -125,7 +91,7 @@ func _generate_sun_glows():
 	add_child(_glow_outer)
 
 	_glow_inner = Sprite2D.new()
-	_glow_inner.texture = glow_tex.call(1.4, _corona_falloff)
+	_glow_inner.texture = make_glow_tex.call(1.4)
 	_glow_inner.centered = true
 	_glow_inner.name = "GlowInner"
 	_glow_inner.z_index = -1
