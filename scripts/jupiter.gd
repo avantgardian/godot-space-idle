@@ -1,14 +1,13 @@
 extends OrbitalBody
 
-var planet_name: String = "Jupiter"
-var planet_color: Color = Color(0.85, 0.6, 0.3)
-@export var collision_flash: float = 2.0
-@export var collision_ring_color: Color = Color(0.85, 0.6, 0.3, 0.9)
-@export var collision_ring_width: float = 6.0
-@export var collision_ring_segments: int = 96
-@export var collision_ring_timer: float = 2.5
-
 func _ready():
+	planet_name = "Jupiter"
+	planet_color = Color(0.85, 0.6, 0.3)
+	collision_flash = 2.0
+	collision_ring_color = Color(0.85, 0.6, 0.3, 0.9)
+	collision_ring_width = 6.0
+	collision_ring_segments = 96
+	collision_ring_timer = 2.5
 	use_shader = true
 	planet_type = &"gas_giant"
 	planet_color = PAL.GAS_BAND_TAN_HI

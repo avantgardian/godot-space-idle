@@ -1,14 +1,13 @@
 extends OrbitalBody
 
-var planet_name: String = "Earth"
-var planet_color: Color = Color(0.3, 0.6, 1.0, 1.0)
-@export var collision_flash: float = 1.0
-@export var collision_ring_color: Color = Color(0.3, 0.7, 1.0, 0.7)
-@export var collision_ring_width: float = 3.5
-@export var collision_ring_segments: int = 72
-@export var collision_ring_timer: float = 1.5
-
 func _ready():
+	planet_name = "Earth"
+	planet_color = Color(0.3, 0.6, 1.0, 1.0)
+	collision_flash = 1.0
+	collision_ring_color = Color(0.3, 0.7, 1.0, 0.7)
+	collision_ring_width = 3.5
+	collision_ring_segments = 72
+	collision_ring_timer = 1.5
 	use_shader = true
 	planet_type = &"terrestrial"
 	planet_color = PAL.TERRA_OCEAN_DEEP

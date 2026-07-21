@@ -18,6 +18,13 @@ var _atm_mat: ShaderMaterial
 var sun_mass: float = 1.0
 @export var mass: float = 1.0
 @export var collision_radius: float = 20.0
+@export var planet_name: String = ""
+@export var planet_color: Color = Color.WHITE
+@export var collision_flash: float = 0.5
+@export var collision_ring_color: Color = Color(1, 1, 1, 0.5)
+@export var collision_ring_width: float = 2.0
+@export var collision_ring_segments: int = 48
+@export var collision_ring_timer: float = 1.0
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false

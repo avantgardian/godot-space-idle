@@ -2,14 +2,6 @@ extends OrbitalBody
 
 const RING_SHADER := preload("res://shaders/ring_system.gdshader")
 
-var planet_name: String = "Saturn"
-var planet_color: Color = Color(0.8, 0.7, 0.4)
-@export var collision_flash: float = 1.8
-@export var collision_ring_color: Color = Color(0.8, 0.7, 0.4, 0.8)
-@export var collision_ring_width: float = 5.0
-@export var collision_ring_segments: int = 88
-@export var collision_ring_timer: float = 2.2
-
 var _ring_sprite_back: Sprite2D
 var _ring_sprite_front: Sprite2D
 var _ring_mat_back: ShaderMaterial
@@ -19,6 +11,13 @@ var _cos_ring_rot: float = 1.0
 var _sin_ring_rot: float = 0.0
 
 func _ready():
+	planet_name = "Saturn"
+	planet_color = Color(0.8, 0.7, 0.4)
+	collision_flash = 1.8
+	collision_ring_color = Color(0.8, 0.7, 0.4, 0.8)
+	collision_ring_width = 5.0
+	collision_ring_segments = 88
+	collision_ring_timer = 2.2
 	use_shader = true
 	planet_type = &"gas_giant"
 	planet_color = PAL.SATURN_BAND_HI
