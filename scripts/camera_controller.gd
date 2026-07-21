@@ -71,11 +71,11 @@ func _process(delta):
 func _input(event):
 	if get_tree().paused:
 		if event is InputEventMouseButton:
-			if event.pressed and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE):
+			if event.pressed and event.is_action_pressed("drag"):
 				_follow_target = null
 				_dragging = true
 				_drag_prev = event.position
-			elif not event.pressed and (event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE):
+			elif not event.pressed and event.is_action_released("drag"):
 				_dragging = false
 		if event is InputEventMouseMotion and _dragging:
 			var delta_vec: Vector2 = event.position - _drag_prev
@@ -83,9 +83,9 @@ func _input(event):
 			_drag_prev = event.position
 
 	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		if event.is_action_pressed("zoom_in"):
 			zoom_in()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		elif event.is_action_pressed("zoom_out"):
 			zoom_out()
 	if event is InputEventPanGesture:
 		_scroll_accum += event.delta.y

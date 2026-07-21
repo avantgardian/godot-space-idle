@@ -50,10 +50,10 @@ func _process(delta):
 		return
 
 	if input_active:
-		var rotate_left := Input.is_key_pressed(KEY_LEFT)
-		var rotate_right := Input.is_key_pressed(KEY_RIGHT)
-		var thrust_forward := Input.is_key_pressed(KEY_UP)
-		var thrust_reverse := Input.is_key_pressed(KEY_DOWN)
+		var rotate_left := Input.is_action_pressed("ship_rotate_left")
+		var rotate_right := Input.is_action_pressed("ship_rotate_right")
+		var thrust_forward := Input.is_action_pressed("ship_thrust_forward")
+		var thrust_reverse := Input.is_action_pressed("ship_thrust_reverse")
 
 		if rotate_left and not rotate_right:
 			_angle -= ROTATION_SPEED * delta

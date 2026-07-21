@@ -162,32 +162,32 @@ func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
 		var sun_screen: Vector2 = %Camera2D.get_canvas_transform() * %Sun.position
 		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
-		if event.button_index == MOUSE_BUTTON_LEFT and on_sun:
+		if event.is_action_pressed("sun_click") and on_sun:
 			sun_mass += CFG.CLICK_MASS_GAIN
 			return
 
-		if event.button_index == MOUSE_BUTTON_LEFT and _check_ship_click(event.position):
+		if event.is_action_pressed("select") and _check_ship_click(event.position):
 			%Camera2D.follow_node(%Spaceship)
 			return
 
-		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
+		if event.is_action_pressed("drag"):
 			%Camera2D.start_drag(event.position)
 
 	if event is InputEventMouseButton and not event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
+		if event.is_action_released("drag"):
 			%Camera2D.end_drag()
 
-	if event is InputEventMouseMotion and (Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE)):
+	if event is InputEventMouseMotion and Input.is_action_pressed("drag"):
 		%Camera2D.update_drag(event.position)
 
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_EQUAL:
+		if event.is_action_pressed("zoom_in"):
 			%Camera2D.zoom_in()
-		elif event.keycode == KEY_MINUS:
+		elif event.is_action_pressed("zoom_out"):
 			%Camera2D.zoom_out()
-		elif event.keycode == KEY_L:
+		elif event.is_action_pressed("spawn_asteroid"):
 			%AsteroidSpawner.spawn()
-		elif event.keycode == KEY_SPACE:
+		elif event.is_action_pressed("toggle_ship_follow"):
 			if %Camera2D.is_following() and %Camera2D.get_follow_target() == %Spaceship:
 				%Camera2D.unfollow()
 			else:
