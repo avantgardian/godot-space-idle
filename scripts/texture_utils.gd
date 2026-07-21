@@ -39,9 +39,9 @@ static func make_disk_mask(size: int, edge_aa_threshold: float = 0.98) -> ImageT
 	_disk_mask_cache[key] = tex
 	return tex
 
-static func make_noisy_blob(size: int, seed: int) -> ImageTexture:
+static func make_noisy_blob(size: int, rng_seed: int) -> ImageTexture:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed
+	rng.seed = rng_seed
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	image.fill(Color.TRANSPARENT)
 	var cx := size / 2.0
