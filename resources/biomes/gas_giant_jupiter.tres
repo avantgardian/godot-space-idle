@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="JupiterBiomeConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/jupiter_biome.gd" id="1_jupiter"]
+
+[resource]
+script = ExtResource("1_jupiter")
+band_hi = Color(0.88, 0.78, 0.55, 1.0)
+band_lo = Color(0.50, 0.32, 0.18, 1.0)
+storm_rust = Color(0.85, 0.30, 0.20, 1.0)
+storm_white = Color(0.95, 0.95, 0.95, 1.0)
+band_count = 12
+band_sharp = 0.15
+shear_amp = 0.1
+band_warp = 0.05
+storm_count = 4
+storm_size_min_deg = 3.5
+storm_size_max_deg = 8.0
+storm_stretch = 1.5
+texture_size = 100

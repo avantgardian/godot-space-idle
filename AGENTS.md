@@ -41,7 +41,7 @@ Every feature or fix follows this sequence:
 | Script | Extends | Role |
 |--------|---------|------|
 | `main.gd` | `Node2D` | Root controller — owns all state, orchestrates planets, asteroids, star field, camera, UI, collisions |
-| `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection. Optional `@export use_shader` (default false) gates the `planet_surface.gdshader` path: when true, `_generate_texture` builds a flat-white disk mask and `_apply_planet_shader` attaches a `ShaderMaterial` feeding `u_time`, `u_light_dir`, `u_axial_tilt`, `u_spin_rate`, `u_seed`, `u_base_color` (defaults to the planet's identity `planet_color`). `_process` advances `u_time` and recomputes `u_light_dir = -position.normalized()` each frame. Other `@export` fields: `planet_type: StringName`, `planet_seed` (0 = hash from node name), `axial_tilt_deg`, `rotation_rate`. Per-biome issues #104–#109 opt each planet in and layer biome-specific uniforms on top. |
+| `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection. Single `@export var biome: BiomeConfig` delegates all surface rendering to a `BiomeConfig` Resource (see `scripts/biomes/`). Common shader uniforms (`u_time`, `u_light_dir`, `u_ambient`, `u_night_rim`, `u_axial_tilt`, `u_spin_rate`, `u_seed`) are set here; biome-specific uniforms are applied by `BiomeConfig.apply_to_shader()`. Atmosphere rim is handled cross-biome via `atm_color`/`atm_thickness_mult`/`atm_intensity`/`atm_ambient` exports. |
 | `mercury.gd` | `orbital_body.gd` | Orbit radius 350, period 25s, mass 1.65e-7, grey |
 | `venus.gd` | `orbital_body.gd` | Orbit radius 500, period 47s, mass 2.45e-6, golden |
 | `earth.gd` | `orbital_body.gd` | Orbit radius 700, period 78s, mass 3.0e-6, blue-green |
@@ -55,6 +55,14 @@ Every feature or fix follows this sequence:
 | `tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens (GUI chrome, trails, HUD overlays) |
 | `planet_palette.gd` | `RefCounted` | `class_name PlanetPalette` — single source of truth for realism-side planet biome photometric color tokens (rocky, greenhouse, terrestrial, gas giant, ice giant, atmospheres, rings). Sibling to `TronPalette` — see Visual language section for the split. |
 | `draw_utils.gd` | `RefCounted` | `class_name DrawUtils` — static neon drawing helpers (`neon_polyline`, `neon_arc`, `neon_segmented_ring`, `neon_circle`, `neon_filled_accent`, `pulsate_factor`, `modulate_alpha`) |
+| `biomes/biome_config.gd` | `Resource` | Abstract `BiomeConfig` base — `get_shader()`, `get_texture_size()`, `apply_to_shader(mat)`, `seed_features(seed_val)`, `sync_features(mat)` |
+| `biomes/rocky_biome.gd` | `BiomeConfig` | Rocky surface shader + crater seeding (Mercury, Mars) |
+| `biomes/greenhouse_biome.gd` | `BiomeConfig` | Thick-cloud greenhouse shader (Venus) |
+| `biomes/terrestrial_biome.gd` | `BiomeConfig` | Earth-like land/ocean/cloud shader |
+| `biomes/gas_giant_biome.gd` | `BiomeConfig` | Banded gas giant shader + random storm seeding (Saturn) |
+| `biomes/jupiter_biome.gd` | `GasGiantBiomeConfig` | Gas giant with fixed Great Red Spot storm seeding |
+| `biomes/ice_giant_biome.gd` | `BiomeConfig` | Methane-blue ice giant shader + random storm seeding (Uranus) |
+| `biomes/neptune_biome.gd` | `IceGiantBiomeConfig` | Ice giant with fixed Great Dark Spot storm seeding |
 | `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
 
 ## Shaders

@@ -11,34 +11,18 @@ var _cos_ring_rot: float = 1.0
 var _sin_ring_rot: float = 0.0
 
 func _ready():
+	biome = preload("res://resources/biomes/gas_giant_saturn.tres")
 	planet_name = "Saturn"
-	planet_color = Color(0.8, 0.7, 0.4)
+	planet_color = PAL.SATURN_BAND_HI
 	collision_flash = 1.8
 	collision_ring_color = Color(0.8, 0.7, 0.4, 0.8)
 	collision_ring_width = 5.0
 	collision_ring_segments = 88
 	collision_ring_timer = 2.2
 	use_shader = true
-	planet_type = &"gas_giant"
-	planet_color = PAL.SATURN_BAND_HI
 	rotation_rate = 0.35
-	band_count = 10
-	band_sharp = 0.20
-	shear_amp = 0.07
-	band_warp = 0.05
-	storm_count = 0
-	storm_stretch = 2.0
 	super()
 	_generate_ring()
-
-func _get_planet_texture_size() -> int:
-	return 88
-
-func _get_gas_band_hi() -> Color:
-	return PAL.SATURN_BAND_HI
-
-func _get_gas_band_lo() -> Color:
-	return PAL.SATURN_BAND_LO
 
 func _generate_ring():
 	var ring_tex_size: int = 256
@@ -55,7 +39,6 @@ func _generate_ring():
 	_cos_ring_rot = cos(-_ring_rotation)
 	_sin_ring_rot = sin(-_ring_rotation)
 
-	# Back half — behind the planet.
 	_ring_sprite_back = Sprite2D.new()
 	_ring_sprite_back.texture = tex
 	_ring_sprite_back.centered = true
@@ -66,7 +49,6 @@ func _generate_ring():
 	_ring_sprite_back.material = _ring_mat_back
 	add_child(_ring_sprite_back)
 
-	# Front half — in front of the planet.
 	_ring_sprite_front = Sprite2D.new()
 	_ring_sprite_front.texture = tex
 	_ring_sprite_front.centered = true
@@ -88,8 +70,8 @@ func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
 	mat.set_shader_parameter("u_encke", 0.55)
 	mat.set_shader_parameter("u_encke_width", 0.006)
 	mat.set_shader_parameter("u_ring_seed", seed_val)
-	mat.set_shader_parameter("u_ring_bright", _TEX.vec3(PAL.RING_SATURN_TAN))
-	mat.set_shader_parameter("u_ring_dark", _TEX.vec3(PAL.RING_SATURN_DARK))
+	mat.set_shader_parameter("u_ring_bright", Vector3(PAL.RING_SATURN_TAN.r, PAL.RING_SATURN_TAN.g, PAL.RING_SATURN_TAN.b))
+	mat.set_shader_parameter("u_ring_dark", Vector3(PAL.RING_SATURN_DARK.r, PAL.RING_SATURN_DARK.g, PAL.RING_SATURN_DARK.b))
 	mat.set_shader_parameter("u_shadow_strength", 0.4)
 	mat.set_shader_parameter("u_half_mask", half_mask)
 	return mat
