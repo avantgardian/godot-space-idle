@@ -1,6 +1,6 @@
 extends Sprite2D
 
-const TEX := preload("res://scripts/texture_utils.gd")
+const TEX := preload("res://scripts/util/texture_utils.gd")
 
 @export var texture_size: int = 256
 
@@ -25,7 +25,7 @@ var _granulation_scale: float = 1.0
 var _corona_falloff: float = 2.2
 var _corona_radius_mult: float = 1.6
 
-const _SUN_SHADER := preload("res://shaders/sun_surface.gdshader")
+const _SUN_SHADER := preload("res://shaders/world/sun_surface.gdshader")
 
 func generate(star_params: Dictionary = {}) -> void:
 	if star_params.has("core_0"):      _star_core_0 = star_params.core_0

@@ -1,6 +1,6 @@
 extends Control
 
-const PAL := preload("res://scripts/tron_palette.gd")
+const PAL := preload("res://scripts/util/tron_palette.gd")
 const FONT_BOLD := preload("res://resources/fonts/Orbitron-Bold.ttf")
 
 func _ready():

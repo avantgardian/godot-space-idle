@@ -1,6 +1,6 @@
 extends OrbitalBody
 
-const RING_SHADER := preload("res://shaders/ring_system.gdshader")
+const RING_SHADER := preload("res://shaders/bodies/ring_system.gdshader")
 
 var _ring_sprite_back: Sprite2D
 var _ring_sprite_front: Sprite2D

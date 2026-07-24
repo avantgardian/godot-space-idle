@@ -1,7 +1,7 @@
 class_name DrawUtils
 extends RefCounted
 
-const PAL := preload("res://scripts/tron_palette.gd")
+const PAL := preload("res://scripts/util/tron_palette.gd")
 
 # ---------------------------------------------------------------------------
 # TRON neon rendering helpers. Pure-draw utilities; callers own state

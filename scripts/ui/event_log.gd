@@ -1,7 +1,7 @@
 class_name EventLog
 extends Node
 
-const PAL := preload("res://scripts/tron_palette.gd")
+const PAL := preload("res://scripts/util/tron_palette.gd")
 const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 const DURATION := 60.0

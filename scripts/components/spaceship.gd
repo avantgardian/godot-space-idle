@@ -11,8 +11,8 @@ const COLLISION_RADIUS: float = 14.0
 # TRON palette + neon drawing helpers — see scripts/tron_palette.gd and
 # scripts/draw_utils.gd. All visual tokens live there; this file should not
 # introduce new inline colors.
-const PAL := preload("res://scripts/tron_palette.gd")
-const DU  := preload("res://scripts/draw_utils.gd")
+const PAL := preload("res://scripts/util/tron_palette.gd")
+const DU  := preload("res://scripts/util/draw_utils.gd")
 
 var mass: float = 0.001
 var collision_radius: float = COLLISION_RADIUS
@@ -207,7 +207,7 @@ func _draw():
 class _GlowLayer extends Node2D:
 	# Inner classes don't inherit the outer-class preload aliases, so each
 	# inner class references TronPalette / DrawUtils via its own preload.
-	const PAL := preload("res://scripts/tron_palette.gd")
+	const PAL := preload("res://scripts/util/tron_palette.gd")
 	var thrusting := false
 	var _phase := 0.0
 
@@ -247,8 +247,8 @@ class _GlowLayer extends Node2D:
 class _RingLayer extends Node2D:
 	# Inner classes don't inherit the outer-class preload aliases, so each
 	# inner class references TronPalette / DrawUtils via its own preload.
-	const PAL := preload("res://scripts/tron_palette.gd")
-	const DU  := preload("res://scripts/draw_utils.gd")
+	const PAL := preload("res://scripts/util/tron_palette.gd")
+	const DU  := preload("res://scripts/util/draw_utils.gd")
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 
