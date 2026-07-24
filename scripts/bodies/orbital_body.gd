@@ -4,7 +4,13 @@ extends Node2D
 const _TEX := preload("res://scripts/util/texture_utils.gd")
 const _TRAIL := preload("res://scripts/components/trail_component.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
-const _PLANET_SHADER := preload("res://shaders/bodies/planet_surface.gdshader")
+const _BIOME_SHADERS := {
+	BIOME_ROCKY:        preload("res://shaders/bodies/planet_rocky.gdshader"),
+	BIOME_GREENHOUSE:   preload("res://shaders/bodies/planet_greenhouse.gdshader"),
+	BIOME_TERRESTRIAL:  preload("res://shaders/bodies/planet_terrestrial.gdshader"),
+	BIOME_GAS_GIANT:    preload("res://shaders/bodies/planet_gas_giant.gdshader"),
+	BIOME_ICE_GIANT:    preload("res://shaders/bodies/planet_ice_giant.gdshader"),
+}
 const _ATM_SHADER := preload("res://shaders/bodies/atmosphere_rim.gdshader")
 const PAL := preload("res://scripts/util/planet_palette.gd")
 var _sprite: Sprite2D
@@ -167,112 +173,90 @@ func _apply_planet_shader():
 	var seed_val := planet_seed
 	if seed_val == 0:
 		seed_val = hash(name)
-	# Clamp the seed to a small range before passing to the shader uniform.
-	# The shader builds per-pixel coords as `vec2(lon, lat) * scale +
-	# vec2(u_seed * 1.7, u_seed * 0.93)`. float32 has ~7 decimal digits of
-	# precision, so a multi-billion hash value absorbs the few-unit lon/lat
-	# variation across the disk — and the per-pixel hash21 input becomes
-	# identical everywhere, producing a uniform fbm (flat texture, no
-	# continents/craters/clouds). Clamping to [0, 1023) keeps the offset
-	# within float32 precision while still varying per-instance. (Same bug
-	# silently hid all Mars/Mercury surface texture since #104.)
 	seed_val = abs(seed_val) % 1023
-	_shader_mat = ShaderMaterial.new()
-	_shader_mat.shader = _PLANET_SHADER
 	var biome := _get_biome_mode()
-	_shader_mat.set_shader_parameter("u_biome_mode", biome)
+	_shader_mat = ShaderMaterial.new()
+	if not _BIOME_SHADERS.has(biome):
+		return
+	_shader_mat.shader = _BIOME_SHADERS[biome]
+
+	# Common uniforms for all biomes.
 	_shader_mat.set_shader_parameter("u_time", 0.0)
 	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
 	_shader_mat.set_shader_parameter("u_ambient", 0.06)
 	_shader_mat.set_shader_parameter("u_night_rim", 0.4)
-	_shader_mat.set_shader_parameter("u_limb", 0.35)
 	_shader_mat.set_shader_parameter("u_axial_tilt", deg_to_rad(axial_tilt_deg))
 	_shader_mat.set_shader_parameter("u_spin_rate", rotation_rate)
 	_shader_mat.set_shader_parameter("u_seed", seed_val)
-	var bc := _get_shader_base_color()
-	_shader_mat.set_shader_parameter("u_base_color", _TEX.vec3(bc))
-	_shader_mat.set_shader_parameter("u_noise_scale", 4.0)
-	_shader_mat.set_shader_parameter("u_noise_amp", 0.15)
-	# Rocky biome (#104) uniforms. Defaults are harmless (no caps, no craters)
-	# so non-rocky planets remain pixel-identical to the #102 path.
-	var rocky_hi := _get_rocky_hi()
-	var rocky_lo := _get_rocky_lo()
-	_shader_mat.set_shader_parameter("u_rocky_hi", _TEX.vec3(rocky_hi))
-	_shader_mat.set_shader_parameter("u_rocky_lo", _TEX.vec3(rocky_lo))
-	_shader_mat.set_shader_parameter("u_surface_grain_amp", 0.15)
-	_shader_mat.set_shader_parameter("u_polar_cap_lat", deg_to_rad(polar_cap_lat_deg))
-	_shader_mat.set_shader_parameter("u_polar_softness", polar_softness)
-	var polar_col := _get_polar_cap_color()
-	_shader_mat.set_shader_parameter("u_polar_cap_color", _TEX.vec3(polar_col))
-	# Greenhouse biome (#105) uniforms. Defaults are inert (no limb brighten,
-	# no lava leak) so non-greenhouse planets see no change.
-	var v_hi := _get_greenhouse_cloud_hi()
-	var v_lo := _get_greenhouse_cloud_lo()
-	_shader_mat.set_shader_parameter("u_venus_cloud_hi", _TEX.vec3(v_hi))
-	_shader_mat.set_shader_parameter("u_venus_cloud_lo", _TEX.vec3(v_lo))
-	_shader_mat.set_shader_parameter("u_cloud_swirl_amp", cloud_swirl_amp)
-	_shader_mat.set_shader_parameter("u_cloud_swirl_freq", cloud_swirl_freq)
-	_shader_mat.set_shader_parameter("u_cloud_contrast", cloud_contrast)
-	_shader_mat.set_shader_parameter("u_limb_brighten", limb_brighten)
-	_shader_mat.set_shader_parameter("u_surface_lava_leak", surface_lava_leak)
-	var lava_col := _get_lava_color()
-	_shader_mat.set_shader_parameter("u_lava_color", _TEX.vec3(lava_col))
-	# Terrestrial biome (#106) uniforms. Reuses u_polar_cap_lat and
-	# u_polar_softness (already set above from the rocky #104 exports) so a
-	# single set of polar params governs cap placement across biomes.
-	var ocean_deep := _get_terra_ocean_deep()
-	var ocean_shallow := _get_terra_ocean_shallow()
-	var land_trop := _get_terra_land_tropical()
-	var land_des := _get_terra_land_desert()
-	var land_tun := _get_terra_land_tundra()
-	var ice := _get_terra_ice_cap()
-	var cloud := _get_terra_cloud_white()
-	var spec := _get_terra_ocean_specular()
-	_shader_mat.set_shader_parameter("u_ocean_deep", _TEX.vec3(ocean_deep))
-	_shader_mat.set_shader_parameter("u_ocean_shallow", _TEX.vec3(ocean_shallow))
-	_shader_mat.set_shader_parameter("u_land_tropical", _TEX.vec3(land_trop))
-	_shader_mat.set_shader_parameter("u_land_desert", _TEX.vec3(land_des))
-	_shader_mat.set_shader_parameter("u_land_tundra", _TEX.vec3(land_tun))
-	_shader_mat.set_shader_parameter("u_terra_ice_cap", _TEX.vec3(ice))
-	_shader_mat.set_shader_parameter("u_terra_cloud_white", _TEX.vec3(cloud))
-	_shader_mat.set_shader_parameter("u_terra_specular", _TEX.vec3(spec))
-	_shader_mat.set_shader_parameter("u_sea_level", sea_level)
-	_shader_mat.set_shader_parameter("u_ocean_shelf_depth", ocean_shelf_depth)
-	_shader_mat.set_shader_parameter("u_cloud_coverage", cloud_coverage)
-	_shader_mat.set_shader_parameter("u_cloud_spin_rate", cloud_spin_rate)
-	_shader_mat.set_shader_parameter("u_cloud_scale", cloud_scale)
-	_shader_mat.set_shader_parameter("u_specular_power", specular_power)
-	_shader_mat.set_shader_parameter("u_city_lights", city_lights)
-	# Gas giant biome (#107) uniforms. Defaults are inert so non-gas-giant
-	# planets see no change.
-	var gb_hi := _get_gas_band_hi()
-	var gb_lo := _get_gas_band_lo()
-	var sr := _get_storm_rust()
-	var sw := _get_storm_white()
-	_shader_mat.set_shader_parameter("u_gas_band_hi", _TEX.vec3(gb_hi))
-	_shader_mat.set_shader_parameter("u_gas_band_lo", _TEX.vec3(gb_lo))
-	_shader_mat.set_shader_parameter("u_storm_rust", _TEX.vec3(sr))
-	_shader_mat.set_shader_parameter("u_storm_white", _TEX.vec3(sw))
-	_shader_mat.set_shader_parameter("u_band_count", band_count)
-	_shader_mat.set_shader_parameter("u_band_sharp", band_sharp)
-	_shader_mat.set_shader_parameter("u_shear_amp", shear_amp)
-	_shader_mat.set_shader_parameter("u_band_warp", band_warp)
-	_shader_mat.set_shader_parameter("u_storm_stretch", storm_stretch)
-	# Ice giant biome (#109) uniforms. Defaults are Uranus values (inert).
-	var ice_base := _get_ice_base_color()
-	var ice_haze := _get_ice_haze_color()
-	var ice_dark := _get_ice_storm_dark()
-	_shader_mat.set_shader_parameter("u_ice_base_color", _TEX.vec3(ice_base))
-	_shader_mat.set_shader_parameter("u_ice_band_contrast", ice_band_contrast)
-	_shader_mat.set_shader_parameter("u_ice_haze_color", _TEX.vec3(ice_haze))
-	_shader_mat.set_shader_parameter("u_ice_haze_strength", ice_haze_strength)
-	_shader_mat.set_shader_parameter("u_ice_storm_dark", _TEX.vec3(ice_dark))
-	_shader_mat.set_shader_parameter("u_ice_variant", ice_variant)
-	if biome == BIOME_ICE_GIANT:
-		_shader_mat.set_shader_parameter("u_limb", 0.30)
-	# Crater / storm uniforms seeded below; zeros here as placeholders.
-	_shader_mat.set_shader_parameter("u_crater_count", 0)
-	_shader_mat.set_shader_parameter("u_storm_count", 0)
+
+	match biome:
+		BIOME_ROCKY:
+			_shader_mat.set_shader_parameter("u_limb", 0.35)
+			_shader_mat.set_shader_parameter("u_noise_scale", 4.0)
+			_shader_mat.set_shader_parameter("u_rocky_hi", _TEX.vec3(_get_rocky_hi()))
+			_shader_mat.set_shader_parameter("u_rocky_lo", _TEX.vec3(_get_rocky_lo()))
+			_shader_mat.set_shader_parameter("u_surface_grain_amp", 0.15)
+			_shader_mat.set_shader_parameter("u_polar_cap_lat", deg_to_rad(polar_cap_lat_deg))
+			_shader_mat.set_shader_parameter("u_polar_softness", polar_softness)
+			_shader_mat.set_shader_parameter("u_polar_cap_color", _TEX.vec3(_get_polar_cap_color()))
+			_shader_mat.set_shader_parameter("u_crater_count", 0)
+		BIOME_GREENHOUSE:
+			_shader_mat.set_shader_parameter("u_limb", 0.35)
+			_shader_mat.set_shader_parameter("u_venus_cloud_hi", _TEX.vec3(_get_greenhouse_cloud_hi()))
+			_shader_mat.set_shader_parameter("u_venus_cloud_lo", _TEX.vec3(_get_greenhouse_cloud_lo()))
+			_shader_mat.set_shader_parameter("u_cloud_swirl_amp", cloud_swirl_amp)
+			_shader_mat.set_shader_parameter("u_cloud_swirl_freq", cloud_swirl_freq)
+			_shader_mat.set_shader_parameter("u_cloud_contrast", cloud_contrast)
+			_shader_mat.set_shader_parameter("u_limb_brighten", limb_brighten)
+			_shader_mat.set_shader_parameter("u_surface_lava_leak", surface_lava_leak)
+			_shader_mat.set_shader_parameter("u_lava_color", _TEX.vec3(_get_lava_color()))
+		BIOME_TERRESTRIAL:
+			_shader_mat.set_shader_parameter("u_limb", 0.35)
+			_shader_mat.set_shader_parameter("u_surface_grain_amp", 0.15)
+			_shader_mat.set_shader_parameter("u_polar_cap_lat", deg_to_rad(polar_cap_lat_deg))
+			_shader_mat.set_shader_parameter("u_polar_softness", polar_softness)
+			_shader_mat.set_shader_parameter("u_terra_ice_cap", _TEX.vec3(_get_terra_ice_cap()))
+			_shader_mat.set_shader_parameter("u_ocean_deep", _TEX.vec3(_get_terra_ocean_deep()))
+			_shader_mat.set_shader_parameter("u_ocean_shallow", _TEX.vec3(_get_terra_ocean_shallow()))
+			_shader_mat.set_shader_parameter("u_land_tropical", _TEX.vec3(_get_terra_land_tropical()))
+			_shader_mat.set_shader_parameter("u_land_desert", _TEX.vec3(_get_terra_land_desert()))
+			_shader_mat.set_shader_parameter("u_land_tundra", _TEX.vec3(_get_terra_land_tundra()))
+			_shader_mat.set_shader_parameter("u_terra_cloud_white", _TEX.vec3(_get_terra_cloud_white()))
+			_shader_mat.set_shader_parameter("u_terra_specular", _TEX.vec3(_get_terra_ocean_specular()))
+			_shader_mat.set_shader_parameter("u_sea_level", sea_level)
+			_shader_mat.set_shader_parameter("u_ocean_shelf_depth", ocean_shelf_depth)
+			_shader_mat.set_shader_parameter("u_cloud_coverage", cloud_coverage)
+			_shader_mat.set_shader_parameter("u_cloud_spin_rate", cloud_spin_rate)
+			_shader_mat.set_shader_parameter("u_cloud_scale", cloud_scale)
+			_shader_mat.set_shader_parameter("u_specular_power", specular_power)
+			_shader_mat.set_shader_parameter("u_city_lights", city_lights)
+		BIOME_GAS_GIANT:
+			_shader_mat.set_shader_parameter("u_limb", 0.35)
+			_shader_mat.set_shader_parameter("u_gas_band_hi", _TEX.vec3(_get_gas_band_hi()))
+			_shader_mat.set_shader_parameter("u_gas_band_lo", _TEX.vec3(_get_gas_band_lo()))
+			_shader_mat.set_shader_parameter("u_storm_rust", _TEX.vec3(_get_storm_rust()))
+			_shader_mat.set_shader_parameter("u_storm_white", _TEX.vec3(_get_storm_white()))
+			_shader_mat.set_shader_parameter("u_band_count", band_count)
+			_shader_mat.set_shader_parameter("u_band_sharp", band_sharp)
+			_shader_mat.set_shader_parameter("u_shear_amp", shear_amp)
+			_shader_mat.set_shader_parameter("u_band_warp", band_warp)
+			_shader_mat.set_shader_parameter("u_storm_stretch", storm_stretch)
+			_shader_mat.set_shader_parameter("u_storm_count", 0)
+		BIOME_ICE_GIANT:
+			_shader_mat.set_shader_parameter("u_limb", 0.30)
+			_shader_mat.set_shader_parameter("u_ice_base_color", _TEX.vec3(_get_ice_base_color()))
+			_shader_mat.set_shader_parameter("u_ice_band_contrast", ice_band_contrast)
+			_shader_mat.set_shader_parameter("u_ice_haze_color", _TEX.vec3(_get_ice_haze_color()))
+			_shader_mat.set_shader_parameter("u_ice_haze_strength", ice_haze_strength)
+			_shader_mat.set_shader_parameter("u_ice_storm_dark", _TEX.vec3(_get_ice_storm_dark()))
+			_shader_mat.set_shader_parameter("u_ice_variant", ice_variant)
+			_shader_mat.set_shader_parameter("u_band_count", band_count)
+			_shader_mat.set_shader_parameter("u_storm_stretch", storm_stretch)
+			_shader_mat.set_shader_parameter("u_storm_white", _TEX.vec3(_get_storm_white()))
+			_shader_mat.set_shader_parameter("u_storm_count", 0)
+		_:
+			pass
+
 	_sprite.material = _shader_mat
 	if biome == BIOME_ROCKY:
 		_seed_craters(seed_val)
