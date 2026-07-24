@@ -1,4 +1,4 @@
-extends "res://scripts/game_controller.gd"
+extends "res://scripts/controllers/game_controller.gd"
 
 const GM_UNIT := 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (25.0 * 25.0)
 
@@ -52,7 +52,7 @@ const STAR_TYPES: Array[Dictionary] = [
 	  corona_falloff=3.0, corona_radius_mult=1.25 },
 ]
 
-const _SPACESHIP := preload("res://scripts/spaceship.gd")
+const _SPACESHIP := preload("res://scripts/components/spaceship.gd")
 
 var _star_type: String = "G2V"
 

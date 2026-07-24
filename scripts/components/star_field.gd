@@ -1,6 +1,6 @@
 extends Node2D
 
-const TEX := preload("res://scripts/texture_utils.gd")
+const TEX := preload("res://scripts/util/texture_utils.gd")
 
 const LAYERS := [
 	{ count=500, min_r=0.2, max_r=0.5, min_b=0.08, max_b=0.25, motion_scale=0.003 },
@@ -11,7 +11,7 @@ const LAYERS := [
 	{ count=60,  min_r=1.5, max_r=3.0, min_b=0.6, max_b=1.0,  motion_scale=0.18 },
 ]
 
-const _STAR_SHADER := preload("res://shaders/star_blur.gdshader")
+const _STAR_SHADER := preload("res://shaders/world/star_blur.gdshader")
 
 var _sprites: Array[Sprite2D]
 var _motion_scales: Array[float]

@@ -1,12 +1,12 @@
 class_name OrbitalBody
 extends Node2D
 
-const _TEX := preload("res://scripts/texture_utils.gd")
-const _TRAIL := preload("res://scripts/trail_component.gd")
-const DU := preload("res://scripts/draw_utils.gd")
-const _PLANET_SHADER := preload("res://shaders/planet_surface.gdshader")
-const _ATM_SHADER := preload("res://shaders/atmosphere_rim.gdshader")
-const PAL := preload("res://scripts/planet_palette.gd")
+const _TEX := preload("res://scripts/util/texture_utils.gd")
+const _TRAIL := preload("res://scripts/components/trail_component.gd")
+const DU := preload("res://scripts/util/draw_utils.gd")
+const _PLANET_SHADER := preload("res://shaders/bodies/planet_surface.gdshader")
+const _ATM_SHADER := preload("res://shaders/bodies/atmosphere_rim.gdshader")
+const PAL := preload("res://scripts/util/planet_palette.gd")
 var _sprite: Sprite2D
 var _atm_sprite: Sprite2D
 var _atm_mat: ShaderMaterial

@@ -1,6 +1,6 @@
-extends "res://scripts/game_controller.gd"
+extends "res://scripts/controllers/game_controller.gd"
 
-const _PLANET_POPUP := preload("res://scripts/planet_popup.gd")
+const _PLANET_POPUP := preload("res://scripts/ui/planet_popup.gd")
 
 var _planet_data: Array[Node2D]
 var _planet_popup: Panel

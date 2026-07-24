@@ -3,13 +3,13 @@ extends Node2D
 @export var star_seed: int = 42
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
-const CFG := preload("res://scripts/game_config.gd")
+const CFG := preload("res://scripts/util/game_config.gd")
 const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
-const _ASTEROID_SPAWNER := preload("res://scripts/asteroid_spawner.gd")
-const _ASTEROID_SCRIPT := preload("res://scripts/asteroid.gd")
-const _COLLISION_MGR := preload("res://scripts/collision_manager.gd")
-const _POST_PROCESS := preload("res://scripts/post_process_manager.gd")
+const _ASTEROID_SPAWNER := preload("res://scripts/components/asteroid_spawner.gd")
+const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
+const _COLLISION_MGR := preload("res://scripts/controllers/collision_manager.gd")
+const _POST_PROCESS := preload("res://scripts/components/post_process_manager.gd")
 
 var sun_mass: float = 1.0
 var _mass_label: Label

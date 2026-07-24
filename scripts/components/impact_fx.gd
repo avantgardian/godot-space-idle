@@ -1,7 +1,7 @@
 class_name ImpactFX
 extends Node
 
-const TEX := preload("res://scripts/texture_utils.gd")
+const TEX := preload("res://scripts/util/texture_utils.gd")
 
 var _rings: Array[Dictionary] = []
 

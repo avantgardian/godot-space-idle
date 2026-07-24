@@ -1,12 +1,12 @@
 class_name Asteroid
 extends Node2D
 
-const TEX := preload("res://scripts/texture_utils.gd")
-const PAL := preload("res://scripts/tron_palette.gd")
+const TEX := preload("res://scripts/util/texture_utils.gd")
+const PAL := preload("res://scripts/util/tron_palette.gd")
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
 const PLANET_SOFTENING: float = 150.0
-const _TRAIL := preload("res://scripts/trail_component.gd")
+const _TRAIL := preload("res://scripts/components/trail_component.gd")
 
 var sun_mass: float = 1.0
 var gm_unit: float = 0.0

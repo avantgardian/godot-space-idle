@@ -1,8 +1,8 @@
 class_name PlanetPopup
 extends Panel
 
-const PAL := preload("res://scripts/tron_palette.gd")
-const DU := preload("res://scripts/draw_utils.gd")
+const PAL := preload("res://scripts/util/tron_palette.gd")
+const DU := preload("res://scripts/util/draw_utils.gd")
 const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 var _planet_node: Node2D

@@ -22,7 +22,7 @@ func _ready():
 	pp_layer.add_child(cr)
 
 	_mat = ShaderMaterial.new()
-	_mat.shader = preload("res://shaders/post_process.gdshader")
+	_mat.shader = preload("res://shaders/world/post_process.gdshader")
 	cr.material = _mat
 	_mat.set_shader_parameter("u_bloom_intensity", _bloom_intensity)
 
