@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RockyBiomeConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/rocky_biome.gd" id="1_rocky"]
+
+[resource]
+script = ExtResource("1_rocky")
+rocky_hi = Color(0.85, 0.40, 0.20, 1.0)
+rocky_lo = Color(0.45, 0.18, 0.10, 1.0)
+polar_cap_color = Color(0.90, 0.85, 0.80, 1.0)
+crater_count = 6
+polar_cap_lat_deg = 60.0
+polar_softness = 0.2
+texture_size = 26

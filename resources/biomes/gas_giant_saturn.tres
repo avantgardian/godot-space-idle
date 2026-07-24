@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GasGiantBiomeConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/gas_giant_biome.gd" id="1_gas"]
+
+[resource]
+script = ExtResource("1_gas")
+band_hi = Color(0.85, 0.75, 0.45, 1.0)
+band_lo = Color(0.55, 0.40, 0.22, 1.0)
+storm_rust = Color(0.85, 0.30, 0.20, 1.0)
+storm_white = Color(0.95, 0.95, 0.95, 1.0)
+band_count = 10
+band_sharp = 0.2
+shear_amp = 0.07
+band_warp = 0.05
+storm_count = 0
+storm_stretch = 2.0
+texture_size = 88

@@ -52,7 +52,6 @@ start_angle = 2.5
 mass = 2.45e-06
 collision_radius = 22.0
 trail_max = 1410
-surface_lava_leak = 0.6
 
 [node name="Earth" type="Node2D" parent="." unique_id=807002999]
 unique_name_in_owner = true

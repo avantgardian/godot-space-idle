@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="TerrestrialBiomeConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/terrestrial_biome.gd" id="1_terra"]
+
+[resource]
+script = ExtResource("1_terra")
+ocean_deep = Color(0.04, 0.18, 0.42, 1.0)
+ocean_shallow = Color(0.10, 0.45, 0.65, 1.0)
+land_tropical = Color(0.10, 0.45, 0.15, 1.0)
+land_desert = Color(0.78, 0.65, 0.40, 1.0)
+land_tundra = Color(0.55, 0.55, 0.40, 1.0)
+ice_cap = Color(0.92, 0.95, 1.00, 1.0)
+cloud_white = Color(0.95, 0.95, 0.95, 0.85)
+ocean_specular = Color(0.95, 0.98, 1.00, 1.0)
+sea_level = 0.5
+ocean_shelf_depth = 0.15
+cloud_coverage = 0.45
+cloud_spin_rate = 0.15
+cloud_scale = 3.0
+specular_power = 64.0
+city_lights = 0.0
+polar_cap_lat_deg = 60.0
+polar_softness = 0.2
+texture_size = 48
