@@ -63,7 +63,7 @@ func spawn():
 	var radial := -randf_range(0.1, 0.4) * v_circ
 	var tangential := randf_range(0.2, 2.5) * v_circ
 	var dir := Vector2(cos(entry_angle), sin(entry_angle))
-	var tangent := Vector2(-dir.y, dir.x)
+	var tangent := Vector2(-dir.y, dir.x) * (1.0 if randf() < 0.5 else -1.0)
 	_vel = dir * radial + tangent * tangential
 
 	position = _pos
