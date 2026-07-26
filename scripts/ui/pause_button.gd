@@ -1,6 +1,7 @@
 extends Button
 
-var _paused := false
+signal pause_toggled
+
 var _overlay: ColorRect
 
 func _ready():
@@ -29,10 +30,13 @@ func _ready():
 	_overlay.hide()
 	get_parent().call_deferred("add_child", _overlay)
 
-	pressed.connect(_toggle)
+	pressed.connect(_on_pressed)
 
-func _toggle():
-	_paused = not _paused
-	get_tree().paused = _paused
-	text = "Play" if _paused else "Pause"
-	_overlay.visible = _paused
+func _on_pressed():
+	emit_signal("pause_toggled")
+
+func set_pause_state(paused: bool):
+	text = "Play" if paused else "Pause"
+
+func set_overlay_visible(visible: bool):
+	_overlay.visible = visible
