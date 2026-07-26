@@ -3,6 +3,9 @@
 *.import
 *.translation
 
+# GUT addon bundles its own .import files — don't ignore those
+!addons/gut/**/*.import
+
 # OS
 .DS_Store
 Thumbs.db

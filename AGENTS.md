@@ -11,11 +11,12 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 
 ## Dev commands
 
-There are no build/test/lint commands. This is a pure Godot project with no toolchain outside the editor.
-
 - Open the project: `godot .` from repo root (or open `project.godot` in the Godot editor)
-- No formatter, linter, typechecker, or test framework is configured
-- No CI, no pre-commit hooks, no task runner
+- **Run tests (headless CI):** `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize`
+- **Run tests (editor):** Open the GUT panel via the editor dock (enabled by `addons/gut/plugin.cfg`) and click "Run All", or load `res://tests/test_runner.tscn` and run the scene
+- **Format/lint:** `gdformat --check scripts/` and `gdlint scripts/` (install via `pip install gdtoolkit`)
+- **Pre-commit:** `pre-commit run --all-files` (install via `pre-commit install`; see `.pre-commit-config.yaml`)
+- **CI:** `.github/workflows/ci.yml` runs GUT tests on push/PR to non-main branches; `.github/workflows/check.yml` checks script compilation
 - Git operations use `rtk` wrapper: `rtk git status`, `rtk git diff`, `rtk git commit -m "..."`, `rtk git push`
 - GitHub operations use `gh`: `gh issue create`, `gh pr create`
 
