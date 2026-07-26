@@ -12,6 +12,7 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 ## Dev commands
 
 - Open the project: `godot .` from repo root (or open `project.godot` in the Godot editor)
+- **Godot Steam path:** The editor and headless binary are at `/Users/avantgardian/Library/Application Support/Steam/steamapps/common/Godot Engine/Godot.app/Contents/MacOS/Godot` — use this for headless CI/test commands instead of bare `godot`
 - **Run tests (headless CI):** `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize`
 - **Run tests (editor):** Open the GUT panel via the editor dock (enabled by `addons/gut/plugin.cfg`) and click "Run All", or load `res://tests/test_runner.tscn` and run the scene
 - **Format/lint:** `gdformat --check scripts/` and `gdlint scripts/` (install via `pip install gdtoolkit`)
