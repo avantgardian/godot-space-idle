@@ -4,6 +4,7 @@ extends RefCounted
 const PATH := "user://settings.cfg"
 
 const REBINDABLE_ACTIONS: Array[String] = [
+	"ui_cancel",
 	"zoom_in",
 	"zoom_out",
 	"spawn_asteroid",

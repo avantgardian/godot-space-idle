@@ -11,8 +11,11 @@ const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
 const _COLLISION_MGR := preload("res://scripts/controllers/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/components/post_process_manager.gd")
 const _SETTINGS := preload("res://scripts/util/settings_manager.gd")
+const _PAUSE_MENU := preload("res://scripts/ui/pause_menu.gd")
 
 var sun_mass: float = 1.0
+var _paused := false
+var _pause_menu: PauseMenu
 var _mass_label: Label
 var _collision_mgr: RefCounted
 var _last_label_mass: float = -1.0
@@ -32,6 +35,7 @@ func _apply_theme():
 	var game_theme := load("res://resources/game_theme.tres") as Theme
 	%EventLogPanel.theme = game_theme
 	%PauseButton.theme = game_theme
+	%PauseButton.pause_toggled.connect(_on_pause_toggled)
 	_mass_label.theme = game_theme
 	_mass_label.add_theme_font_override("font", FONT_MONO)
 
@@ -102,7 +106,9 @@ func _unhandled_input(event):
 		%Camera2D.update_drag(event.position)
 
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.is_action_pressed("zoom_in"):
+		if event.is_action_pressed("ui_cancel"):
+			_toggle_pause()
+		elif event.is_action_pressed("zoom_in"):
 			%Camera2D.zoom_in()
 		elif event.is_action_pressed("zoom_out"):
 			%Camera2D.zoom_out()
@@ -131,3 +137,30 @@ func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: 
 	%ImpactFX.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
 	%PostProcessManager.trigger()
 	%EventLog.log_message(message)
+
+func _on_pause_toggled():
+	_toggle_pause()
+
+func _toggle_pause():
+	_paused = not _paused
+	get_tree().paused = _paused
+	%PauseButton.set_pause_state(_paused)
+	if _paused:
+		_show_pause_menu()
+	else:
+		_hide_pause_menu()
+
+func _show_pause_menu():
+	_pause_menu = _PAUSE_MENU.new()
+	_pause_menu.resume_pressed.connect(_toggle_pause)
+	_pause_menu.exit_to_menu_pressed.connect(_on_exit_to_menu)
+	%UI.add_child(_pause_menu)
+
+func _hide_pause_menu():
+	if _pause_menu and is_instance_valid(_pause_menu):
+		_pause_menu.close()
+	_pause_menu = null
+
+func _on_exit_to_menu():
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
