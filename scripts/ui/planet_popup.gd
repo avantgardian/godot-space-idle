@@ -7,6 +7,7 @@ const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 var _planet_node: Node2D
 var _camera: Camera2D
+var reduced_motion: bool = false
 var _popup_labels: Dictionary = {}
 var _planet_color: Color
 
@@ -89,8 +90,11 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	size = Vector2(280, 150)
 
 	modulate = Color(1, 1, 1, 0)
-	var tween := create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	if reduced_motion:
+		modulate = Color(1, 1, 1, 1)
+	else:
+		var tween := create_tween()
+		tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func _process(_delta):
 	if not _planet_node or not _camera:
@@ -115,6 +119,9 @@ func _process(_delta):
 	position.y = clamp(position.y, 10, viewport_size.y - ps.y - 10)
 
 func close():
-	var tween := create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.15)
-	tween.tween_callback(queue_free)
+	if reduced_motion:
+		queue_free()
+	else:
+		var tween := create_tween()
+		tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.15)
+		tween.tween_callback(queue_free)

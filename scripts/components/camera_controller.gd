@@ -12,6 +12,7 @@ var shake_intensity: float = 0.0
 
 var _dragging: bool = false
 var _drag_prev: Vector2
+var _screen_shake_enabled: bool = true
 var _scroll_accum: float = 0.0
 var _follow_target: Node2D = null
 var _last_frame: int = 0
@@ -57,7 +58,10 @@ func _process(delta):
 
 	if shake_intensity > 0.0:
 		shake_intensity = max(shake_intensity - 15.0 * delta, 0.0)
-		offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_intensity
+		if _screen_shake_enabled:
+			offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_intensity
+		else:
+			offset = Vector2.ZERO
 	else:
 		offset = Vector2.ZERO
 
@@ -144,6 +148,9 @@ func update_drag(screen_pos: Vector2):
 
 func trigger_shake(intensity: float):
 	shake_intensity = min(shake_intensity + intensity, 40.0)
+
+func set_screen_shake_enabled(on: bool) -> void:
+	_screen_shake_enabled = on
 
 func get_blur_amount() -> float:
 	var t := (zoom.x - min_zoom) / (max_zoom - min_zoom)

@@ -57,7 +57,6 @@ text = "New Game - Progression"
 
 [node name="SettingsBtn" type="Button" parent="CenterContainer/MenuContainer"]
 text = "Settings"
-disabled = true
 
 [node name="SpacerBottom" type="Control" parent="CenterContainer/MenuContainer"]
 custom_minimum_size = Vector2(0, 20)

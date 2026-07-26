@@ -16,8 +16,14 @@ func _ready():
 func setup():
 	var panel := Panel.new()
 	panel.name = "EventLogPanel"
-	panel.position = Vector2(16, get_viewport().get_visible_rect().size.y - 155)
-	panel.size = Vector2(300, 135)
+	panel.anchor_left = 0.0
+	panel.anchor_top = 1.0
+	panel.anchor_right = 0.0
+	panel.anchor_bottom = 1.0
+	panel.offset_left = 16.0
+	panel.offset_top = -155.0
+	panel.offset_right = 316.0
+	panel.offset_bottom = -20.0
 	panel.clip_contents = true
 	add_child(panel)
 	panel.owner = get_tree().current_scene

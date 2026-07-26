@@ -10,11 +10,13 @@ const _ASTEROID_SPAWNER := preload("res://scripts/components/asteroid_spawner.gd
 const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
 const _COLLISION_MGR := preload("res://scripts/controllers/collision_manager.gd")
 const _POST_PROCESS := preload("res://scripts/components/post_process_manager.gd")
+const _SETTINGS := preload("res://scripts/util/settings_manager.gd")
 
 var sun_mass: float = 1.0
 var _mass_label: Label
 var _collision_mgr: RefCounted
 var _last_label_mass: float = -1.0
+var _settings: SettingsManager
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
@@ -23,6 +25,7 @@ func _ready():
 	_add_post_process()
 	_add_asteroid_spawner()
 	(%UI as CanvasLayer).layer = 2
+	_load_settings()
 
 func _apply_theme():
 	_mass_label = %MassLabel as Label
@@ -58,6 +61,13 @@ func _process(_delta):
 	_update_mass_label()
 	%StarField.update_parallax(%Camera2D.position, %Camera2D.zoom.x)
 	%StarField.set_blur(%Camera2D.get_blur_amount())
+
+func _load_settings():
+	_settings = _SETTINGS.new()
+	%PostProcessManager.set_screen_shake_enabled(_settings.screen_shake)
+	%PostProcessManager.set_colorblind_mode(_settings.colorblind_mode)
+	%Camera2D.set_screen_shake_enabled(_settings.screen_shake)
+	%Sun.set_animations_enabled(not _settings.reduced_motion)
 
 func _update_mass_label():
 	if _mass_label and sun_mass != _last_label_mass:

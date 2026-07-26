@@ -36,6 +36,7 @@ func _ready():
 
 	$CenterContainer/MenuContainer/SandboxBtn.pressed.connect(_on_sandbox_pressed)
 	$CenterContainer/MenuContainer/ProgressionBtn.pressed.connect(_on_progression_pressed)
+	$CenterContainer/MenuContainer/SettingsBtn.pressed.connect(_on_settings_pressed)
 	$CenterContainer/MenuContainer/QuitBtn.pressed.connect(_on_quit_pressed)
 
 func _on_sandbox_pressed():
@@ -43,6 +44,9 @@ func _on_sandbox_pressed():
 
 func _on_progression_pressed():
 	get_tree().change_scene_to_file("res://scenes/progression.tscn")
+
+func _on_settings_pressed():
+	get_tree().change_scene_to_file("res://scenes/settings.tscn")
 
 func _on_quit_pressed():
 	get_tree().quit()

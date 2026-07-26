@@ -6,6 +6,7 @@ const TEX := preload("res://scripts/util/texture_utils.gd")
 
 var sun_time: float = 0.0
 var mass: float = 1.0
+var _animations_enabled: bool = true
 var _collision_flash: float = 0.0
 var _glow_outer: Sprite2D
 var _glow_inner: Sprite2D
@@ -101,6 +102,9 @@ func _generate_sun_glows():
 func flash(intensity: float):
 	_collision_flash = max(_collision_flash, intensity)
 
+func set_animations_enabled(enabled: bool) -> void:
+	_animations_enabled = enabled
+
 func _process(delta):
 	sun_time += delta
 	material.set_shader_parameter("time", sun_time)
@@ -109,6 +113,24 @@ func _process(delta):
 	# sphere-projected noise field would fight the shader motion, so we
 	# keep the sprite axis-aligned.
 	rotation = 0.0
+
+	if not _animations_enabled:
+		scale = Vector2.ONE
+		modulate = Color.WHITE
+		if _glow_outer:
+			_glow_outer.scale = Vector2.ONE
+			_glow_outer.modulate = Color(1, 1, 1, 0.4)
+		if _glow_inner:
+			_glow_inner.scale = Vector2.ONE
+			_glow_inner.modulate = Color(1, 1, 1, 0.6)
+		if _collision_flash > 0.0:
+			var t: float = _collision_flash / 0.6
+			var flash_t: float = t * t
+			modulate = Color.WHITE.lerp(Color.WHITE, flash_t * 0.7)
+			scale = Vector2.ONE * (1.0 + flash_t * 0.15)
+			_collision_flash -= delta
+		return
+
 	var breathe := sin(sun_time * 0.5) * 0.04 + 1.0
 	scale = Vector2(breathe, breathe)
 
