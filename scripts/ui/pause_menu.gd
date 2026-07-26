@@ -91,6 +91,12 @@ func _setup_menu():
 	exit_btn.pressed.connect(_on_exit_to_menu)
 	vbox.add_child(exit_btn)
 
+func _input(event):
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.is_action_pressed("ui_cancel"):
+			emit_signal("resume_pressed")
+			get_viewport().set_input_as_handled()
+
 func _on_resume():
 	emit_signal("resume_pressed")
 
