@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: 4.7
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot
+        run: |
+          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
+          unzip godot.zip
+          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
+
+      - name: Import project
+        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
+
+      - name: Run GUT tests
+        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize
