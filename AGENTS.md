@@ -7,7 +7,7 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 - Entry point: `scenes/main.tscn` (run/main_scene)
 - All scripts in `scripts/` — GDScript only, no C# or GDExtension
 - Sun clickable (left-click) to increase mass (+0.1/click); `+`/`-` or scroll to zoom; left/middle drag to pan
-- `L` key spawns an asteroid manually
+- `L` key spawns an asteroid manually; `Esc` toggles pause menu
 
 ## Dev commands
 
@@ -41,7 +41,9 @@ Every feature or fix follows this sequence:
 
 | Script | Extends | Role |
 |--------|---------|------|
-| `main.gd` | `Node2D` | Root controller — owns all state, orchestrates planets, asteroids, star field, camera, UI, collisions |
+| `game_controller.gd` | `Node2D` | Base controller for both game modes — owns all shared state (sun mass, settings, pause), orchestrates asteroids, star field, camera, UI. Handles `Esc` pause toggle and pause menu lifecycle. |
+| `main.gd` | `game_controller.gd` | Sandbox mode — adds 8 planets, planet popup, planet collision wiring |
+| `progression.gd` | `game_controller.gd` | Progression mode — adds star type generation, spaceship, ship controls |
 | `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection. Single `@export var biome: BiomeConfig` delegates all surface rendering to a `BiomeConfig` Resource (see `scripts/biomes/`). Common shader uniforms (`u_time`, `u_light_dir`, `u_ambient`, `u_night_rim`, `u_axial_tilt`, `u_spin_rate`, `u_seed`) are set here; biome-specific uniforms are applied by `BiomeConfig.apply_to_shader()`. Atmosphere rim is handled cross-biome via `atm_color`/`atm_thickness_mult`/`atm_intensity`/`atm_ambient` exports. |
 | `mercury.gd` | `orbital_body.gd` | Orbit radius 350, period 25s, mass 1.65e-7, grey |
 | `venus.gd` | `orbital_body.gd` | Orbit radius 500, period 47s, mass 2.45e-6, golden |
@@ -65,6 +67,8 @@ Every feature or fix follows this sequence:
 | `biomes/ice_giant_biome.gd` | `BiomeConfig` | Methane-blue ice giant shader + random storm seeding (Uranus) |
 | `biomes/neptune_biome.gd` | `IceGiantBiomeConfig` | Ice giant with fixed Great Dark Spot storm seeding |
 | `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
+| `pause_button.gd` | `Button` | Bottom-right Pause/Play button — emits `pause_toggled` signal; controller owns pause state |
+| `pause_menu.gd` | `Panel` | Full-screen TRON pause overlay — Resume (unpause), Save/Load (disabled placeholders), Exit to Main Menu; handles `Esc` to unpause via `_input()` (has `PROCESS_MODE_ALWAYS`) |
 
 ## Shaders
 
@@ -97,7 +101,8 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 
 ## Architecture
 
-- **No autoloads/singletons** — `main.gd` owns all state and coordinates child nodes via `$` paths
+- **No autoloads/singletons** — `game_controller.gd` owns all shared state (sun mass, pause, settings) and coordinates child nodes via `%` unique-name access. `main.gd` and `progression.gd` extend it for sandbox and progression modes respectively.
+- **Pause** — `Esc` or the bottom-right PauseButton toggles `get_tree().paused`. A full-screen `PauseMenu` overlay appears with Resume, Save/Load (disabled placeholders), and Exit to Main Menu buttons. `PROCESS_MODE_ALWAYS` nodes (Camera2D, PauseButton, PauseMenu) continue to process input while paused; the rest of the tree freezes.
 - **Planets** inherit from `orbital_body.gd` which handles circular Newtonian orbits (`GM_UNIT` / `_initial_gm()`), trail recording (1200 points, Line2D rendering), and sun-collision detection. When a planet hits the sun it is marked dead (no respawn) and emits `collided_with_sun`. Each planet has a custom `_get_planet_color()` for its procedural texture. Saturn additionally generates a rotating ring sprite.
 - **Body-body collisions** — `main.gd` checks planet-planet, planet-asteroid overlaps each frame. The larger body absorbs the smaller with momentum conservation; collision effects (impact rings + additive glow sprites) spawn at the merge point.
 - **Asteroids** spawn every ~35–55s (max 3 alive), feel softened gravity from all planets, and despawn when >4000 units from origin.
