@@ -38,5 +38,5 @@ func _on_pressed():
 func set_pause_state(paused: bool):
 	text = "Play" if paused else "Pause"
 
-func set_overlay_visible(show: bool):
-	_overlay.visible = show
+func set_overlay_visible(flag: bool):
+	_overlay.visible = flag
