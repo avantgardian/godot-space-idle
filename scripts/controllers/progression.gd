@@ -71,6 +71,7 @@ func _ready():
 	add_child(ship)
 	ship.owner = self
 	ship.unique_name_in_owner = true
+	ship.set_reduced_motion(_settings.reduced_motion)
 
 func _process(delta):
 	super._process(delta)
