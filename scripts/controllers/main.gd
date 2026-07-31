@@ -41,9 +41,6 @@ func _process(delta):
 func _get_asteroid_gm() -> float:
 	return %Mercury.get_gm()
 
-func _format_mass_label(mass: float) -> String:
-	return "Msun = %.7f" % mass
-
 func _get_click_target(screen_pos: Vector2) -> Node2D:
 	return _check_planet_click(screen_pos)
 
