@@ -4,8 +4,6 @@ extends Node2D
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 const CFG := preload("res://scripts/util/game_config.gd")
-const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
-
 const _ASTEROID_SPAWNER := preload("res://scripts/components/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
 const _COLLISION_MGR := preload("res://scripts/controllers/collision_manager.gd")
@@ -16,9 +14,7 @@ const _PAUSE_MENU := preload("res://scripts/ui/pause_menu.gd")
 var sun_mass: float = 1.0
 var _paused := false
 var _pause_menu: PauseMenu
-var _mass_label: Label
 var _collision_mgr: RefCounted
-var _last_label_mass: float = -1.0
 var _settings: SettingsManager
 
 func _ready():
@@ -31,13 +27,10 @@ func _ready():
 	_load_settings()
 
 func _apply_theme():
-	_mass_label = %MassLabel as Label
 	var game_theme := load("res://resources/game_theme.tres") as Theme
 	%EventLogPanel.theme = game_theme
 	%PauseButton.theme = game_theme
 	%PauseButton.pause_toggled.connect(_on_pause_toggled)
-	_mass_label.theme = game_theme
-	_mass_label.add_theme_font_override("font", FONT_MONO)
 
 func _add_post_process():
 	var pm := _POST_PROCESS.new()
@@ -62,7 +55,6 @@ func _process(_delta):
 	%AsteroidSpawner.sun_mass = sun_mass
 	if _collision_mgr:
 		_collision_mgr.check_collisions(%AsteroidSpawner._asteroids)
-	_update_mass_label()
 	%StarField.update_parallax(%Camera2D.position, %Camera2D.zoom.x)
 	%StarField.set_blur(%Camera2D.get_blur_amount())
 
@@ -72,14 +64,6 @@ func _load_settings():
 	%PostProcessManager.set_colorblind_mode(_settings.colorblind_mode)
 	%Camera2D.set_screen_shake_enabled(_settings.screen_shake)
 	%Sun.set_animations_enabled(not _settings.reduced_motion)
-
-func _update_mass_label():
-	if _mass_label and sun_mass != _last_label_mass:
-		_mass_label.text = _format_mass_label(sun_mass)
-		_last_label_mass = sun_mass
-
-func _format_mass_label(mass: float) -> String:
-	return "Msun = %.7f" % mass
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:

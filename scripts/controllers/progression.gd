@@ -83,9 +83,6 @@ func _process(delta):
 func _get_asteroid_gm() -> float:
 	return GM_UNIT
 
-func _format_mass_label(mass: float) -> String:
-	return "Msun = %.4f [%s]" % [mass, _star_type]
-
 func _get_click_target(screen_pos: Vector2) -> Node2D:
 	if _check_ship_click(screen_pos):
 		return %Spaceship
