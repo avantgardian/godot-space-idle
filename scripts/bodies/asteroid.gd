@@ -58,10 +58,10 @@ func spawn():
 	var entry_angle := randf_range(0.0, TAU)
 	_pos = Vector2(cos(entry_angle), sin(entry_angle)) * spawn_r
 
-	var gm := gm_unit * sun_mass
-	var v_circ := sqrt(gm / spawn_r)
-	var radial := -randf_range(0.1, 0.4) * v_circ
-	var tangential := randf_range(0.2, 2.5) * v_circ
+	var v_inf := randf_range(5.0, 120.0)
+	var radial_frac := randf_range(0.5, 0.95)
+	var radial := -v_inf * radial_frac
+	var tangential := v_inf * sqrt(1.0 - radial_frac * radial_frac)
 	var dir := Vector2(cos(entry_angle), sin(entry_angle))
 	var tangent := Vector2(-dir.y, dir.x) * (1.0 if randf() < 0.5 else -1.0)
 	_vel = dir * radial + tangent * tangential
