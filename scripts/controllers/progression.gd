@@ -83,6 +83,9 @@ func _process(delta):
 func _get_asteroid_gm() -> float:
 	return GM_UNIT
 
+func _get_star_type() -> String:
+	return _star_type
+
 func _get_click_target(screen_pos: Vector2) -> Node2D:
 	if _check_ship_click(screen_pos):
 		return %Spaceship

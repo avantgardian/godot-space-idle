@@ -3,7 +3,7 @@ extends Node2D
 @export var star_seed: int = 42
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
-const CFG := preload("res://scripts/util/game_config.gd")
+const _SUN_POPUP := preload("res://scripts/ui/sun_popup.gd")
 const _ASTEROID_SPAWNER := preload("res://scripts/components/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
 const _COLLISION_MGR := preload("res://scripts/controllers/collision_manager.gd")
@@ -15,6 +15,7 @@ var sun_mass: float = 1.0
 var _paused := false
 var _pause_menu: PauseMenu
 var _collision_mgr: RefCounted
+var _sun_popup: Panel
 var _settings: SettingsManager
 
 func _ready():
@@ -67,19 +68,23 @@ func _load_settings():
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
-		var sun_screen: Vector2 = %Camera2D.get_canvas_transform() * %Sun.position
-		var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
-		if event.is_action_pressed("sun_click") and on_sun:
-			sun_mass += CFG.CLICK_MASS_GAIN
-			return
-
 		if event.is_action_pressed("select"):
+			var sun_screen: Vector2 = %Camera2D.get_canvas_transform() * %Sun.position
+			var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
+			if on_sun:
+				_on_sun_clicked()
+				return
+
 			var clicked := _get_click_target(event.position)
 			if clicked:
+				_close_sun_popup()
 				_on_select_target(clicked)
 				return
 
+			_close_sun_popup()
+
 		if event.is_action_pressed("drag"):
+			_close_sun_popup()
 			_on_drag_pressed(event.position)
 
 	if event is InputEventMouseButton and not event.pressed:
@@ -105,6 +110,28 @@ func _get_click_target(_screen_pos: Vector2) -> Node2D:
 
 func _on_select_target(target: Node2D):
 	%Camera2D.follow_node(target)
+
+func _on_sun_clicked():
+	%Camera2D.unfollow()
+	_show_sun_popup()
+
+func _show_sun_popup():
+	_close_sun_popup()
+	var popup := _SUN_POPUP.new()
+	popup.show_for_sun(self, %Camera2D, %Sun, _get_star_type())
+	popup.reduced_motion = _settings.reduced_motion
+	%UI.add_child(popup)
+	_sun_popup = popup
+
+func _close_sun_popup():
+	if not _sun_popup or not is_instance_valid(_sun_popup):
+		_sun_popup = null
+		return
+	_sun_popup.close()
+	_sun_popup = null
+
+func _get_star_type() -> String:
+	return ""
 
 func _on_drag_pressed(pos: Vector2):
 	%Camera2D.start_drag(pos)
