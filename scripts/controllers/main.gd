@@ -79,6 +79,7 @@ func _on_planet_collided(planet: Node2D):
 
 func _show_planet_popup(planet_node: Node2D):
 	_close_planet_popup()
+	_close_sun_popup()
 	var idx := _find_planet_idx(planet_node)
 	if idx < 0:
 		return
