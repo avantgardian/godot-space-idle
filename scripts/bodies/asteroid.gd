@@ -1,6 +1,8 @@
 class_name Asteroid
 extends Node2D
 
+enum AsteroidArchetype { C_TYPE, S_TYPE, M_TYPE, X_TYPE }
+
 signal collided_with_sun
 
 const TEX := preload("res://scripts/util/texture_utils.gd")
@@ -14,6 +16,8 @@ const PLANET_SOFTENING: float = 150.0
 const _TRAIL := preload("res://scripts/components/trail_component.gd")
 const TEXTURE_SIZE := 24
 
+const ARCHETYPE_WEIGHTS := [0.55, 0.25, 0.10, 0.10]
+
 var sun_mass: float = 1.0
 var gm_unit: float = 0.0
 var mass: float = 0.0
@@ -25,6 +29,7 @@ var _sprite: Sprite2D
 var _shader_mat: ShaderMaterial
 var _asteroid_time: float = 0.0
 var _asteroid_seed: int = 0
+var _archetype: int = AsteroidArchetype.C_TYPE
 var _trail_component: Node
 var _planets: Array[Dictionary] = []
 var _body_color: Color = Color.WHITE
@@ -61,15 +66,43 @@ func _ready():
 
 func _generate_texture():
 	_sprite = Sprite2D.new()
-	var pick := randi() % 2
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _asteroid_seed
+	var roll := rng.randf()
+	var cum := 0.0
+	_archetype = AsteroidArchetype.C_TYPE
+	for i in range(ARCHETYPE_WEIGHTS.size()):
+		cum += ARCHETYPE_WEIGHTS[i]
+		if roll <= cum:
+			_archetype = i
+			break
+
 	var hi: Color
 	var lo: Color
-	if pick == 0:
-		hi = PAL_P.ROCKY_MERCURY_HI
-		lo = PAL_P.ROCKY_MERCURY_LO
-	else:
-		hi = PAL_P.ROCKY_MARS_HI
-		lo = PAL_P.ROCKY_MARS_LO
+	var ambient: float
+	var relief_base: float
+	match _archetype:
+		AsteroidArchetype.C_TYPE:
+			hi = PAL_P.ROCKY_ASTEROID_C_HI
+			lo = PAL_P.ROCKY_ASTEROID_C_LO
+			ambient = 0.04
+			relief_base = 0.06
+		AsteroidArchetype.S_TYPE:
+			hi = PAL_P.ROCKY_ASTEROID_S_HI
+			lo = PAL_P.ROCKY_ASTEROID_S_LO
+			ambient = 0.08
+			relief_base = 0.12
+		AsteroidArchetype.M_TYPE:
+			hi = PAL_P.ROCKY_ASTEROID_M_HI
+			lo = PAL_P.ROCKY_ASTEROID_M_LO
+			ambient = 0.07
+			relief_base = 0.05
+		AsteroidArchetype.X_TYPE:
+			hi = PAL_P.ROCKY_ASTEROID_X_HI
+			lo = PAL_P.ROCKY_ASTEROID_X_LO
+			ambient = 0.14
+			relief_base = 0.15
 	_body_color = hi.lerp(lo, 0.5)
 
 	_sprite.texture = TEX.make_disk_mask(TEXTURE_SIZE)
@@ -79,28 +112,24 @@ func _generate_texture():
 	_shader_mat.shader = ASTEROID_SHADER
 	_shader_mat.set_shader_parameter("u_time", 0.0)
 	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
-	_shader_mat.set_shader_parameter("u_ambient", 0.08)
+	_shader_mat.set_shader_parameter("u_ambient", ambient)
 	_shader_mat.set_shader_parameter("u_seed", abs(_asteroid_seed) % 1023)
 	_shader_mat.set_shader_parameter(
 		"u_spin_rate", 1.2 + 0.8 * (float(abs(_asteroid_seed) % 100) / 100.0)
 	)
 	_shader_mat.set_shader_parameter(
-		"u_base_color", Vector3(_body_color.r, _body_color.g, _body_color.b)
+		"u_base_color", Vector3(1.0, 1.0, 1.0)
 	)
 	_shader_mat.set_shader_parameter(
 		"u_regolith_hi",
-		Vector3(
-			PAL_P.ASTEROID_REGOLITH_HI.r, PAL_P.ASTEROID_REGOLITH_HI.g, PAL_P.ASTEROID_REGOLITH_HI.b
-		)
+		Vector3(hi.r, hi.g, hi.b)
 	)
 	_shader_mat.set_shader_parameter(
 		"u_regolith_lo",
-		Vector3(
-			PAL_P.ASTEROID_REGOLITH_LO.r, PAL_P.ASTEROID_REGOLITH_LO.g, PAL_P.ASTEROID_REGOLITH_LO.b
-		)
+		Vector3(lo.r, lo.g, lo.b)
 	)
 	_shader_mat.set_shader_parameter(
-		"u_relief_depth", 0.12 + 0.08 * (float(abs(_asteroid_seed) % 50) / 50.0)
+		"u_relief_depth", relief_base + 0.06 * (float(abs(_asteroid_seed) % 50) / 50.0)
 	)
 	_shader_mat.set_shader_parameter(
 		"u_irregularity", 0.15 + 0.20 * (float(abs((_asteroid_seed * 7) % 100)) / 100.0)

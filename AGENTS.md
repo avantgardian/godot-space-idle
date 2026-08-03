@@ -158,6 +158,7 @@ Sibling to `TronPalette`, single source of truth for realism-side biome photomet
 | Token group | Use |
 |-------------|-----|
 | `ROCKY_MERCURY_HI/LO`, `ROCKY_MARS_HI/LO`, `ROCKY_MARS_ICE`, `ROCKY_CRATER_SHADOW` | Rocky biomes (Mercury, Mars, dead moons) |
+| `ROCKY_ASTEROID_C_HI/LO`, `ROCKY_ASTEROID_S_HI/LO`, `ROCKY_ASTEROID_M_HI/LO`, `ROCKY_ASTEROID_X_HI/LO` | Asteroid taxonomic archetypes (C/S/M/X, #175) |
 | `VENUS_CLOUD_HI/LO`, `VENUS_SURFACE_LAVA` | Greenhouse / hot thick cloud decks (Venus) |
 | `TERRA_OCEAN_DEEP/SHALLOW`, `TERRA_LAND_TROPICAL/DESERT/TUNDRA`, `TERRA_ICE_CAP`, `TERRA_CLOUD_WHITE`, `TERRA_OCEAN_SPECULAR` | Terrestrial / habitable worlds (Earth) |
 | `GAS_BAND_TAN_HI/LO`, `GAS_STORM_RUST`, `GAS_STORM_WHITE`, `SATURN_BAND_HI/LO` | Gas giants (Jupiter base + Saturn) |
