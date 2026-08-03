@@ -39,7 +39,7 @@ static func make_disk_mask(size: int, edge_aa_threshold: float = 0.98) -> ImageT
 	_disk_mask_cache[key] = tex
 	return tex
 
-static func make_noisy_blob(size: int, rng_seed: int) -> ImageTexture:
+static func make_noisy_blob(size: int, rng_seed: int, color_fn: Callable) -> ImageTexture:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = rng_seed
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
@@ -54,8 +54,14 @@ static func make_noisy_blob(size: int, rng_seed: int) -> ImageTexture:
 			if dist <= max_r:
 				var noise := rng.randf_range(0.7, 1.0)
 				if dist <= max_r * noise:
-					var bright := rng.randf_range(0.3, 0.5)
-					var c := Color(bright, bright * 0.95, bright * 0.9)
+					var t := dist / max_r
+					var base_color: Color = color_fn.call(t, x, y)
+					var bright_factor := rng.randf_range(0.6, 1.0)
+					var c := Color(
+						base_color.r * bright_factor,
+						base_color.g * bright_factor,
+						base_color.b * bright_factor
+					)
 					var alpha := 1.0
 					if dist > max_r * noise * 0.7:
 						alpha = 1.0 - (dist - max_r * noise * 0.7) / (max_r * noise * 0.3)

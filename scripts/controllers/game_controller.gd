@@ -3,6 +3,7 @@ extends Node2D
 @export var star_seed: int = 42
 
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
+const PAL := preload("res://scripts/util/tron_palette.gd")
 const _SUN_POPUP := preload("res://scripts/ui/sun_popup.gd")
 const _ASTEROID_SPAWNER := preload("res://scripts/components/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
@@ -140,7 +141,7 @@ func _on_key_pressed(_event):
 	pass
 
 func _on_asteroid_collided(ast: Node2D):
-	_on_body_hit_sun(ast.mass, 0.2, Color(1, 0.7, 0.3, 0.3), 1.5, 24, 0.4, "Asteroid collided with the Sun")
+	_on_body_hit_sun(ast.mass, 0.2, PAL.ACCENT, 1.5, 24, 0.4, "Asteroid collided with the Sun")
 
 func _on_body_hit_sun(mass: float, flash: float, ring_color: Color, ring_width: float, ring_segments: int, ring_timer: float, message: String):
 	sun_mass += mass
