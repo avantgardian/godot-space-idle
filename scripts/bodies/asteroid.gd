@@ -67,8 +67,8 @@ func _ensure_init():
 	_asteroid_seed = randi()
 	_generate_texture()
 	_trail_component = _TRAIL.new()
-	var head := DU.trail_head(PAL_T.ASTEROID_TRAIL)
-	var tail := DU.trail_tail(PAL_T.ASTEROID_TRAIL)
+	var head := PAL_T.ASTEROID_TRAIL
+	var tail := Color(PAL_T.ASTEROID_TRAIL, 0.0)
 	_trail_component.setup(tail, head, 1.0, 600)
 	add_child(_trail_component)
 

@@ -43,4 +43,4 @@ const RING_ALPHA_MAX := 0.5
 const RING_PULSE_MIN := 0.35
 const RING_PULSE_SPEED := 2.5
 
-const ASTEROID_TRAIL := Color(1.00, 0.15, 0.02, 1.00)
+const ASTEROID_TRAIL := Color(1.00, 0.08, 0.00, 1.00)
