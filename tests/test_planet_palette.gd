@@ -18,6 +18,14 @@ func test_rocky_tokens_valid():
 	_validate_color(PAL.ROCKY_MARS_LO, "ROCKY_MARS_LO")
 	_validate_color(PAL.ROCKY_MARS_ICE, "ROCKY_MARS_ICE")
 	_validate_color(PAL.ROCKY_CRATER_SHADOW, "ROCKY_CRATER_SHADOW")
+	_validate_color(PAL.ROCKY_ASTEROID_C_HI, "ROCKY_ASTEROID_C_HI")
+	_validate_color(PAL.ROCKY_ASTEROID_C_LO, "ROCKY_ASTEROID_C_LO")
+	_validate_color(PAL.ROCKY_ASTEROID_S_HI, "ROCKY_ASTEROID_S_HI")
+	_validate_color(PAL.ROCKY_ASTEROID_S_LO, "ROCKY_ASTEROID_S_LO")
+	_validate_color(PAL.ROCKY_ASTEROID_M_HI, "ROCKY_ASTEROID_M_HI")
+	_validate_color(PAL.ROCKY_ASTEROID_M_LO, "ROCKY_ASTEROID_M_LO")
+	_validate_color(PAL.ROCKY_ASTEROID_X_HI, "ROCKY_ASTEROID_X_HI")
+	_validate_color(PAL.ROCKY_ASTEROID_X_LO, "ROCKY_ASTEROID_X_LO")
 
 func test_greenhouse_tokens_valid():
 	_validate_color(PAL.VENUS_CLOUD_HI, "VENUS_CLOUD_HI")

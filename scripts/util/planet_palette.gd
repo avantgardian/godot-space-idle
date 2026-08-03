@@ -13,7 +13,7 @@ extends RefCounted
 # the sun at the same orbit radius if a biome reads off.
 # ---------------------------------------------------------------------------
 
-# Rocky biome — Mercury, Mars, dead moons, dry asteroids.
+# Rocky biome — Mercury, Mars, dead moons, dry asteroids (C/S/M/X archetypes below).
 const ROCKY_MERCURY_HI := Color(0.62, 0.58, 0.55, 1.0)
 const ROCKY_MERCURY_LO := Color(0.30, 0.27, 0.25, 1.0)
 const ROCKY_MARS_HI := Color(0.85, 0.40, 0.20, 1.0)
@@ -59,6 +59,16 @@ const ATM_RIM_ICE := Color(0.40, 0.65, 1.00, 1.0)
 # Asteroid regolith — small irregular rocky bodies (#174).
 const ASTEROID_REGOLITH_HI := Color(0.55, 0.48, 0.42, 1.0)
 const ASTEROID_REGOLITH_LO := Color(0.25, 0.20, 0.16, 1.0)
+
+# Asteroid taxonomic archetypes (Tholen/Bus-DeMeo-inspired, simplified for gameplay, #175).
+const ROCKY_ASTEROID_C_HI := Color(0.30, 0.27, 0.23, 1.0)
+const ROCKY_ASTEROID_C_LO := Color(0.10, 0.09, 0.08, 1.0)
+const ROCKY_ASTEROID_S_HI := Color(0.80, 0.66, 0.50, 1.0)
+const ROCKY_ASTEROID_S_LO := Color(0.40, 0.28, 0.18, 1.0)
+const ROCKY_ASTEROID_M_HI := Color(0.55, 0.55, 0.60, 1.0)
+const ROCKY_ASTEROID_M_LO := Color(0.25, 0.25, 0.28, 1.0)
+const ROCKY_ASTEROID_X_HI := Color(0.78, 0.82, 0.88, 1.0)
+const ROCKY_ASTEROID_X_LO := Color(0.45, 0.50, 0.60, 1.0)
 
 # Ring system (Saturn-style, #108).
 const RING_SATURN_TAN := Color(0.78, 0.68, 0.45, 1.0)
