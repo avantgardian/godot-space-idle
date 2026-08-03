@@ -150,7 +150,7 @@ func spawn():
 	collision_radius = _visual_radius_px * 0.7
 
 	var mass_norm_mid := mass / 6e-8
-	_spin_rate = 0.6 / sqrt(max(mass_norm_mid, 0.25))
+	_spin_rate = 0.5 / clamp(mass_norm_mid, 0.25, 1.0)
 	if randf() < 0.5:
 		_spin_rate = -_spin_rate
 
