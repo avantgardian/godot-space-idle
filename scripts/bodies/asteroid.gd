@@ -1,9 +1,9 @@
 class_name Asteroid
 extends Node2D
 
-enum AsteroidArchetype { C_TYPE, S_TYPE, M_TYPE, X_TYPE }
-
 signal collided_with_sun
+
+enum AsteroidArchetype { C_TYPE, S_TYPE, M_TYPE, X_TYPE }
 
 const TEX := preload("res://scripts/util/texture_utils.gd")
 const PAL_T := preload("res://scripts/util/tron_palette.gd")
