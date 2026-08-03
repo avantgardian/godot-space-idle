@@ -14,7 +14,7 @@ func test_spin_rate_in_range():
 	var a: Node2D = autofree(ASTEROID.new())
 	add_child(a)
 	a.spawn()
-	assert_between(abs(a._spin_rate), 1.25, 2.5, "spin_rate in [1.25, 2.5]")
+	assert_between(abs(a._spin_rate), 0.6, 1.2, "spin_rate in [0.6, 1.2]")
 
 
 func test_visual_radius_monotonic_with_mass():
