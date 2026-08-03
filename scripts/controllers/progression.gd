@@ -54,7 +54,10 @@ const STAR_TYPES: Array[Dictionary] = [
 
 const _SPACESHIP := preload("res://scripts/components/spaceship.gd")
 
+const AUTO_FIRE_RANGE: float = 800.0
+
 var _star_type: String = "G2V"
+var _rockets: Array[Rocket] = []
 
 func _ready():
 	super._ready()
@@ -79,6 +82,51 @@ func _process(delta):
 	%Spaceship.input_active = cam_following_ship
 	var barrier_r: float = OrbitalBody.sun_collision_r(sun_mass) + %Spaceship.collision_radius + 50.0
 	%Spaceship.enforce_sun_barrier(barrier_r)
+
+	if cam_following_ship:
+		var nearest: Node2D = null
+		var nearest_dist: float = AUTO_FIRE_RANGE
+		for a in %AsteroidSpawner._asteroids:
+			if a.is_alive():
+				var d: float = %Spaceship.position.distance_to(a.position)
+				if d < nearest_dist:
+					nearest_dist = d
+					nearest = a
+		if nearest:
+			var rocket: Rocket = %Spaceship.try_fire(nearest)
+			if rocket:
+				add_child(rocket)
+				_rockets.append(rocket)
+
+	var sun_r: float = OrbitalBody.sun_collision_r(sun_mass)
+	for i in range(_rockets.size() - 1, -1, -1):
+		var r: Rocket = _rockets[i]
+		if not r.is_alive():
+			r.queue_free()
+			_rockets.remove_at(i)
+			continue
+
+		var rocket_dist: float = r.position.length()
+		if rocket_dist < sun_r + r.collision_radius or rocket_dist > 5000.0:
+			r.disable()
+			continue
+
+		var hit_asteroid := false
+		for a in %AsteroidSpawner._asteroids:
+			if not a.is_alive():
+				continue
+			var contact_r: float = r.collision_radius + a.collision_radius
+			if r.position.distance_squared_to(a.position) < contact_r * contact_r:
+				var hit_pos: Vector2 = a.position.lerp(r.position, 0.5)
+				a.disable()
+				r.disable()
+				%ImpactFX.spawn_glow(hit_pos, a.mass, contact_r)
+				%PostProcessManager.trigger()
+				%EventLog.log_message("Asteroid destroyed by rocket")
+				hit_asteroid = true
+				break
+		if hit_asteroid:
+			continue
 
 func _get_asteroid_gm() -> float:
 	return GM_UNIT

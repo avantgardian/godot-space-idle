@@ -11,8 +11,12 @@ const COLLISION_RADIUS: float = 14.0
 # TRON palette + neon drawing helpers — see scripts/tron_palette.gd and
 # scripts/draw_utils.gd. All visual tokens live there; this file should not
 # introduce new inline colors.
+const FIRE_COOLDOWN: float = 10.0
+const FIRE_MUZZLE_SPEED: float = 175.0
+
 const PAL := preload("res://scripts/util/tron_palette.gd")
 const DU  := preload("res://scripts/util/draw_utils.gd")
+const _ROCKET := preload("res://scripts/components/rocket.gd")
 
 var mass: float = 0.001
 var collision_radius: float = COLLISION_RADIUS
@@ -22,6 +26,7 @@ var _pos: Vector2 = Vector2.ZERO
 var _vel: Vector2 = Vector2.ZERO
 var _angle: float = 0.0
 var _alive: bool = true
+var _fire_cooldown: float = 0.0
 
 var _thrust_node: Node2D
 var _ring_node: Node2D
@@ -48,6 +53,9 @@ func init(start_pos: Vector2):
 func _process(delta):
 	if not _alive:
 		return
+
+	if _fire_cooldown > 0.0:
+		_fire_cooldown -= delta
 
 	if input_active:
 		var rotate_left := Input.is_action_pressed("ship_rotate_left")
@@ -127,6 +135,15 @@ func get_vel() -> Vector2:
 
 func set_vel(v: Vector2):
 	_vel = v
+
+func try_fire(target: Node2D) -> Rocket:
+	if _fire_cooldown > 0.0 or not _alive:
+		return null
+	_fire_cooldown = FIRE_COOLDOWN
+	var rocket := _ROCKET.new()
+	var muzzle_vel := Vector2.UP.rotated(_angle) * FIRE_MUZZLE_SPEED
+	rocket.init(_pos, _vel + muzzle_vel, target)
+	return rocket
 
 func disable():
 	_alive = false
