@@ -1,14 +1,18 @@
 class_name Asteroid
 extends Node2D
 
+signal collided_with_sun
+
 const TEX := preload("res://scripts/util/texture_utils.gd")
 const PAL_T := preload("res://scripts/util/tron_palette.gd")
 const PAL_P := preload("res://scripts/util/planet_palette.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
+const ASTEROID_SHADER := preload("res://shaders/bodies/asteroid_surface.gdshader")
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
 const PLANET_SOFTENING: float = 150.0
 const _TRAIL := preload("res://scripts/components/trail_component.gd")
+const TEXTURE_SIZE := 24
 
 var sun_mass: float = 1.0
 var gm_unit: float = 0.0
@@ -18,11 +22,13 @@ var _pos: Vector2
 var _vel: Vector2
 var _alive: bool = false
 var _sprite: Sprite2D
+var _shader_mat: ShaderMaterial
+var _asteroid_time: float = 0.0
+var _asteroid_seed: int = 0
 var _trail_component: Node
 var _planets: Array[Dictionary] = []
 var _body_color: Color = Color.WHITE
 
-signal collided_with_sun
 
 func disable():
 	if _trail_component:
@@ -30,22 +36,28 @@ func disable():
 	_alive = false
 	visible = false
 
+
 func set_planet_data(data: Array[Dictionary]):
 	_planets = data
+
 
 func get_vel() -> Vector2:
 	return _vel
 
+
 func set_vel(v: Vector2):
 	_vel = v
 
+
 func _ready():
+	_asteroid_seed = randi()
 	_generate_texture()
 	_trail_component = _TRAIL.new()
 	var head := DU.trail_head(_body_color)
 	var tail := DU.trail_tail(_body_color)
 	_trail_component.setup(tail, head, 1.0, 600)
 	add_child(_trail_component)
+
 
 func _generate_texture():
 	_sprite = Sprite2D.new()
@@ -59,11 +71,44 @@ func _generate_texture():
 		hi = PAL_P.ROCKY_MARS_HI
 		lo = PAL_P.ROCKY_MARS_LO
 	_body_color = hi.lerp(lo, 0.5)
-	var color_fn := func(t: float, _x: int, _y: int) -> Color:
-		return hi.lerp(lo, t)
-	_sprite.texture = TEX.make_noisy_blob(14, randi(), color_fn)
+
+	_sprite.texture = TEX.make_disk_mask(TEXTURE_SIZE)
 	_sprite.centered = true
+
+	_shader_mat = ShaderMaterial.new()
+	_shader_mat.shader = ASTEROID_SHADER
+	_shader_mat.set_shader_parameter("u_time", 0.0)
+	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
+	_shader_mat.set_shader_parameter("u_ambient", 0.08)
+	_shader_mat.set_shader_parameter("u_seed", abs(_asteroid_seed) % 1023)
+	_shader_mat.set_shader_parameter(
+		"u_spin_rate", 1.2 + 0.8 * (float(abs(_asteroid_seed) % 100) / 100.0)
+	)
+	_shader_mat.set_shader_parameter(
+		"u_base_color", Vector3(_body_color.r, _body_color.g, _body_color.b)
+	)
+	_shader_mat.set_shader_parameter(
+		"u_regolith_hi",
+		Vector3(
+			PAL_P.ASTEROID_REGOLITH_HI.r, PAL_P.ASTEROID_REGOLITH_HI.g, PAL_P.ASTEROID_REGOLITH_HI.b
+		)
+	)
+	_shader_mat.set_shader_parameter(
+		"u_regolith_lo",
+		Vector3(
+			PAL_P.ASTEROID_REGOLITH_LO.r, PAL_P.ASTEROID_REGOLITH_LO.g, PAL_P.ASTEROID_REGOLITH_LO.b
+		)
+	)
+	_shader_mat.set_shader_parameter(
+		"u_relief_depth", 0.12 + 0.08 * (float(abs(_asteroid_seed) % 50) / 50.0)
+	)
+	_shader_mat.set_shader_parameter(
+		"u_irregularity", 0.15 + 0.20 * (float(abs((_asteroid_seed * 7) % 100)) / 100.0)
+	)
+	_sprite.material = _shader_mat
+
 	add_child(_sprite)
+
 
 func spawn():
 	mass = randf_range(1.5e-8, 6e-8)
@@ -80,10 +125,14 @@ func spawn():
 	_vel = dir * radial + tangent * tangential
 
 	position = _pos
+	_asteroid_time = 0.0
+	if _shader_mat:
+		_shader_mat.set_shader_parameter("u_time", 0.0)
 	if _trail_component:
 		_trail_component.clear()
 	_alive = true
 	visible = true
+
 
 func _process(delta):
 	if not _alive:
@@ -100,12 +149,26 @@ func _process(delta):
 		var dist_sq: float = offset.length_squared()
 		var dist: float = sqrt(dist_sq)
 		var softened_r2: float = dist_sq + PLANET_SOFTENING * PLANET_SOFTENING
-		acc += gm_unit * pow(pl.mass, PLANET_MASS_EXPONENT) / softened_r2 * offset / dist * PLANET_GRAVITY_SCALE
+		acc += (
+			gm_unit
+			* pow(pl.mass, PLANET_MASS_EXPONENT)
+			/ softened_r2
+			* offset
+			/ dist
+			* PLANET_GRAVITY_SCALE
+		)
 	_vel += acc * delta
 	_pos += _vel * delta
 	position = _pos
 
-	_sprite.rotation += delta * 1.5
+	if _shader_mat:
+		_asteroid_time += delta
+		_shader_mat.set_shader_parameter("u_time", _asteroid_time)
+		var dir := -_pos
+		if dir.length_squared() > 0.0:
+			dir = dir.normalized()
+		var light_vec := Vector3(dir.x, dir.y, 0.0)
+		_shader_mat.set_shader_parameter("u_light_dir", light_vec)
 
 	var sun_r := OrbitalBody.sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
@@ -125,6 +188,7 @@ func _process(delta):
 
 	if _trail_component:
 		_trail_component.record(position)
+
 
 func is_alive() -> bool:
 	return _alive
