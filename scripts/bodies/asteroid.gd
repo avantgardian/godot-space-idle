@@ -2,7 +2,9 @@ class_name Asteroid
 extends Node2D
 
 const TEX := preload("res://scripts/util/texture_utils.gd")
-const PAL := preload("res://scripts/util/tron_palette.gd")
+const PAL_T := preload("res://scripts/util/tron_palette.gd")
+const PAL_P := preload("res://scripts/util/planet_palette.gd")
+const DU := preload("res://scripts/util/draw_utils.gd")
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
 const PLANET_SOFTENING: float = 150.0
@@ -18,6 +20,7 @@ var _alive: bool = false
 var _sprite: Sprite2D
 var _trail_component: Node
 var _planets: Array[Dictionary] = []
+var _body_color: Color = Color.WHITE
 
 signal collided_with_sun
 
@@ -39,16 +42,26 @@ func set_vel(v: Vector2):
 func _ready():
 	_generate_texture()
 	_trail_component = _TRAIL.new()
-	var accent := PAL.ACCENT
-	_trail_component.setup(
-		Color(accent.r, accent.g, accent.b, 0.0),
-		Color(accent.r, accent.g, accent.b, 0.5),
-		1.0, 600)
+	var head := DU.trail_head(_body_color)
+	var tail := DU.trail_tail(_body_color)
+	_trail_component.setup(tail, head, 1.0, 600)
 	add_child(_trail_component)
 
 func _generate_texture():
 	_sprite = Sprite2D.new()
-	_sprite.texture = TEX.make_noisy_blob(14, randi())
+	var pick := randi() % 2
+	var hi: Color
+	var lo: Color
+	if pick == 0:
+		hi = PAL_P.ROCKY_MERCURY_HI
+		lo = PAL_P.ROCKY_MERCURY_LO
+	else:
+		hi = PAL_P.ROCKY_MARS_HI
+		lo = PAL_P.ROCKY_MARS_LO
+	_body_color = hi.lerp(lo, 0.5)
+	var color_fn := func(t: float, _x: int, _y: int) -> Color:
+		return hi.lerp(lo, t)
+	_sprite.texture = TEX.make_noisy_blob(14, randi(), color_fn)
 	_sprite.centered = true
 	add_child(_sprite)
 

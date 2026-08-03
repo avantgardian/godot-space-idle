@@ -54,7 +54,7 @@ Every feature or fix follows this sequence:
 | `saturn.gd` | `orbital_body.gd` | Orbit radius 1800, period 616s, mass 2.86e-4, procedural ring (animated) |
 | `uranus.gd` | `orbital_body.gd` | Orbit radius 2200, period 1074s, mass 4.35e-5, cyan-blue |
 | `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 1599s, mass 5.14e-5, deep blue |
-| `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave reddish trails, despawn >4000u |
+| `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave orange trails (TRON accent), despawn >5000u |
 | `texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
 | `tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens (GUI chrome, trails, HUD overlays) |
 | `planet_palette.gd` | `RefCounted` | `class_name PlanetPalette` — single source of truth for realism-side planet biome photometric color tokens (rocky, greenhouse, terrestrial, gas giant, ice giant, atmospheres, rings). Sibling to `TronPalette` — see Visual language section for the split. |
@@ -106,7 +106,7 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 - **Pause** — `Esc` or the bottom-right PauseButton toggles `get_tree().paused`. A full-screen `PauseMenu` overlay appears with Resume, Save/Load (disabled placeholders), and Exit to Main Menu buttons. `PROCESS_MODE_ALWAYS` nodes (Camera2D, PauseButton, PauseMenu) continue to process input while paused; the rest of the tree freezes.
 - **Planets** inherit from `orbital_body.gd` which handles circular Newtonian orbits (`GM_UNIT` / `_initial_gm()`), trail recording (1200 points, Line2D rendering), and sun-collision detection. When a planet hits the sun it is marked dead (no respawn) and emits `collided_with_sun`. Each planet has a custom `_get_planet_color()` for its procedural texture. Saturn additionally generates a rotating ring sprite.
 - **Body-body collisions** — `main.gd` checks planet-planet, planet-asteroid overlaps each frame. The larger body absorbs the smaller with momentum conservation; collision effects (impact rings + additive glow sprites) spawn at the merge point.
-- **Asteroids** spawn every ~35–55s (max 3 alive), feel softened gravity from all planets, and despawn when >4000 units from origin.
+- **Asteroids** spawn every ~35–55s, feel softened gravity from all planets, and despawn when >5000 units from origin.
 - **Star field** — procedural parallax with canvas-item shaders (6 layers, edge-wrapping, seeded by `star_seed`). Blur amount driven by camera zoom via shader parameter.
 - **Sun** — runtime-generated white-disk mask texture + realism shader (`sun_surface.gdshader`), sibling additive-blend glow sprites (corona), pulsating `breathe` animation, collision flash on any impact. Spot machinery exists in `sun.gd` but is force-disabled per user feedback (`sun.gd:69-70`).
 - **Camera** — `Camera2D` with position smoothing and lerp-smoothed zoom (clamped 0.3–4.0×). Zoom level mapped to star-field blur.
