@@ -21,7 +21,7 @@ const ARCHETYPE_WEIGHTS := [0.55, 0.25, 0.10, 0.10]
 var sun_mass: float = 1.0
 var gm_unit: float = 0.0
 var mass: float = 0.0
-var collision_radius: float = 6.0
+var collision_radius: float = 0.0
 var _pos: Vector2
 var _vel: Vector2
 var _alive: bool = false
@@ -33,6 +33,9 @@ var _archetype: int = AsteroidArchetype.C_TYPE
 var _trail_component: Node
 var _planets: Array[Dictionary] = []
 var _body_color: Color = Color.WHITE
+var _visual_radius_px: float = 12.0
+var _spin_rate: float = 1.5
+var _density_ratio: float = 1.0
 
 
 func disable():
@@ -55,6 +58,12 @@ func set_vel(v: Vector2):
 
 
 func _ready():
+	_ensure_init()
+
+
+func _ensure_init():
+	if _sprite:
+		return
 	_asteroid_seed = randi()
 	_generate_texture()
 	_trail_component = _TRAIL.new()
@@ -114,20 +123,10 @@ func _generate_texture():
 	_shader_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
 	_shader_mat.set_shader_parameter("u_ambient", ambient)
 	_shader_mat.set_shader_parameter("u_seed", abs(_asteroid_seed) % 1023)
-	_shader_mat.set_shader_parameter(
-		"u_spin_rate", 1.2 + 0.8 * (float(abs(_asteroid_seed) % 100) / 100.0)
-	)
-	_shader_mat.set_shader_parameter(
-		"u_base_color", Vector3(1.0, 1.0, 1.0)
-	)
-	_shader_mat.set_shader_parameter(
-		"u_regolith_hi",
-		Vector3(hi.r, hi.g, hi.b)
-	)
-	_shader_mat.set_shader_parameter(
-		"u_regolith_lo",
-		Vector3(lo.r, lo.g, lo.b)
-	)
+	_shader_mat.set_shader_parameter("u_spin_rate", _spin_rate)
+	_shader_mat.set_shader_parameter("u_base_color", Vector3(1.0, 1.0, 1.0))
+	_shader_mat.set_shader_parameter("u_regolith_hi", Vector3(hi.r, hi.g, hi.b))
+	_shader_mat.set_shader_parameter("u_regolith_lo", Vector3(lo.r, lo.g, lo.b))
 	_shader_mat.set_shader_parameter(
 		"u_relief_depth", relief_base + 0.06 * (float(abs(_asteroid_seed) % 50) / 50.0)
 	)
@@ -140,7 +139,26 @@ func _generate_texture():
 
 
 func spawn():
+	_ensure_init()
+
 	mass = randf_range(1.5e-8, 6e-8)
+
+	var m_norm := clampf((mass - 1.5e-8) / (6e-8 - 1.5e-8), 0.0, 1.0)
+	_visual_radius_px = lerpf(2.0, 10.0, pow(m_norm, 1.0 / 3.0))
+	_visual_radius_px /= pow(_density_ratio, 1.0 / 3.0)
+
+	collision_radius = _visual_radius_px * 0.7
+
+	var mass_norm_mid := mass / 6e-8
+	_spin_rate = 1.25 / sqrt(max(mass_norm_mid, 0.25))
+	if randf() < 0.5:
+		_spin_rate = -_spin_rate
+
+	var scl := _visual_radius_px / (TEXTURE_SIZE * 0.5)
+	_sprite.scale = Vector2(scl, scl)
+
+	_shader_mat.set_shader_parameter("u_spin_rate", _spin_rate)
+
 	var spawn_r := randf_range(2400.0, 3200.0)
 	var entry_angle := randf_range(0.0, TAU)
 	_pos = Vector2(cos(entry_angle), sin(entry_angle)) * spawn_r
@@ -155,10 +173,8 @@ func spawn():
 
 	position = _pos
 	_asteroid_time = 0.0
-	if _shader_mat:
-		_shader_mat.set_shader_parameter("u_time", 0.0)
-	if _trail_component:
-		_trail_component.clear()
+	_shader_mat.set_shader_parameter("u_time", 0.0)
+	_trail_component.clear()
 	_alive = true
 	visible = true
 
