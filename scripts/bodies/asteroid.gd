@@ -93,6 +93,7 @@ func _generate_texture():
 	var relief_base: float
 	var crater_count: int
 	var crater_depth: float
+	var limb_strength: float
 	match _archetype:
 		AsteroidArchetype.C_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_C_HI
@@ -101,6 +102,7 @@ func _generate_texture():
 			relief_base = 0.06
 			crater_count = 5
 			crater_depth = 0.7
+			limb_strength = 0.05
 		AsteroidArchetype.S_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_S_HI
 			lo = PAL_P.ROCKY_ASTEROID_S_LO
@@ -108,6 +110,7 @@ func _generate_texture():
 			relief_base = 0.12
 			crater_count = 4
 			crater_depth = 0.5
+			limb_strength = 0.20
 		AsteroidArchetype.M_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_M_HI
 			lo = PAL_P.ROCKY_ASTEROID_M_LO
@@ -115,6 +118,7 @@ func _generate_texture():
 			relief_base = 0.05
 			crater_count = 3
 			crater_depth = 0.3
+			limb_strength = 0.35
 		AsteroidArchetype.X_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_X_HI
 			lo = PAL_P.ROCKY_ASTEROID_X_LO
@@ -122,6 +126,7 @@ func _generate_texture():
 			relief_base = 0.15
 			crater_count = 2
 			crater_depth = 0.4
+			limb_strength = 0.25
 	_body_color = hi.lerp(lo, 0.5)
 
 	_sprite.texture = TEX.make_disk_mask(TEXTURE_SIZE)
@@ -145,6 +150,7 @@ func _generate_texture():
 	)
 	_shader_mat.set_shader_parameter("u_crater_count", crater_count)
 	_shader_mat.set_shader_parameter("u_crater_depth", crater_depth)
+	_shader_mat.set_shader_parameter("u_limb_strength", limb_strength)
 	_sprite.material = _shader_mat
 
 	add_child(_sprite)

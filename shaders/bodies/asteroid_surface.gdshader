@@ -42,6 +42,7 @@ uniform float u_relief_depth : hint_range(0.0, 0.4) = 0.15;
 uniform float u_irregularity : hint_range(0.0, 0.5) = 0.20;
 uniform int u_crater_count : hint_range(0, 8) = 0;
 uniform float u_crater_depth : hint_range(0.0, 1.0) = 0.0;
+uniform float u_limb_strength : hint_range(0.0, 0.5) = 0.0;
 
 float crater_term(vec3 n_spun, float diff) {
 	float c = 0.0;
@@ -131,6 +132,11 @@ void fragment() {
 			float crat = crater_term(n_spun, diff);
 			vec3 col = base * (lighting - crat) * limb;
 			col = max(col, base * u_ambient * 0.25);
+
+			float lit_hemisphere = max(dot(n_light, L), 0.0);
+			float edge = 1.0 - smoothstep(0.75, 1.0, disk_r);
+			float limb_mask = pow(edge, 2.0) * pow(lit_hemisphere, 3.0);
+			col += u_regolith_hi * u_base_color * limb_mask * u_limb_strength * 1.5;
 			COLOR = vec4(col, tex.a * edge_aa);
 		}
 	}
