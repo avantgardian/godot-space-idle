@@ -197,7 +197,7 @@ func spawn():
 	visible = true
 
 
-func _process(delta):
+func _physics_process(delta):
 	if not _alive:
 		return
 

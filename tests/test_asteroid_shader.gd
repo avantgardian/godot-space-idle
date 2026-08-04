@@ -20,7 +20,7 @@ func test_asteroid_light_dir_updates():
 	assert_ne(light_before.length(), 0.0, "initial light_dir is nonzero")
 
 	a.position = Vector2(100.0, 0.0)
-	a._process(0.1)
+	a._physics_process(0.1)
 	var light_after: Vector3 = a._shader_mat.get_shader_parameter("u_light_dir")
 	assert_ne(light_after, light_before, "light_dir changes when asteroid moves")
 
@@ -46,7 +46,7 @@ func test_asteroid_spawn_resets_time():
 	add_child(a)
 
 	a.spawn()
-	a._process(1.0)
+	a._physics_process(1.0)
 	var t1: float = a._shader_mat.get_shader_parameter("u_time")
 	assert_gt(t1, 0.0, "time advances after processing")
 
@@ -61,6 +61,6 @@ func test_asteroid_no_sprite_rotation():
 
 	a.spawn()
 	var rot_before: float = a._sprite.rotation
-	a._process(1.0)
+	a._physics_process(1.0)
 	var rot_after: float = a._sprite.rotation
 	assert_eq(rot_after, rot_before, "sprite rotation stays zero (shader handles spin)")

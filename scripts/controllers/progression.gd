@@ -180,8 +180,8 @@ func _ready():
 	_spaceship = %Spaceship
 
 
-func _process(delta):
-	super._process(delta)
+func _physics_process(delta):
+	super._physics_process(delta)
 	var cam_following_ship: bool = (
 		_camera.is_following() and _camera.get_follow_target() == _spaceship
 	)

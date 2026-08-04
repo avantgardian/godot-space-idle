@@ -76,7 +76,7 @@ func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
 	mat.set_shader_parameter("u_half_mask", half_mask)
 	return mat
 
-func _process(delta):
+func _physics_process(delta):
 	super(delta)
 	_update_ring_light(_ring_mat_back)
 	_update_ring_light(_ring_mat_front)

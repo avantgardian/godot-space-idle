@@ -71,7 +71,7 @@ func _get_asteroid_gm() -> float:
 	return 0.0
 
 
-func _process(_delta):
+func _physics_process(_delta):
 	_sun.mass = sun_mass
 	_spawner.sun_mass = sun_mass
 	if _collision_mgr:

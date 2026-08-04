@@ -50,7 +50,7 @@ func init(start_pos: Vector2):
 	_pos = start_pos
 	position = start_pos
 
-func _process(delta):
+func _physics_process(delta):
 	if not _alive:
 		return
 
