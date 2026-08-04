@@ -10,6 +10,7 @@ var _ring_rotation: float = 0.0
 var _cos_ring_rot: float = 1.0
 var _sin_ring_rot: float = 0.0
 
+
 func _ready():
 	biome = preload("res://resources/biomes/gas_giant_saturn.tres")
 	planet_name = "Saturn"
@@ -23,6 +24,7 @@ func _ready():
 	rotation_rate = 0.35
 	super()
 	_generate_ring()
+
 
 func _generate_ring():
 	var ring_tex_size: int = 256
@@ -59,6 +61,7 @@ func _generate_ring():
 	_ring_sprite_front.material = _ring_mat_front
 	add_child(_ring_sprite_front)
 
+
 func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = RING_SHADER
@@ -70,23 +73,30 @@ func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
 	mat.set_shader_parameter("u_encke", 0.55)
 	mat.set_shader_parameter("u_encke_width", 0.006)
 	mat.set_shader_parameter("u_ring_seed", seed_val)
-	mat.set_shader_parameter("u_ring_bright", Vector3(PAL.RING_SATURN_TAN.r, PAL.RING_SATURN_TAN.g, PAL.RING_SATURN_TAN.b))
-	mat.set_shader_parameter("u_ring_dark", Vector3(PAL.RING_SATURN_DARK.r, PAL.RING_SATURN_DARK.g, PAL.RING_SATURN_DARK.b))
+	mat.set_shader_parameter(
+		"u_ring_bright",
+		Vector3(PAL.RING_SATURN_TAN.r, PAL.RING_SATURN_TAN.g, PAL.RING_SATURN_TAN.b)
+	)
+	mat.set_shader_parameter(
+		"u_ring_dark",
+		Vector3(PAL.RING_SATURN_DARK.r, PAL.RING_SATURN_DARK.g, PAL.RING_SATURN_DARK.b)
+	)
 	mat.set_shader_parameter("u_shadow_strength", 0.4)
 	mat.set_shader_parameter("u_half_mask", half_mask)
 	return mat
 
+
 func _physics_process(delta):
 	super(delta)
-	_update_ring_light(_ring_mat_back)
-	_update_ring_light(_ring_mat_front)
+	_update_ring_light()
 
-func _update_ring_light(mat: ShaderMaterial):
-	if not mat:
-		return
-	var dir := -position
-	if dir.length_squared() > 0.0:
-		dir = dir.normalized()
+
+func _update_ring_light():
+	var dir := -position.normalized()
 	var lx := dir.x * _cos_ring_rot - dir.y * _sin_ring_rot
 	var ly := dir.x * _sin_ring_rot + dir.y * _cos_ring_rot
-	mat.set_shader_parameter("u_light_dir", Vector3(lx, ly, 0.0))
+	var ring_light := Vector3(lx, ly, 0.0)
+	if _ring_mat_back:
+		_ring_mat_back.set_shader_parameter("u_light_dir", ring_light)
+	if _ring_mat_front:
+		_ring_mat_front.set_shader_parameter("u_light_dir", ring_light)
