@@ -127,9 +127,10 @@ func _apply_atmosphere_shader(tex_size: int):
 	if atm_tex_size < 4:
 		return
 	_atm_sprite = Sprite2D.new()
-	_atm_sprite.texture = _make_opaque_white_square(atm_tex_size)
+	_atm_sprite.texture = _TEX.make_white_square()
 	_atm_sprite.centered = true
 	_atm_sprite.z_index = 1
+	_atm_sprite.scale = Vector2(atm_tex_size, atm_tex_size)
 	add_child(_atm_sprite)
 	_atm_mat = ShaderMaterial.new()
 	_atm_mat.shader = _ATM_SHADER
@@ -140,12 +141,6 @@ func _apply_atmosphere_shader(tex_size: int):
 	_atm_mat.set_shader_parameter("u_atm_thickness", 0.03)
 	_atm_mat.set_shader_parameter("u_planet_radius_uv", 1.0 / atm_thickness_mult)
 	_atm_sprite.material = _atm_mat
-
-
-func _make_opaque_white_square(size: int) -> ImageTexture:
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	image.fill(Color(1.0, 1.0, 1.0, 1.0))
-	return ImageTexture.create_from_image(image)
 
 
 func _get_planet_texture_size() -> int:

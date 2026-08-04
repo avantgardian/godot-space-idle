@@ -27,10 +27,7 @@ func _ready():
 
 
 func _generate_ring():
-	var ring_tex_size: int = 256
-	var image := Image.create(ring_tex_size, ring_tex_size, false, Image.FORMAT_RGBA8)
-	image.fill(Color(1.0, 1.0, 1.0, 1.0))
-	var tex := ImageTexture.create_from_image(image)
+	var tex := _TEX.make_white_square()
 
 	var seed_val := planet_seed
 	if seed_val == 0:
@@ -45,7 +42,7 @@ func _generate_ring():
 	_ring_sprite_back.texture = tex
 	_ring_sprite_back.centered = true
 	_ring_sprite_back.z_index = -1
-	_ring_sprite_back.scale = Vector2(1.0, 0.30)
+	_ring_sprite_back.scale = Vector2(256, 76.8)
 	_ring_sprite_back.rotation = _ring_rotation
 	_ring_mat_back = _make_ring_material(-1, seed_val)
 	_ring_sprite_back.material = _ring_mat_back
@@ -55,7 +52,7 @@ func _generate_ring():
 	_ring_sprite_front.texture = tex
 	_ring_sprite_front.centered = true
 	_ring_sprite_front.z_index = 1
-	_ring_sprite_front.scale = Vector2(1.0, 0.30)
+	_ring_sprite_front.scale = Vector2(256, 76.8)
 	_ring_sprite_front.rotation = _ring_rotation
 	_ring_mat_front = _make_ring_material(1, seed_val)
 	_ring_sprite_front.material = _ring_mat_front

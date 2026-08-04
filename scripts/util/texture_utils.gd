@@ -1,6 +1,8 @@
 class_name TextureUtils
 
 static var _disk_mask_cache := {}
+static var _white_square: ImageTexture = null
+
 
 static func make_circle_texture(size: int, color_fn: Callable) -> ImageTexture:
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
@@ -16,6 +18,16 @@ static func make_circle_texture(size: int, color_fn: Callable) -> ImageTexture:
 				var t := dist / max_r
 				image.set_pixel(x, y, color_fn.call(t, x, y))
 	return ImageTexture.create_from_image(image)
+
+
+static func make_white_square() -> ImageTexture:
+	if _white_square:
+		return _white_square
+	var image := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	image.fill(Color(1.0, 1.0, 1.0, 1.0))
+	_white_square = ImageTexture.create_from_image(image)
+	return _white_square
+
 
 static func make_disk_mask(size: int, edge_aa_threshold: float = 0.98) -> ImageTexture:
 	var key := "%d|%.3f" % [size, edge_aa_threshold]
@@ -38,6 +50,7 @@ static func make_disk_mask(size: int, edge_aa_threshold: float = 0.98) -> ImageT
 	var tex := ImageTexture.create_from_image(image)
 	_disk_mask_cache[key] = tex
 	return tex
+
 
 static func make_noisy_blob(size: int, rng_seed: int, color_fn: Callable) -> ImageTexture:
 	var rng := RandomNumberGenerator.new()
@@ -68,6 +81,7 @@ static func make_noisy_blob(size: int, rng_seed: int, color_fn: Callable) -> Ima
 					image.set_pixel(x, y, Color(c.r, c.g, c.b, alpha))
 	return ImageTexture.create_from_image(image)
 
+
 static func draw_disk_on_image(image: Image, cx: float, cy: float, radius: float, color: Color):
 	var r := ceili(radius)
 	for dx in range(-r, r + 1):
@@ -83,6 +97,7 @@ static func draw_disk_on_image(image: Image, cx: float, cy: float, radius: float
 					var final_color := Color(color.r, color.g, color.b, color.a * alpha)
 					var existing := image.get_pixel(px, py)
 					image.set_pixel(px, py, final_color.blend(existing))
+
 
 static func vec3(c: Color) -> Vector3:
 	return Vector3(c.r, c.g, c.b)
