@@ -55,7 +55,7 @@ func _ready() -> void:
 		1.5, 200)
 	add_child(_trail_component)
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not _alive:
 		return
 

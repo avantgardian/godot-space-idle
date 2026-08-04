@@ -163,7 +163,7 @@ func _initial_gm() -> float:
 func get_gm() -> float:
 	return _gm
 
-func _process(delta):
+func _physics_process(delta):
 	if _dead:
 		return
 

@@ -29,8 +29,8 @@ func _ready():
 	)
 
 
-func _process(delta):
-	super._process(delta)
+func _physics_process(delta):
+	super._physics_process(delta)
 	for planet in _planet_data:
 		planet.sun_mass = sun_mass
 	for i in _planet_data.size():

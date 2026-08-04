@@ -93,5 +93,5 @@ func test_sprite_rotation_stays_zero():
 	var a: Node2D = autofree(ASTEROID.new())
 	add_child(a)
 	a.spawn()
-	a._process(1.0)
+	a._physics_process(1.0)
 	assert_eq(a._sprite.rotation, 0.0, "sprite rotation stays zero (shader handles spin)")
