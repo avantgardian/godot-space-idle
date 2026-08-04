@@ -9,7 +9,7 @@ var _planet_data_cache: Array[Dictionary] = []
 
 func _ready():
 	super._ready()
-	%Sun.generate()
+	_sun.generate()
 	_planet_data = [
 		%Mercury,
 		%Venus,
@@ -25,12 +25,7 @@ func _ready():
 		planet.setup_trail(planet.planet_color)
 		_planet_data_cache.append({pos = Vector2.ZERO, mass = 0.0})
 	_collision_mgr = _COLLISION_MGR.new(
-		_planet_data,
-		_ASTEROID_SCRIPT,
-		%ImpactFX,
-		%EventLog,
-		_find_planet_idx,
-		%PostProcessManager.trigger
+		_planet_data, _ASTEROID_SCRIPT, _impact_fx, _event_log, _find_planet_idx, _post_fx.trigger
 	)
 
 

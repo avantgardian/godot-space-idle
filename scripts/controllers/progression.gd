@@ -166,9 +166,9 @@ func _ready():
 	_star_type = star_data.type
 	star_data["start_mass"] = sun_mass
 	star_data["mass_span"] = sun_mass
-	%Sun.generate(star_data)
+	_sun.generate(star_data)
 	_collision_mgr = _COLLISION_MGR.new(
-		[], _ASTEROID_SCRIPT, %ImpactFX, %EventLog, _dummy_planet_idx, %PostProcessManager.trigger
+		[], _ASTEROID_SCRIPT, _impact_fx, _event_log, _dummy_planet_idx, _post_fx.trigger
 	)
 	var ship := _SPACESHIP.new()
 	ship.name = "Spaceship"

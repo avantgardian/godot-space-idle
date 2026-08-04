@@ -26,27 +26,28 @@ var _spawner: AsteroidSpawner
 @onready var _impact_fx: ImpactFX = %ImpactFX
 var _post_fx: PostProcessManager
 @onready var _event_log: EventLog = %EventLog
+@onready var _event_log_panel: Panel = %EventLogPanel
 @onready var _pause_btn: Button = %PauseButton
 @onready var _ui: CanvasLayer = %UI
 
 
 func _ready():
 	RenderingServer.set_default_clear_color(BG_COLOR)
-	%StarField.generate(star_seed, %Camera2D.min_zoom)
+	_star_field.generate(star_seed, _camera.min_zoom)
 	_apply_theme()
 	_add_post_process()
 	_post_fx = %PostProcessManager
 	_add_asteroid_spawner()
 	_spawner = %AsteroidSpawner
-	(%UI as CanvasLayer).layer = 2
+	_ui.layer = 2
 	_load_settings()
 
 
 func _apply_theme():
 	var game_theme := load("res://resources/game_theme.tres") as Theme
-	%EventLogPanel.theme = game_theme
-	%PauseButton.theme = game_theme
-	%PauseButton.pause_toggled.connect(_on_pause_toggled)
+	_event_log_panel.theme = game_theme
+	_pause_btn.theme = game_theme
+	_pause_btn.pause_toggled.connect(_on_pause_toggled)
 
 
 func _add_post_process():
