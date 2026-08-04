@@ -91,27 +91,37 @@ func _generate_texture():
 	var lo: Color
 	var ambient: float
 	var relief_base: float
+	var crater_count: int
+	var crater_depth: float
 	match _archetype:
 		AsteroidArchetype.C_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_C_HI
 			lo = PAL_P.ROCKY_ASTEROID_C_LO
 			ambient = 0.04
 			relief_base = 0.06
+			crater_count = 5
+			crater_depth = 0.7
 		AsteroidArchetype.S_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_S_HI
 			lo = PAL_P.ROCKY_ASTEROID_S_LO
 			ambient = 0.08
 			relief_base = 0.12
+			crater_count = 4
+			crater_depth = 0.5
 		AsteroidArchetype.M_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_M_HI
 			lo = PAL_P.ROCKY_ASTEROID_M_LO
 			ambient = 0.07
 			relief_base = 0.05
+			crater_count = 3
+			crater_depth = 0.3
 		AsteroidArchetype.X_TYPE:
 			hi = PAL_P.ROCKY_ASTEROID_X_HI
 			lo = PAL_P.ROCKY_ASTEROID_X_LO
 			ambient = 0.14
 			relief_base = 0.15
+			crater_count = 2
+			crater_depth = 0.4
 	_body_color = hi.lerp(lo, 0.5)
 
 	_sprite.texture = TEX.make_disk_mask(TEXTURE_SIZE)
@@ -133,6 +143,8 @@ func _generate_texture():
 	_shader_mat.set_shader_parameter(
 		"u_irregularity", 0.15 + 0.20 * (float(abs((_asteroid_seed * 7) % 100)) / 100.0)
 	)
+	_shader_mat.set_shader_parameter("u_crater_count", crater_count)
+	_shader_mat.set_shader_parameter("u_crater_depth", crater_depth)
 	_sprite.material = _shader_mat
 
 	add_child(_sprite)

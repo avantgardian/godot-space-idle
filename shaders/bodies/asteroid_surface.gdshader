@@ -40,6 +40,38 @@ uniform vec3 u_regolith_hi = vec3(0.55, 0.48, 0.42);
 uniform vec3 u_regolith_lo = vec3(0.25, 0.20, 0.16);
 uniform float u_relief_depth : hint_range(0.0, 0.4) = 0.15;
 uniform float u_irregularity : hint_range(0.0, 0.5) = 0.20;
+uniform int u_crater_count : hint_range(0, 8) = 0;
+uniform float u_crater_depth : hint_range(0.0, 1.0) = 0.0;
+
+float crater_term(vec3 n_spun, float diff) {
+	float c = 0.0;
+	for (int i = 0; i < 8; i++) {
+		if (i >= u_crater_count) {
+			break;
+		}
+
+		float h1 = hash21(vec2(float(u_seed * 31 + i * 137 + 1), 0.37));
+		float h2 = hash21(vec2(float(u_seed * 31 + i * 137 + 2), 0.59));
+		float h3 = hash21(vec2(float(u_seed * 31 + i * 137 + 3), 0.73));
+
+		float lon = h1 * 6.283185307;
+		float lat = (h2 - 0.5) * 3.141592654;
+		float crat_r = 0.25 + h3 * 0.40;
+
+		vec3 center = normalize(vec3(cos(lat) * cos(lon), sin(lat), cos(lat) * sin(lon)));
+		float d_dot = clamp(dot(n_spun, center), -1.0, 1.0);
+		float d_proxy = 1.0 - d_dot;
+		float r_proxy = 1.0 - cos(crat_r);
+		float d_norm = d_proxy / max(r_proxy, 0.001);
+
+		float bowl = 1.0 - smoothstep(0.0, 1.0, d_norm);
+		float rim = exp(-6.0 * abs(d_norm - 1.0)) * diff * 0.8;
+
+		c += bowl * u_crater_depth * 1.0;
+		c -= rim;
+	}
+	return clamp(c, 0.0, 1.0);
+}
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
@@ -56,9 +88,6 @@ void fragment() {
 		float r2_spun = dot(uv_spun, uv_spun);
 		float r_spun = sqrt(r2_spun);
 
-		float r2_light = dot(uv_ndc, uv_ndc);
-		float r_light = sqrt(r2_light);
-
 		float angle = atan(uv_spun.y, uv_spun.x);
 		float ap = angle * 0.159154943 + float(u_seed) * 0.0173;
 		float silhouette = fbm(vec2(ap * 8.0, float(u_seed) * 0.031));
@@ -72,7 +101,7 @@ void fragment() {
 		} else {
 			float edge_aa = 1.0 - smoothstep(mask_radius - 0.05, mask_radius, r_spun);
 
-			float disk_r = min(r_light, 0.999);
+			float disk_r = clamp(r_spun / mask_radius, 0.0, 0.999);
 			float mu = sqrt(1.0 - disk_r * disk_r);
 
 			vec3 n_light = vec3(uv_ndc.x, uv_ndc.y, mu);
@@ -94,10 +123,14 @@ void fragment() {
 			float limb = (1.0 + 1.5 * mu) / 2.5;
 
 			float tint = fbm(vec2(lon_spun, lat_spun) * 5.0 + vec2(float(u_seed) * 3.7, float(u_seed) * 2.3));
+			float micro = fbm(vec2(lon_spun, lat_spun) * 18.0 + vec2(float(u_seed) * 4.1, float(u_seed) * 3.7));
+			tint = mix(tint, micro, 0.15);
 			vec3 base = mix(u_regolith_lo, u_regolith_hi, tint);
 			base *= u_base_color;
 
-			vec3 col = base * lighting * limb;
+			float crat = crater_term(n_spun, diff);
+			vec3 col = base * (lighting - crat) * limb;
+			col = max(col, base * u_ambient * 0.25);
 			COLOR = vec4(col, tex.a * edge_aa);
 		}
 	}
