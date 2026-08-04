@@ -46,11 +46,14 @@ var _trail_component: Node
 
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
+var _last_light_dir := Vector2.ZERO
 
 signal collided_with_sun
 
+
 func is_dead() -> bool:
 	return _dead
+
 
 func disable():
 	if _trail_component:
@@ -58,16 +61,20 @@ func disable():
 	_dead = true
 	visible = false
 
+
 func get_vel() -> Vector2:
 	return _vel
 
+
 func set_vel(v: Vector2):
 	_vel = v
+
 
 func _ready():
 	_gm = _initial_gm()
 	_generate_texture()
 	_reset()
+
 
 func setup_trail(color: Color):
 	_trail_component = _TRAIL.new()
@@ -75,6 +82,7 @@ func setup_trail(color: Color):
 	var tail := DU.trail_tail(color)
 	_trail_component.setup(tail, head, 1.5, trail_max)
 	add_child(_trail_component)
+
 
 func _generate_texture():
 	var tex_size := _get_planet_texture_size()
@@ -88,6 +96,7 @@ func _generate_texture():
 	if use_shader and biome:
 		_apply_planet_shader()
 		_apply_atmosphere_shader(tex_size)
+
 
 func _apply_planet_shader():
 	var seed_val := planet_seed
@@ -110,6 +119,7 @@ func _apply_planet_shader():
 	biome.apply_to_shader(_shader_mat)
 	_sprite.material = _shader_mat
 
+
 func _apply_atmosphere_shader(tex_size: int):
 	if atm_color.a <= 0.0:
 		return
@@ -131,18 +141,22 @@ func _apply_atmosphere_shader(tex_size: int):
 	_atm_mat.set_shader_parameter("u_planet_radius_uv", 1.0 / atm_thickness_mult)
 	_atm_sprite.material = _atm_mat
 
+
 func _make_opaque_white_square(size: int) -> ImageTexture:
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	image.fill(Color(1.0, 1.0, 1.0, 1.0))
 	return ImageTexture.create_from_image(image)
+
 
 func _get_planet_texture_size() -> int:
 	if biome:
 		return biome.get_texture_size()
 	return 32
 
+
 func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
 	return Color.WHITE
+
 
 func _reset():
 	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
@@ -154,14 +168,20 @@ func _reset():
 	if _trail_component:
 		_trail_component.clear()
 
+
 static func sun_collision_r(mass_solar: float) -> float:
 	return (128.0 + sqrt(mass_solar) * 8.0) * 0.85
 
+
 func _initial_gm() -> float:
-	return 4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
+	return (
+		4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
+	)
+
 
 func get_gm() -> float:
 	return _gm
+
 
 func _physics_process(delta):
 	if _dead:
@@ -180,13 +200,13 @@ func _physics_process(delta):
 	if _shader_mat:
 		_planet_time += delta
 		_shader_mat.set_shader_parameter("u_time", _planet_time)
-		var dir := -position
-		if dir.length_squared() > 0.0:
-			dir = dir.normalized()
-		var light_vec := Vector3(dir.x, dir.y, 0.0)
-		_shader_mat.set_shader_parameter("u_light_dir", light_vec)
-		if _atm_mat:
-			_atm_mat.set_shader_parameter("u_light_dir", light_vec)
+		var dir := -position.normalized()
+		if dir.distance_squared_to(_last_light_dir) > 1e-6:
+			_last_light_dir = dir
+			var light_vec := Vector3(dir.x, dir.y, 0.0)
+			_shader_mat.set_shader_parameter("u_light_dir", light_vec)
+			if _atm_mat:
+				_atm_mat.set_shader_parameter("u_light_dir", light_vec)
 
 	var sun_r := sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
