@@ -15,8 +15,69 @@ const FIRE_COOLDOWN: float = 10.0
 const FIRE_MUZZLE_SPEED: float = 175.0
 
 const PAL := preload("res://scripts/util/tron_palette.gd")
-const DU  := preload("res://scripts/util/draw_utils.gd")
+const DU := preload("res://scripts/util/draw_utils.gd")
 const _ROCKET := preload("res://scripts/components/rocket.gd")
+
+# Constant geometry arrays — built once at class-load time, never
+# allocated inside _draw. Pointed nose up, swept-back wings, twin engine
+# pods, notched tail. Closed polylines (last point == first).
+static var _hull_points := PackedVector2Array(
+	[
+		Vector2(0.0, -18.0),
+		Vector2(-5.0, -8.0),
+		Vector2(-13.0, 6.0),
+		Vector2(-9.0, 7.0),
+		Vector2(-9.0, 11.0),
+		Vector2(-5.0, 11.0),
+		Vector2(-5.0, 7.0),
+		Vector2(0.0, 9.0),
+		Vector2(5.0, 7.0),
+		Vector2(5.0, 11.0),
+		Vector2(9.0, 11.0),
+		Vector2(9.0, 7.0),
+		Vector2(13.0, 6.0),
+		Vector2(5.0, -8.0),
+		Vector2(0.0, -18.0),
+	]
+)
+
+static var _accent_left := PackedVector2Array(
+	[
+		Vector2(2.0, -6.0),
+		Vector2(4.5, 1.5),
+		Vector2(2.5, 1.5),
+		Vector2(-1.0, -6.0),
+		Vector2(2.0, -6.0),
+	]
+)
+
+static var _accent_right := PackedVector2Array(
+	[
+		Vector2(-2.0, -6.0),
+		Vector2(-4.5, 1.5),
+		Vector2(-2.5, 1.5),
+		Vector2(1.0, -6.0),
+		Vector2(-2.0, -6.0),
+	]
+)
+
+static var _cockpit_points := PackedVector2Array(
+	[
+		Vector2(0.0, -12.5),
+		Vector2(2.25, -9.0),
+		Vector2(0.0, -5.5),
+		Vector2(-2.25, -9.0),
+	]
+)
+
+static var _halo_points := PackedVector2Array(
+	[
+		Vector2(0.0, -14.0),
+		Vector2(3.75, -9.0),
+		Vector2(0.0, -4.0),
+		Vector2(-3.75, -9.0),
+	]
+)
 
 var mass: float = 0.001
 var collision_radius: float = COLLISION_RADIUS
@@ -34,6 +95,7 @@ var _flicker: float = 0.0
 var _pulse_phase: float = 0.0
 const _PULSE_SPEED: float = PAL.RING_PULSE_SPEED  # rad/s pulsation when not selected
 
+
 func _ready():
 	_ring_node = _RingLayer.new()
 	_ring_node.name = "IndicatorRing"
@@ -46,9 +108,11 @@ func _ready():
 
 	position = _pos
 
+
 func init(start_pos: Vector2):
 	_pos = start_pos
 	position = start_pos
+
 
 func _physics_process(delta):
 	if not _alive:
@@ -111,6 +175,7 @@ func _physics_process(delta):
 
 	queue_redraw()
 
+
 func enforce_sun_barrier(min_dist: float):
 	var r := _pos.length()
 	if r < min_dist:
@@ -124,17 +189,22 @@ func enforce_sun_barrier(min_dist: float):
 		if radial_vel < 0.0:
 			_vel -= radial_dir * radial_vel
 
+
 func is_alive() -> bool:
 	return _alive
+
 
 func is_dead() -> bool:
 	return not _alive
 
+
 func get_vel() -> Vector2:
 	return _vel
 
+
 func set_vel(v: Vector2):
 	_vel = v
+
 
 func try_fire(target: Node2D) -> Rocket:
 	if _fire_cooldown > 0.0 or not _alive:
@@ -145,132 +215,90 @@ func try_fire(target: Node2D) -> Rocket:
 	rocket.init(_pos, _vel + muzzle_vel, target)
 	return rocket
 
+
 func disable():
 	_alive = false
 	visible = false
+
 
 func set_reduced_motion(enabled: bool) -> void:
 	if _ring_node is _RingLayer:
 		(_ring_node as _RingLayer).reduced_motion = enabled
 		_ring_node.queue_redraw()
 
+
 # ---------------------------------------------------------------------------
 # Vector hull rendering (TRON-style neon wireframe)
 # ---------------------------------------------------------------------------
 
-func _hull_points() -> PackedVector2Array:
-	# Pointed nose up, swept-back wings, twin engine pods, notched tail.
-	# Closed polyline (last point == first) so draw_polyline closes cleanly.
-	return PackedVector2Array([
-		Vector2(0.0,   -18.0),  # nose tip
-		Vector2(-5.0,   -8.0),  # shoulder left
-		Vector2(-13.0,   6.0),  # outer wing tip left
-		Vector2(-9.0,    7.0),  # wing root left
-		Vector2(-9.0,   11.0),  # engine outer left
-		Vector2(-5.0,  11.0),  # engine inner left
-		Vector2(-5.0,   7.0),  # notch back left
-		Vector2(0.0,    9.0),  # tail center
-		Vector2(5.0,    7.0),  # notch back right
-		Vector2(5.0,  11.0),  # engine inner right
-		Vector2(9.0,   11.0),  # engine outer right
-		Vector2(9.0,    7.0),  # wing root right
-		Vector2(13.0,   6.0),  # outer wing tip right
-		Vector2(5.0,   -8.0),  # shoulder right
-		Vector2(0.0,  -18.0),  # close
-	])
-
-func _accent_quad(side: int) -> PackedVector2Array:
-	# Short diagonal stripe hugging the inner wing leading edge.
-	# side = -1 left / +1 right
-	var s := float(side)
-	return PackedVector2Array([
-		Vector2(-2.0 * s, -6.0),
-		Vector2(-4.5 * s,  1.5),
-		Vector2(-2.5 * s,  1.5),
-		Vector2( 1.0 * s, -6.0),
-		Vector2(-2.0 * s, -6.0),  # close
-	])
-
-func _cockpit_poly() -> PackedVector2Array:
-	return PackedVector2Array([
-		Vector2( 0.0,   -12.5),
-		Vector2( 2.25, -9.0),
-		Vector2( 0.0,   -5.5),
-		Vector2(-2.25, -9.0),
-	])
 
 func _draw():
-	# Hull outline (3-stroke neon triple-stack: glow -> line -> bright core).
-	DU.neon_polyline(self, _hull_points(), PAL.HULL_GLOW, PAL.HULL_LINE, PAL.HULL_BRIGHT)
+	DU.neon_polyline(self, _hull_points, PAL.HULL_GLOW, PAL.HULL_LINE, PAL.HULL_BRIGHT)
 
-	# Orange wing accent stripes (filled accent quad + glowing outline).
-	for side in [-1, 1]:
-		DU.neon_filled_accent(self, _accent_quad(side), PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
+	DU.neon_filled_accent(self, _accent_left, PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
+	DU.neon_filled_accent(self, _accent_right, PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
 
-	# Inner brace lines (recognizer-style cross-bracing).
 	draw_line(Vector2(0.0, -16.0), Vector2(0.0, -10.0), PAL.HULL_LINE, 0.75, true)
 	draw_line(Vector2(-5.0, -2.0), Vector2(5.0, -2.0), PAL.HULL_LINE, 0.75, true)
-	draw_line(Vector2(-4.0,  3.0), Vector2(4.0,  3.0), PAL.HULL_LINE, 0.75, true)
+	draw_line(Vector2(-4.0, 3.0), Vector2(4.0, 3.0), PAL.HULL_LINE, 0.75, true)
 
-	# Cockpit core: soft glow halo (larger, dim) + bright filled diamond.
-	var halo := PackedVector2Array([
-		Vector2( 0.0,   -14.0),
-		Vector2( 3.75, -9.0),
-		Vector2( 0.0,   -4.0),
-		Vector2(-3.75, -9.0),
-	])
-	draw_colored_polygon(halo, PAL.COCKPIT_GLOW)
-	draw_colored_polygon(_cockpit_poly(), PAL.COCKPIT)
+	draw_colored_polygon(_halo_points, PAL.COCKPIT_GLOW)
+	draw_colored_polygon(_cockpit_points, PAL.COCKPIT)
+
 
 # ---------------------------------------------------------------------------
 # Additive layers: segmented indicator ring + thrust flame
 # ---------------------------------------------------------------------------
 
-class _GlowLayer extends Node2D:
+
+class _GlowLayer:
+	extends Node2D
 	# Inner classes don't inherit the outer-class preload aliases, so each
 	# inner class references TronPalette / DrawUtils via its own preload.
 	const PAL := preload("res://scripts/util/tron_palette.gd")
+	const _PORTS := [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]
+
 	var thrusting := false
 	var _phase := 0.0
+	var _flame_buf_outer := PackedVector2Array()
+	var _flame_buf_inner := PackedVector2Array()
 
 	func _init() -> void:
 		var mat := CanvasItemMaterial.new()
 		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		material = mat
+		_flame_buf_outer.resize(4)
+		_flame_buf_inner.resize(4)
 
 	func _draw() -> void:
-		# Twin engine port glows (always-on small halos).
-		for port in [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]:
+		for port in _PORTS:
 			draw_circle(port, 3.5, PAL.ENGINE_PORT)
 			draw_circle(port, 1.5, PAL.PORT_CORE)
 
 		if not thrusting:
 			return
 
-		# Dual twin-jet exhausts (TRON jet-blue, additive).
-		for port in [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]:
+		for port in _PORTS:
 			var length := 22.0 + sin(_phase) * 6.0
 			var hf := 2.5
-			var outer := PackedVector2Array([
-				port + Vector2(-hf,       0.0),
-				port + Vector2( hf,       0.0),
-				port + Vector2( hf * 0.6, length),
-				port + Vector2(-hf * 0.6, length),
-			])
-			draw_colored_polygon(outer, PAL.FLAME_OUTER)
-			var inner := PackedVector2Array([
-				port + Vector2(-hf * 0.45, 0.0),
-				port + Vector2( hf * 0.45, 0.0),
-				port + Vector2( hf * 0.20, length * 0.85),
-				port + Vector2(-hf * 0.20, length * 0.85),
-			])
-			draw_colored_polygon(inner, PAL.FLAME_INNER)
+			_flame_buf_outer[0] = port + Vector2(-hf, 0.0)
+			_flame_buf_outer[1] = port + Vector2(hf, 0.0)
+			_flame_buf_outer[2] = port + Vector2(hf * 0.6, length)
+			_flame_buf_outer[3] = port + Vector2(-hf * 0.6, length)
+			draw_colored_polygon(_flame_buf_outer, PAL.FLAME_OUTER)
+			_flame_buf_inner[0] = port + Vector2(-hf * 0.45, 0.0)
+			_flame_buf_inner[1] = port + Vector2(hf * 0.45, 0.0)
+			_flame_buf_inner[2] = port + Vector2(hf * 0.20, length * 0.85)
+			_flame_buf_inner[3] = port + Vector2(-hf * 0.20, length * 0.85)
+			draw_colored_polygon(_flame_buf_inner, PAL.FLAME_INNER)
 
-class _RingLayer extends Node2D:
+
+class _RingLayer:
+	extends Node2D
 	# Inner classes don't inherit the outer-class preload aliases, so each
 	# inner class references TronPalette / DrawUtils via its own preload.
 	const PAL := preload("res://scripts/util/tron_palette.gd")
-	const DU  := preload("res://scripts/util/draw_utils.gd")
+	const DU := preload("res://scripts/util/draw_utils.gd")
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 	var reduced_motion: bool = false
@@ -293,8 +321,8 @@ class _RingLayer extends Node2D:
 		if pulsate and not reduced_motion:
 			alpha_mult = DU.pulsate_factor(pulse_phase, PAL.RING_PULSE_MIN)
 
-		var glow_c   := DU.modulate_alpha(PAL.RING_GLOW,   alpha_mult)
-		var line_c   := DU.modulate_alpha(PAL.RING_LINE,   alpha_mult)
+		var glow_c := DU.modulate_alpha(PAL.RING_GLOW, alpha_mult)
+		var line_c := DU.modulate_alpha(PAL.RING_LINE, alpha_mult)
 		var bright_c := DU.modulate_alpha(PAL.RING_BRIGHT, alpha_mult)
 
 		DU.neon_segmented_ring(self, Vector2.ZERO, r, segments, gap, glow_c, line_c, bright_c)

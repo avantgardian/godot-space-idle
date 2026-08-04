@@ -11,8 +11,8 @@ const PAL := preload("res://scripts/util/tron_palette.gd")
 
 # Canonical 3-stroke neon widths. The triple-stack IS the TRON look:
 # wide soft glow -> mid stroke -> crisp inner core.
-const NEON_GLOW_WIDTH   := 5.0
-const NEON_LINE_WIDTH   := 1.5
+const NEON_GLOW_WIDTH := 5.0
+const NEON_LINE_WIDTH := 1.5
 const NEON_BRIGHT_WIDTH := 0.5
 
 # 2-stroke accent widths (filled polygon + glowing outline + crisp edge).
@@ -27,9 +27,9 @@ const ARC_RESOLUTION := 18
 # identity color (gradient stop 1, the newest end of the trail); tail =
 # HULL_LINE tinted toward identity with low alpha (stop 0, oldest end).
 # All trails render with additive blending (configured by TrailComponent).
-const TRAIL_HEAD_TINT  := 0.55
+const TRAIL_HEAD_TINT := 0.55
 const TRAIL_HEAD_ALPHA := 0.85
-const TRAIL_TAIL_TINT  := 0.35
+const TRAIL_TAIL_TINT := 0.35
 const TRAIL_TAIL_ALPHA := 0.0
 
 
@@ -37,32 +37,57 @@ const TRAIL_TAIL_ALPHA := 0.0
 # closed outline, ensure `points[length-1] == points[0]` (as the spaceship
 # hull does) — `draw_polyline` will not auto-close.
 static func neon_polyline(
-		canvas: CanvasItem,
-		points: PackedVector2Array,
-		glow: Color, line: Color, bright: Color,
-		antialias: bool = true
+	canvas: CanvasItem,
+	points: PackedVector2Array,
+	glow: Color,
+	line: Color,
+	bright: Color,
+	antialias: bool = true
 ) -> void:
-	canvas.draw_polyline(points, glow,   NEON_GLOW_WIDTH,   antialias)
-	canvas.draw_polyline(points, line,   NEON_LINE_WIDTH,   antialias)
+	canvas.draw_polyline(points, glow, NEON_GLOW_WIDTH, antialias)
+	canvas.draw_polyline(points, line, NEON_LINE_WIDTH, antialias)
 	canvas.draw_polyline(points, bright, NEON_BRIGHT_WIDTH, antialias)
+
+
+# Same as neon_arc but writes arc points into a caller-owned buffer that must
+# be pre-sized to (segments + 1). Buffer is written by index (zero allocs).
+static func neon_arc_into(
+	buf: PackedVector2Array,
+	canvas: CanvasItem,
+	center: Vector2,
+	r: float,
+	a0: float,
+	a1: float,
+	segments: int,
+	glow: Color,
+	line: Color,
+	bright: Color,
+	antialias: bool = true
+) -> void:
+	for j in range(segments + 1):
+		var a := lerpf(a0, a1, float(j) / float(segments))
+		buf[j] = center + Vector2(cos(a) * r, sin(a) * r)
+	neon_polyline(canvas, buf, glow, line, bright, antialias)
 
 
 # Single neon arc, 3-stroke. Polyline endpoints are sampled at the supplied
 # resolution; use `a1 - a0 == TAU` and `points[0] == points[end]` semantics
 # to get a closed circle.
 static func neon_arc(
-		canvas: CanvasItem,
-		center: Vector2, r: float,
-		a0: float, a1: float,
-		segments: int,
-		glow: Color, line: Color, bright: Color,
-		antialias: bool = true
+	canvas: CanvasItem,
+	center: Vector2,
+	r: float,
+	a0: float,
+	a1: float,
+	segments: int,
+	glow: Color,
+	line: Color,
+	bright: Color,
+	antialias: bool = true
 ) -> void:
 	var pts := PackedVector2Array()
-	for j in range(segments + 1):
-		var a := lerpf(a0, a1, float(j) / float(segments))
-		pts.append(center + Vector2(cos(a) * r, sin(a) * r))
-	neon_polyline(canvas, pts, glow, line, bright, antialias)
+	pts.resize(segments + 1)
+	neon_arc_into(pts, canvas, center, r, a0, a1, segments, glow, line, bright, antialias)
 
 
 # Segmented neon ring — N arc segments with symmetric angular gaps. This is
@@ -71,27 +96,36 @@ static func neon_arc(
 # first arc begins immediately above top (at angle `-PI/2 + gap/2`) so the
 # gap pattern is visually symmetric about the heading axis.
 static func neon_segmented_ring(
-		canvas: CanvasItem,
-		center: Vector2, r: float,
-		segment_count: int, gap: float,
-		glow: Color, line: Color, bright: Color,
-		antialias: bool = true
+	canvas: CanvasItem,
+	center: Vector2,
+	r: float,
+	segment_count: int,
+	gap: float,
+	glow: Color,
+	line: Color,
+	bright: Color,
+	antialias: bool = true
 ) -> void:
 	var arc_len := (TAU - segment_count * gap) / segment_count
 	var start := -PI * 0.5 + gap * 0.5
+	var buf := PackedVector2Array()
+	buf.resize(ARC_RESOLUTION + 1)
 	for i in range(segment_count):
 		var a0 := start + (arc_len + gap) * i
 		var a1 := a0 + arc_len
-		neon_arc(canvas, center, r, a0, a1, ARC_RESOLUTION, glow, line, bright, antialias)
+		neon_arc_into(buf, canvas, center, r, a0, a1, ARC_RESOLUTION, glow, line, bright, antialias)
 
 
 # Full neon circle — closed 360° arc with the 3-stroke stack.
 static func neon_circle(
-		canvas: CanvasItem,
-		center: Vector2, r: float,
-		glow: Color, line: Color, bright: Color,
-		segments: int = 64,
-		antialias: bool = true
+	canvas: CanvasItem,
+	center: Vector2,
+	r: float,
+	glow: Color,
+	line: Color,
+	bright: Color,
+	segments: int = 64,
+	antialias: bool = true
 ) -> void:
 	neon_arc(canvas, center, r, 0.0, TAU, segments, glow, line, bright, antialias)
 
@@ -100,14 +134,16 @@ static func neon_circle(
 # Used for the spaceship wing-trim stripes. Pass a closed point array
 # (last point == first) so `draw_polyline` outlines the whole shape.
 static func neon_filled_accent(
-		canvas: CanvasItem,
-		points: PackedVector2Array,
-		fill: Color, glow: Color, line: Color,
-		antialias: bool = true
+	canvas: CanvasItem,
+	points: PackedVector2Array,
+	fill: Color,
+	glow: Color,
+	line: Color,
+	antialias: bool = true
 ) -> void:
 	canvas.draw_colored_polygon(points, fill)
-	canvas.draw_polyline(points, glow,  ACCENT_GLOW_WIDTH, antialias)
-	canvas.draw_polyline(points, line,  ACCENT_LINE_WIDTH, antialias)
+	canvas.draw_polyline(points, glow, ACCENT_GLOW_WIDTH, antialias)
+	canvas.draw_polyline(points, line, ACCENT_LINE_WIDTH, antialias)
 
 
 # Pulsation envelope: sine swing between `min_val` and 1.0. Use to modulate
@@ -140,6 +176,7 @@ static func trail_head(planet_color: Color) -> Color:
 		lerpf(PAL.HULL_BRIGHT.b, planet_color.b, TRAIL_HEAD_TINT),
 		TRAIL_HEAD_ALPHA
 	)
+
 
 static func trail_tail(planet_color: Color) -> Color:
 	return Color(
