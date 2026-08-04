@@ -1,6 +1,11 @@
 extends Sprite2D
 
 const TEX := preload("res://scripts/util/texture_utils.gd")
+const _SUN_SHADER := preload("res://shaders/world/sun_surface.gdshader")
+const _SCALE_BASE := Vector2.ONE
+const _COLOR_WHITE := Color.WHITE
+const _COLOR_GLOW_OUTER := Color(1, 1, 1, 0.4)
+const _COLOR_GLOW_INNER := Color(1, 1, 1, 0.6)
 
 @export var texture_size: int = 256
 
@@ -10,6 +15,8 @@ var _animations_enabled: bool = true
 var _collision_flash: float = 0.0
 var _glow_outer: Sprite2D
 var _glow_inner: Sprite2D
+var _shader_mat: ShaderMaterial
+var _anim_dirty := true
 
 var _star_core_0 := Color(1.0, 0.95, 0.8)
 var _star_core_1 := Color(1.0, 0.7, 0.2)
@@ -26,28 +33,43 @@ var _granulation_scale: float = 1.0
 var _corona_falloff: float = 2.2
 var _corona_radius_mult: float = 1.6
 
-const _SUN_SHADER := preload("res://shaders/world/sun_surface.gdshader")
 
 func generate(star_params: Dictionary = {}) -> void:
-	if star_params.has("core_0"):      _star_core_0 = star_params.core_0
-	if star_params.has("core_1"):      _star_core_1 = star_params.core_1
-	if star_params.has("core_2"):      _star_core_2 = star_params.core_2
-	if star_params.has("glow_tint"):   _star_glow_tint = star_params.glow_tint
-	if star_params.has("base_mod"):    _star_base_modulate = star_params.base_mod
-	if star_params.has("hot_mod"):     _star_hot_modulate = star_params.hot_mod
-	if star_params.has("start_mass"):  _star_start_mass = star_params.start_mass
-	if star_params.has("mass_span"):   _star_mass_span = star_params.mass_span
-	if star_params.has("tex_size"):    texture_size = star_params.tex_size
-	if star_params.has("limb_strength"):   _limb_strength = star_params.limb_strength
-	if star_params.has("granulation_scale"):_granulation_scale = star_params.granulation_scale
-	if star_params.has("corona_falloff"): _corona_falloff = star_params.corona_falloff
-	if star_params.has("corona_radius_mult"):_corona_radius_mult = star_params.corona_radius_mult
+	if star_params.has("core_0"):
+		_star_core_0 = star_params.core_0
+	if star_params.has("core_1"):
+		_star_core_1 = star_params.core_1
+	if star_params.has("core_2"):
+		_star_core_2 = star_params.core_2
+	if star_params.has("glow_tint"):
+		_star_glow_tint = star_params.glow_tint
+	if star_params.has("base_mod"):
+		_star_base_modulate = star_params.base_mod
+	if star_params.has("hot_mod"):
+		_star_hot_modulate = star_params.hot_mod
+	if star_params.has("start_mass"):
+		_star_start_mass = star_params.start_mass
+	if star_params.has("mass_span"):
+		_star_mass_span = star_params.mass_span
+	if star_params.has("tex_size"):
+		texture_size = star_params.tex_size
+	if star_params.has("limb_strength"):
+		_limb_strength = star_params.limb_strength
+	if star_params.has("granulation_scale"):
+		_granulation_scale = star_params.granulation_scale
+	if star_params.has("corona_falloff"):
+		_corona_falloff = star_params.corona_falloff
+	if star_params.has("corona_radius_mult"):
+		_corona_radius_mult = star_params.corona_radius_mult
 	_generate_sun_texture()
 	_apply_sun_shader()
 	_generate_sun_glows()
+	rotation = 0.0
+
 
 func _generate_sun_texture():
 	self.texture = TEX.make_disk_mask(texture_size, 0.95)
+
 
 func _apply_sun_shader():
 	var shader_mat := ShaderMaterial.new()
@@ -59,6 +81,8 @@ func _apply_sun_shader():
 	shader_mat.set_shader_parameter("u_core_1", TEX.vec3(_star_core_1))
 	shader_mat.set_shader_parameter("u_core_2", TEX.vec3(_star_core_2))
 	material = shader_mat
+	_shader_mat = shader_mat
+
 
 func _generate_sun_glows():
 	var add_mat := func() -> CanvasItemMaterial:
@@ -70,14 +94,19 @@ func _generate_sun_glows():
 	var glow_falloff := _corona_falloff
 	var make_glow_tex := func(size_ratio: float) -> Texture2D:
 		var size := int(texture_size * size_ratio)
-		return TEX.make_circle_texture(size, func(t, _x, _y) -> Color:
-			var brightness: float = (1.0 - t * t) * (1.0 - 0.5 * t)
-			brightness *= pow(1.0 - t, glow_falloff * 0.25)
-			brightness *= 1.4
-			var alpha: float = (1.0 - t * t) * 0.85
-			return Color(glow_tint.r * brightness,
-						 glow_tint.g * brightness,
-						 glow_tint.b * brightness, alpha)
+		return TEX.make_circle_texture(
+			size,
+			func(t, _x, _y) -> Color:
+				var brightness: float = (1.0 - t * t) * (1.0 - 0.5 * t)
+				brightness *= pow(1.0 - t, glow_falloff * 0.25)
+				brightness *= 1.4
+				var alpha: float = (1.0 - t * t) * 0.85
+				return Color(
+					glow_tint.r * brightness,
+					glow_tint.g * brightness,
+					glow_tint.b * brightness,
+					alpha
+				)
 		)
 
 	# Bump minimum radius so every type has a visible aura. corona_radius_mult
@@ -99,35 +128,37 @@ func _generate_sun_glows():
 	_glow_inner.material = add_mat.call()
 	add_child(_glow_inner)
 
+
 func flash(intensity: float):
 	_collision_flash = max(_collision_flash, intensity)
+	_anim_dirty = true
+
 
 func set_animations_enabled(enabled: bool) -> void:
 	_animations_enabled = enabled
+	_anim_dirty = true
+
 
 func _process(delta):
 	sun_time += delta
-	material.set_shader_parameter("time", sun_time)
-	# No rigid sprite rotation: the visual motion comes from the shader's
-	# animated granulation/flicker. A rotating texture underneath a
-	# sphere-projected noise field would fight the shader motion, so we
-	# keep the sprite axis-aligned.
-	rotation = 0.0
+	_shader_mat.set_shader_parameter("time", sun_time)
 
 	if not _animations_enabled:
-		scale = Vector2.ONE
-		modulate = Color.WHITE
-		if _glow_outer:
-			_glow_outer.scale = Vector2.ONE
-			_glow_outer.modulate = Color(1, 1, 1, 0.4)
-		if _glow_inner:
-			_glow_inner.scale = Vector2.ONE
-			_glow_inner.modulate = Color(1, 1, 1, 0.6)
+		if _anim_dirty:
+			_anim_dirty = false
+			scale = _SCALE_BASE
+			modulate = _COLOR_WHITE
+			if _glow_outer:
+				_glow_outer.scale = _SCALE_BASE
+				_glow_outer.modulate = _COLOR_GLOW_OUTER
+			if _glow_inner:
+				_glow_inner.scale = _SCALE_BASE
+				_glow_inner.modulate = _COLOR_GLOW_INNER
 		if _collision_flash > 0.0:
 			var t: float = _collision_flash / 0.6
 			var flash_t: float = t * t
-			modulate = Color.WHITE.lerp(Color.WHITE, flash_t * 0.7)
-			scale = Vector2.ONE * (1.0 + flash_t * 0.15)
+			modulate = _COLOR_WHITE.lerp(_COLOR_WHITE, flash_t * 0.7)
+			scale = _SCALE_BASE * (1.0 + flash_t * 0.15)
 			_collision_flash -= delta
 		return
 
