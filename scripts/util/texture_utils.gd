@@ -58,11 +58,12 @@ static func make_noisy_blob(size: int, rng_seed: int, color_fn: Callable) -> Ima
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	image.fill(Color.TRANSPARENT)
 	var cx := size / 2.0
+	var cy := size / 2.0
 	var max_r := size / 2.0 - 1
 	for x in range(size):
 		for y in range(size):
 			var dx := x - cx
-			var dy := y - cx
+			var dy := y - cy
 			var dist := sqrt(dx * dx + dy * dy)
 			if dist <= max_r:
 				var noise := rng.randf_range(0.7, 1.0)
