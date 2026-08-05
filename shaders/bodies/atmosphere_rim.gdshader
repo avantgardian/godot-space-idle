@@ -3,7 +3,7 @@ render_mode unshaded, blend_add;
 
 // Driven each frame by OrbitalBody._process (kept in sync with the surface
 // shader's u_light_dir so the day-side limb always faces the sun).
-uniform vec3  u_light_dir = vec3(1.0, 0.0, 0.0);
+uniform vec3  u_light_dir = vec3(-1.0, 0.0, 0.0);
 
 // Per-instance (set in OrbitalBody._apply_atmosphere_shader).
 uniform vec3  u_atm_color        = vec3(0.4, 0.65, 1.0);

@@ -2,7 +2,7 @@ shader_type canvas_item;
 render_mode unshaded;
 
 // Driven each frame by saturn.gd._process.
-uniform vec3  u_light_dir = vec3(1.0, 0.0, 0.0);
+uniform vec3  u_light_dir = vec3(-1.0, 0.0, 0.0);
 
 // Ring geometry (normalized 0..1 in sprite UV space).
 uniform float u_ring_inner     : hint_range(0.2, 0.5) = 0.32;
