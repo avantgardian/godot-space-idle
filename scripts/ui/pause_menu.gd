@@ -9,6 +9,9 @@ signal exit_to_menu_pressed
 const PAL := preload("res://scripts/util/tron_palette.gd")
 const FONT_BOLD := preload("res://resources/fonts/Orbitron-Bold.ttf")
 
+var _closing := false
+
+
 func _ready():
 	process_mode = PROCESS_MODE_ALWAYS
 	mouse_filter = MOUSE_FILTER_IGNORE
@@ -27,6 +30,7 @@ func _ready():
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.2)
 
+
 func _setup_overlay():
 	var overlay := ColorRect.new()
 	overlay.name = "Overlay"
@@ -37,6 +41,7 @@ func _setup_overlay():
 	overlay.color = Color(0.0, 0.0, 0.0, 0.5)
 	overlay.mouse_filter = MOUSE_FILTER_STOP
 	add_child(overlay)
+
 
 func _setup_menu():
 	var center := CenterContainer.new()
@@ -91,25 +96,34 @@ func _setup_menu():
 	exit_btn.pressed.connect(_on_exit_to_menu)
 	vbox.add_child(exit_btn)
 
+
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("ui_cancel"):
 			emit_signal("resume_pressed")
 			get_viewport().set_input_as_handled()
 
+
 func _on_resume():
 	emit_signal("resume_pressed")
+
 
 func _on_save():
 	emit_signal("save_pressed")
 
+
 func _on_load():
 	emit_signal("load_pressed")
+
 
 func _on_exit_to_menu():
 	emit_signal("exit_to_menu_pressed")
 
+
 func close():
+	if _closing:
+		return
+	_closing = true
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.15)
 	tween.tween_callback(queue_free)
