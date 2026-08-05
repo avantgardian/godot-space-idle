@@ -1,5 +1,6 @@
 extends OrbitalBody
 
+
 func _ready():
 	biome = preload("res://resources/biomes/ice_giant_uranus.tres")
 	planet_name = "Uranus"
@@ -13,4 +14,5 @@ func _ready():
 	axial_tilt_deg = 98.0
 	rotation_rate = 0.15
 	atm_color = PAL.ATM_RIM_ICE
+	planet_seed = 45
 	super()

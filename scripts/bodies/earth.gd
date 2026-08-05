@@ -1,5 +1,6 @@
 extends OrbitalBody
 
+
 func _ready():
 	biome = preload("res://resources/biomes/terrestrial_earth.tres")
 	planet_name = "Earth"
@@ -12,4 +13,5 @@ func _ready():
 	use_shader = true
 	rotation_rate = 0.05
 	atm_color = PAL.ATM_RIM_EARTH
+	planet_seed = 634
 	super()

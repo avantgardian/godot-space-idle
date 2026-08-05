@@ -99,10 +99,11 @@ func _generate_texture():
 
 
 func _apply_planet_shader():
-	var seed_val := planet_seed
-	if seed_val == 0:
-		seed_val = hash(name)
-	seed_val = abs(seed_val) % 1023
+	if planet_seed == 0:
+		push_error(
+			"%s: planet_seed is 0 — set an explicit seed for stable procedural generation" % name
+		)
+	var seed_val: int = abs(planet_seed) % 1023
 	var shader := biome.get_shader()
 	if not shader:
 		return

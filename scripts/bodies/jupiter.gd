@@ -1,5 +1,6 @@
 extends OrbitalBody
 
+
 func _ready():
 	biome = preload("res://resources/biomes/gas_giant_jupiter.tres")
 	planet_name = "Jupiter"
@@ -11,4 +12,5 @@ func _ready():
 	collision_ring_timer = 2.5
 	use_shader = true
 	rotation_rate = 0.4
+	planet_seed = 381
 	super()
