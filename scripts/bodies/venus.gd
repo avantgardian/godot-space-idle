@@ -1,5 +1,6 @@
 extends OrbitalBody
 
+
 func _ready():
 	biome = preload("res://resources/biomes/greenhouse_venus.tres")
 	planet_name = "Venus"
@@ -12,4 +13,5 @@ func _ready():
 	use_shader = true
 	rotation_rate = 0.08
 	atm_color = PAL.ATM_RIM_VENUS
+	planet_seed = 315
 	super()

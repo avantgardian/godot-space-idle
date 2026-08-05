@@ -21,6 +21,7 @@ func _ready():
 	collision_ring_segments = 88
 	collision_ring_timer = 2.2
 	use_shader = true
+	planet_seed = 436
 	rotation_rate = 0.35
 	super()
 	_generate_ring()
@@ -29,10 +30,11 @@ func _ready():
 func _generate_ring():
 	var tex := _TEX.make_white_square()
 
-	var seed_val := planet_seed
-	if seed_val == 0:
-		seed_val = hash(name)
-	seed_val = abs(seed_val) % 1023
+	if planet_seed == 0:
+		push_error(
+			"%s: planet_seed is 0 — set an explicit seed for stable procedural generation" % name
+		)
+	var seed_val: int = abs(planet_seed) % 1023
 
 	_ring_rotation = deg_to_rad(axial_tilt_deg)
 	_cos_ring_rot = cos(-_ring_rotation)

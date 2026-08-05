@@ -1,5 +1,6 @@
 extends OrbitalBody
 
+
 func _ready():
 	biome = preload("res://resources/biomes/ice_giant_neptune.tres")
 	planet_name = "Neptune"
@@ -13,4 +14,5 @@ func _ready():
 	axial_tilt_deg = 28.32
 	rotation_rate = 0.15
 	atm_color = PAL.ATM_RIM_ICE
+	planet_seed = 1
 	super()

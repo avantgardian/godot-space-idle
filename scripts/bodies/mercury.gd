@@ -1,5 +1,6 @@
 extends OrbitalBody
 
+
 func _ready():
 	biome = preload("res://resources/biomes/rocky_mercury.tres")
 	planet_name = "Mercury"
@@ -10,4 +11,5 @@ func _ready():
 	collision_ring_segments = 48
 	collision_ring_timer = 0.8
 	use_shader = true
+	planet_seed = 450
 	super()
