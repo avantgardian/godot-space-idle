@@ -157,7 +157,7 @@ func _process(delta):
 		if _collision_flash > 0.0:
 			var t: float = _collision_flash / 0.6
 			var flash_t: float = t * t
-			modulate = _COLOR_WHITE.lerp(_COLOR_WHITE, flash_t * 0.7)
+			modulate = _COLOR_WHITE.lerp(_star_hot_modulate, flash_t * 0.7)
 			scale = _SCALE_BASE * (1.0 + flash_t * 0.15)
 			_collision_flash -= delta
 		return
@@ -178,7 +178,7 @@ func _process(delta):
 	if _collision_flash > 0.0:
 		var t: float = _collision_flash / 0.6
 		var flash_t: float = t * t
-		modulate = modulate.lerp(Color.WHITE, flash_t * 0.7)
+		modulate = modulate.lerp(_star_hot_modulate, flash_t * 0.7)
 		scale = Vector2(breathe, breathe) * (1.0 + flash_t * 0.15)
 		var pulse := 1.0 + flash_t * 0.4
 		_glow_outer.scale = Vector2(outer_pulse, outer_pulse) * pulse
