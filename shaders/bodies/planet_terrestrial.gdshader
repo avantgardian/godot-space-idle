@@ -55,7 +55,7 @@ void compute_lighting(vec3 n, vec3 light_dir, float ambient, float limb_strength
 }
 
 uniform float u_time = 0.0;
-uniform vec3  u_light_dir = vec3(1.0, 0.0, 0.0);
+uniform vec3  u_light_dir = vec3(-1.0, 0.0, 0.0);
 uniform float u_ambient : hint_range(0.0, 0.5) = 0.06;
 uniform float u_night_rim : hint_range(0.0, 1.0) = 0.4;
 uniform float u_limb : hint_range(0.0, 1.0) = 0.35;

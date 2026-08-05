@@ -31,7 +31,7 @@ float fbm(vec2 p) {
 }
 
 uniform float u_time = 0.0;
-uniform vec3 u_light_dir = vec3(1.0, 0.0, 0.0);
+uniform vec3 u_light_dir = vec3(-1.0, 0.0, 0.0);
 uniform float u_ambient : hint_range(0.0, 0.5) = 0.08;
 uniform int u_seed = 1;
 uniform float u_spin_rate = 1.5;
