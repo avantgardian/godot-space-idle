@@ -1,13 +1,14 @@
 class_name JupiterBiomeConfig
 extends GasGiantBiomeConfig
 
+
 func seed_features(seed_val: int) -> void:
 	_storm_lats.clear()
 	_storm_lons.clear()
 	_storm_sizes.clear()
 	_storm_strengths.clear()
 	_storm_kinds.clear()
-	var count: int = clampi(storm_count, 0, _MAX_STORMS)
+	var count: int = clampi(storm_count, 0, MAX_FEATURES)
 	if count == 0:
 		return
 	_storm_lats.append(-0.5)
