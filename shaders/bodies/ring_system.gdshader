@@ -1,7 +1,7 @@
 shader_type canvas_item;
 render_mode unshaded;
 
-// Driven each frame by saturn.gd._process.
+// Driven each frame by RingSystemComponent._physics_process.
 uniform vec3  u_light_dir = vec3(-1.0, 0.0, 0.0);
 
 // Ring geometry (normalized 0..1 in sprite UV space).
@@ -22,7 +22,7 @@ uniform float u_shadow_strength : hint_range(0.0, 1.0) = 0.4;
 // Noise seed — matches the planet's u_seed for deterministic look.
 uniform int   u_ring_seed = 1;
 
-// Masking. Set by saturn.gd to split front/back ring halves.
+// Masking. Set by RingSystemComponent to split front/back ring halves.
 // 0 = show full ring, 1 = show only front half (uv.y > 0), -1 = show only back half (uv.y < 0).
 uniform int u_half_mask = 0;
 
