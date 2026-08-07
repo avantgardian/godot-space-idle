@@ -1,6 +1,7 @@
 class_name NeptuneBiomeConfig
 extends IceGiantBiomeConfig
 
+
 func seed_features(_seed_val: int) -> void:
 	_storm_lats.clear()
 	_storm_lons.clear()

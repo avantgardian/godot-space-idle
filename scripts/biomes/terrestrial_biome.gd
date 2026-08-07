@@ -18,15 +18,16 @@ const TERRESTRIAL_SHADER := preload("res://shaders/bodies/planet_terrestrial.gds
 @export var cloud_scale: float = 3.0
 @export var specular_power: float = 64.0
 @export var city_lights: float = 0.0
-@export var polar_cap_lat_deg: float = 0.0
-@export var polar_softness: float = 0.1
 @export var texture_size: int = 32
+
 
 func get_shader() -> Shader:
 	return TERRESTRIAL_SHADER
 
+
 func get_texture_size() -> int:
 	return texture_size
+
 
 func apply_to_shader(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_limb", 0.35)
@@ -48,6 +49,3 @@ func apply_to_shader(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_cloud_scale", cloud_scale)
 	mat.set_shader_parameter("u_specular_power", specular_power)
 	mat.set_shader_parameter("u_city_lights", city_lights)
-
-func _vec3(c: Color) -> Vector3:
-	return Vector3(c.r, c.g, c.b)
