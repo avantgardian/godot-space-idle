@@ -1,7 +1,5 @@
 extends "res://scripts/controllers/game_controller.gd"
 
-const GM_UNIT := 4.0 * PI * PI * 350.0 * 350.0 * 350.0 / (25.0 * 25.0)
-
 # Per-type physical parameters (rooted in Eddington-Milne limb darkening,
 # Snodgrass-Ulrich differential rotation, and observed convective features):
 #   limb_strength       - limb darkening coefficient (O/B faint, M strong)
@@ -238,7 +236,7 @@ func _physics_process(delta):
 
 
 func _get_asteroid_gm() -> float:
-	return GM_UNIT
+	return OrbitalBody.kepler_gm(350.0, 25.0)
 
 
 func _get_star_type() -> String:
