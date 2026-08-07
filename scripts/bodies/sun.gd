@@ -85,6 +85,15 @@ func _apply_sun_shader():
 
 
 func _generate_sun_glows():
+	if _glow_outer and is_instance_valid(_glow_outer):
+		_glow_outer.texture = null
+		_glow_outer.queue_free()
+	_glow_outer = null
+	if _glow_inner and is_instance_valid(_glow_inner):
+		_glow_inner.texture = null
+		_glow_inner.queue_free()
+	_glow_inner = null
+
 	var add_mat := func() -> CanvasItemMaterial:
 		var m := CanvasItemMaterial.new()
 		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
