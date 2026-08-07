@@ -96,15 +96,7 @@ func _find_planet_idx(node: Node2D) -> int:
 
 
 func _on_planet_collided(planet: Node2D):
-	_on_body_hit_sun(
-		planet.mass,
-		planet.collision_flash,
-		planet.collision_ring_color,
-		planet.collision_ring_width,
-		planet.collision_ring_segments,
-		planet.collision_ring_timer,
-		planet.planet_name + " collided with the Sun"
-	)
+	_on_body_hit_sun(planet.mass, planet.collision_profile, planet.planet_name)
 
 
 func _show_planet_popup(planet_node: Node2D):
