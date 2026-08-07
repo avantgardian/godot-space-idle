@@ -8,6 +8,7 @@ const _SUN_POPUP := preload("res://scripts/ui/sun_popup.gd")
 const _ASTEROID_SPAWNER := preload("res://scripts/components/asteroid_spawner.gd")
 const _ASTEROID_SCRIPT := preload("res://scripts/bodies/asteroid.gd")
 const _COLLISION_MGR := preload("res://scripts/controllers/collision_manager.gd")
+const _ASTEROID_COLLISION := preload("res://resources/collision/asteroid.tres")
 const _POST_PROCESS := preload("res://scripts/components/post_process_manager.gd")
 const _SETTINGS := preload("res://scripts/util/settings_manager.gd")
 const _PAUSE_MENU := preload("res://scripts/ui/pause_menu.gd")
@@ -15,6 +16,8 @@ const _PAUSE_MENU := preload("res://scripts/ui/pause_menu.gd")
 var sun_mass: float = 1.0
 var _paused := false
 var _pause_menu: PauseMenu
+@export var asteroid_collision_profile: CollisionProfile = _ASTEROID_COLLISION
+
 var _collision_mgr: RefCounted
 var _sun_popup: Panel
 var _settings: SettingsManager
@@ -61,7 +64,9 @@ func _add_post_process():
 func _add_asteroid_spawner():
 	var spawner := _ASTEROID_SPAWNER.new()
 	spawner.name = "AsteroidSpawner"
-	spawner.init(_ASTEROID_SCRIPT, _get_asteroid_gm(), _on_asteroid_collided)
+	spawner.init(
+		_ASTEROID_SCRIPT, _get_asteroid_gm(), _on_asteroid_collided.bind(asteroid_collision_profile)
+	)
 	add_child(spawner)
 	spawner.owner = self
 	spawner.unique_name_in_owner = true
@@ -170,24 +175,18 @@ func _on_key_pressed(_event):
 	pass
 
 
-func _on_asteroid_collided(ast: Node2D):
-	_on_body_hit_sun(ast.mass, 0.2, PAL.ACCENT, 1.5, 24, 0.4, "Asteroid collided with the Sun")
+func _on_asteroid_collided(ast: Node2D, profile: CollisionProfile):
+	_on_body_hit_sun(ast.mass, profile, "Asteroid")
 
 
-func _on_body_hit_sun(
-	mass: float,
-	flash: float,
-	ring_color: Color,
-	ring_width: float,
-	ring_segments: int,
-	ring_timer: float,
-	message: String
-):
+func _on_body_hit_sun(mass: float, profile: CollisionProfile, body_name: String):
 	sun_mass += mass
-	_sun.flash(flash)
-	_impact_fx.spawn_ring(ring_color, ring_width, ring_segments, ring_timer)
+	_sun.flash(profile.flash)
+	_impact_fx.spawn_ring(
+		profile.ring_color, profile.ring_width, profile.ring_segments, profile.ring_timer
+	)
 	_post_fx.trigger()
-	_event_log.log_message(message)
+	_event_log.log_message(body_name + " collided with the Sun")
 
 
 func _on_pause_toggled():

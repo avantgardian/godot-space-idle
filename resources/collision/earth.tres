@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CollisionProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/util/collision_profile.gd" id="1_collision"]
+
+[resource]
+script = ExtResource("1_collision")
+flash = 1.0
+ring_color = Color(0.3, 0.7, 1.0, 0.7)
+ring_width = 3.5
+ring_segments = 72
+ring_timer = 1.5

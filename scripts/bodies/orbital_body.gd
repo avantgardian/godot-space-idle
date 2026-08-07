@@ -6,6 +6,7 @@ const _TRAIL := preload("res://scripts/components/trail_component.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
 const _ATM_SHADER := preload("res://shaders/bodies/atmosphere_rim.gdshader")
 const PAL := preload("res://scripts/util/planet_palette.gd")
+const _COLLISION := preload("res://scripts/util/collision_profile.gd")
 
 var _sprite: Sprite2D
 var _atm_sprite: Sprite2D
@@ -20,11 +21,7 @@ var sun_mass: float = 1.0
 @export var collision_radius: float = 20.0
 @export var planet_name: String = ""
 @export var planet_color: Color = Color.WHITE
-@export var collision_flash: float = 0.5
-@export var collision_ring_color: Color = Color(1, 1, 1, 0.5)
-@export var collision_ring_width: float = 2.0
-@export var collision_ring_segments: int = 48
-@export var collision_ring_timer: float = 1.0
+@export var collision_profile: CollisionProfile
 var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
