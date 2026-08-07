@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bht4fhoj7c7kb" path="res://scripts/controllers/main.gd" id="1_3ceyx"]
 [ext_resource type="Script" uid="uid://h8avcvxk4fd4" path="res://scripts/bodies/orbital_body.gd" id="2_orbital"]
-[ext_resource type="Script" uid="uid://lc3qs481xodg" path="res://scripts/bodies/saturn.gd" id="7_3cexz"]
+[ext_resource type="Resource" path="res://resources/biomes/gas_giant_saturn.tres" id="biome_saturn"]
 [ext_resource type="Script" uid="uid://ubljjmb24abf" path="res://scripts/components/camera_controller.gd" id="10"]
 [ext_resource type="Script" uid="uid://duxpmxdqg4jng" path="res://scripts/components/star_field.gd" id="11"]
 [ext_resource type="Script" uid="uid://531pf6utgrcp" path="res://scripts/bodies/sun.gd" id="12"]
@@ -142,7 +142,18 @@ trail_max = 10650
 
 [node name="Saturn" type="Node2D" parent="." unique_id=1967820671]
 unique_name_in_owner = true
-script = ExtResource("7_3cexz")
+script = ExtResource("2_orbital")
+biome = ExtResource("biome_saturn")
+planet_name = "Saturn"
+planet_color = Color(0.85, 0.75, 0.45, 1.0)
+collision_flash = 1.8
+collision_ring_color = Color(0.8, 0.7, 0.4, 0.8)
+collision_ring_width = 5.0
+collision_ring_segments = 88
+collision_ring_timer = 2.2
+use_shader = true
+planet_seed = 436
+rotation_rate = 0.35
 orbit_radius = 1800.0
 orbit_period = 616.0
 start_angle = 3.0

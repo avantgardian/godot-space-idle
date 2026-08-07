@@ -51,7 +51,7 @@ Every feature or fix follows this sequence:
 | `earth.gd` | `orbital_body.gd` | Orbit radius 700, period 78s, mass 3.0e-6, blue-green |
 | `mars.gd` | `orbital_body.gd` | Orbit radius 950, period 131s, mass 3.21e-7, reddish-brown |
 | `jupiter.gd` | `orbital_body.gd` | Orbit radius 1400, period 355s, mass 9.54e-4, banded texture |
-| `saturn.gd` | `orbital_body.gd` | Orbit radius 1800, period 616s, mass 2.86e-4, procedural ring (animated) |
+| `Saturn` | `orbital_body.gd` | Orbit radius 1800, period 616s, mass 2.86e-4 — configured as `OrbitalBody` in `main.tscn` with a `RingSystemComponent` child for procedural rings (Cassini/Encke divisions, animated) |
 | `uranus.gd` | `orbital_body.gd` | Orbit radius 2200, period 1074s, mass 4.35e-5, cyan-blue |
 | `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 1599s, mass 5.14e-5, deep blue |
 | `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave orange trails (TRON accent), despawn >5000u |
@@ -68,6 +68,7 @@ Every feature or fix follows this sequence:
 | `biomes/ice_giant_biome.gd` | `BiomeConfig` | Methane-blue ice giant shader + random storm seeding (Uranus) |
 | `biomes/neptune_biome.gd` | `IceGiantBiomeConfig` | Ice giant with fixed Great Dark Spot storm seeding |
 | `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
+| `ring_system.gd` | `Node2D` | Reusable `RingSystemComponent` (see issue #199) — builds back/front ring sprites with ring shader materials, updates light direction in `_physics_process`. `@export` params for ring geometry, colors, and seed. Attached as a child of any `OrbitalBody` (currently Saturn). |
 | `pause_button.gd` | `Button` | Bottom-right Pause/Play button — emits `pause_toggled` signal; controller owns pause state |
 | `pause_menu.gd` | `Panel` | Full-screen TRON pause overlay — Resume (unpause), Save/Load (disabled placeholders), Exit to Main Menu; handles `Esc` to unpause via `_input()` (has `PROCESS_MODE_ALWAYS`) |
 

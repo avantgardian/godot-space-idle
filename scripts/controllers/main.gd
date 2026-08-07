@@ -1,6 +1,7 @@
 extends "res://scripts/controllers/game_controller.gd"
 
 const _PLANET_POPUP := preload("res://scripts/ui/planet_popup.gd")
+const _RING_SYSTEM := preload("res://scripts/components/ring_system.gd")
 
 var _planet_data: Array[Node2D]
 var _planet_popup: Panel
@@ -24,6 +25,15 @@ func _ready():
 		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
 		planet.setup_trail(planet.planet_color)
 		_planet_data_cache.append({pos = Vector2.ZERO, mass = 0.0})
+	var ring := _RING_SYSTEM.new()
+	ring.ring_inner = 0.40
+	ring.ring_outer = 0.68
+	ring.cassini = 0.49
+	ring.cassini_width = 0.025
+	ring.encke = 0.55
+	ring.encke_width = 0.006
+	ring.shadow_strength = 0.4
+	%Saturn.add_child(ring)
 	_collision_mgr = _COLLISION_MGR.new(
 		_planet_data, _ASTEROID_SCRIPT, _impact_fx, _event_log, _find_planet_idx, _post_fx.trigger
 	)
