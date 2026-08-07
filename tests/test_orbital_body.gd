@@ -2,6 +2,12 @@ extends GutTest
 
 const ORBITAL_BODY := preload("res://scripts/bodies/orbital_body.gd")
 
+func test_kepler_gm_matches_formula():
+	var radius: float = 500.0
+	var period: float = 48.0
+	var expected: float = 4.0 * PI * PI * radius * radius * radius / (period * period)
+	assert_eq(ORBITAL_BODY.kepler_gm(radius, period), expected, "kepler_gm matches Kepler's third law")
+
 func test_initial_gm_keplers_third_law():
 	var body: Node2D = autofree(ORBITAL_BODY.new())
 	add_child(body)

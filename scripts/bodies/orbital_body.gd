@@ -162,14 +162,16 @@ func _reset():
 		_trail_component.clear()
 
 
+static func kepler_gm(radius: float, period: float) -> float:
+	return 4.0 * PI * PI * radius * radius * radius / (period * period)
+
+
 static func sun_collision_r(mass_solar: float) -> float:
 	return (128.0 + sqrt(mass_solar) * 8.0) * 0.85
 
 
 func _initial_gm() -> float:
-	return (
-		4.0 * PI * PI * orbit_radius * orbit_radius * orbit_radius / (orbit_period * orbit_period)
-	)
+	return kepler_gm(orbit_radius, orbit_period)
 
 
 func get_gm() -> float:
