@@ -79,7 +79,7 @@ void fragment() {
 		vec2 uv = UV * 2.0 - 1.0;
 		float r2 = min(dot(uv, uv), 1.0);
 		float mu = sqrt(1.0 - r2);
-		float edge_aa = 1.0 - smoothstep(0.97, 1.0, dot(UV * 2.0 - 1.0, UV * 2.0 - 1.0));
+		float edge_aa = 1.0 - smoothstep(0.97, 1.0, r2);
 
 		float limb = (1.0 + 1.5 * mu) / 2.5;
 		limb = mix(1.0, limb, u_limb_strength);
@@ -138,12 +138,10 @@ void fragment() {
 		}
 
 		float ramp_t = 1.0 - mu;
-		vec3 photosphere;
-		if (ramp_t < 0.5) {
-			photosphere = mix(u_core_0, u_core_1, ramp_t * 2.0);
-		} else {
-			photosphere = mix(u_core_1, u_core_2, (ramp_t - 0.5) * 2.0);
-		}
+		float seg = step(0.5, ramp_t);
+		float t0 = ramp_t * 2.0;
+		float t1 = (ramp_t - 0.5) * 2.0;
+		vec3 photosphere = mix(u_core_0, u_core_1, t0) * (1.0 - seg) + mix(u_core_1, u_core_2, t1) * seg;
 
 		float flicker = (fbm(uv * 6.0 + u_time * 0.7) - 0.5) * u_flicker_intensity;
 		flicker += (ridged(uv * 16.0 + u_time * 1.4) - 0.5) * u_flicker_intensity * 0.5;

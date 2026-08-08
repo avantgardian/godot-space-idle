@@ -87,7 +87,7 @@ void fragment() {
 
 		float cloud_alpha_out = 0.0;
 		vec3  cloud_color_out = vec3(0.0);
-		float cloud_lon = atan(n.x, n.z) + u_time * u_cloud_spin_rate;
+		float cloud_lon = lon - u_time * u_spin_rate + u_time * u_cloud_spin_rate;
 		vec2 cloud_uv = vec2(cloud_lon, lat) * u_cloud_scale + seed_off * 2.31;
 		float cloud_n = smoothstep(0.32, 0.62, fbm(cloud_uv));
 		float cov_lo = u_cloud_coverage;
