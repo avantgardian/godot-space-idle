@@ -74,7 +74,7 @@ func _generate_sun_texture():
 func _apply_sun_shader():
 	var shader_mat := ShaderMaterial.new()
 	shader_mat.shader = _SUN_SHADER
-	shader_mat.set_shader_parameter("time", 0.0)
+	shader_mat.set_shader_parameter("u_time", 0.0)
 	shader_mat.set_shader_parameter("u_limb_strength", _limb_strength)
 	shader_mat.set_shader_parameter("u_granulation_scale", _granulation_scale)
 	shader_mat.set_shader_parameter("u_core_0", _star_core_0)
@@ -150,7 +150,7 @@ func set_animations_enabled(enabled: bool) -> void:
 
 func _process(delta):
 	sun_time += delta
-	_shader_mat.set_shader_parameter("time", sun_time)
+	_shader_mat.set_shader_parameter("u_time", sun_time)
 
 	if not _animations_enabled:
 		if _anim_dirty:

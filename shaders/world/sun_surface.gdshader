@@ -1,6 +1,8 @@
 shader_type canvas_item;
 
-uniform float time : hint_range(0.0, 600.0) = 0.0;
+render_mode unshaded;
+
+uniform float u_time = 0.0;
 
 uniform float u_limb_strength   : hint_range(0.0, 1.0) = 0.65;
 uniform float u_granulation_scale : hint_range(0.2, 8.0) = 1.0;
@@ -39,7 +41,7 @@ float fbm(vec2 p) {
 	float a = 0.5;
 	float f = 1.0;
 	for (int i = 0; i < 5; i++) {
-		v += a * smooth_noise(p * f + time * 0.35 * float(i + 1));
+		v += a * smooth_noise(p * f + u_time * 0.35 * float(i + 1));
 		f *= 2.0;
 		a *= 0.5;
 	}
@@ -51,7 +53,7 @@ float ridged(vec2 p) {
 	float a = 0.5;
 	float f = 1.0;
 	for (int i = 0; i < 4; i++) {
-		float n = 1.0 - abs(smooth_noise(p * f + time * 0.32 * float(i + 1)) * 2.0 - 1.0);
+		float n = 1.0 - abs(smooth_noise(p * f + u_time * 0.32 * float(i + 1)) * 2.0 - 1.0);
 		v += a * n * n;
 		f *= 2.0;
 		a *= 0.5;
@@ -60,9 +62,9 @@ float ridged(vec2 p) {
 }
 
 float granulation(vec2 p) {
-	vec2 q = vec2(fbm(p + time * 0.18), fbm(p + vec2(5.2, 1.3) + time * 0.22));
-	vec2 r = vec2(fbm(p + 1.6 * q + vec2(1.7, 9.2) + time * 0.26),
-	              fbm(p + 1.6 * q + vec2(8.3, 2.8) + time * 0.30));
+	vec2 q = vec2(fbm(p + u_time * 0.18), fbm(p + vec2(5.2, 1.3) + u_time * 0.22));
+	vec2 r = vec2(fbm(p + 1.6 * q + vec2(1.7, 9.2) + u_time * 0.26),
+	              fbm(p + 1.6 * q + vec2(8.3, 2.8) + u_time * 0.30));
 	return mix(fbm(p + 1.8 * r), ridged(p + 1.8 * r), 0.6);
 }
 
@@ -130,7 +132,7 @@ void fragment() {
 
 		float fac = 0.0;
 		if (u_faculae_intensity > 0.0) {
-			float fn = ridged(uv * 18.0 + time * 0.4);
+			float fn = ridged(uv * 18.0 + u_time * 0.4);
 			float limb_mask = pow(1.0 - mu, 3.0);
 			fac = pow(fn, 2.0) * limb_mask * u_faculae_intensity * 0.20;
 		}
@@ -143,8 +145,8 @@ void fragment() {
 			photosphere = mix(u_core_1, u_core_2, (ramp_t - 0.5) * 2.0);
 		}
 
-		float flicker = (fbm(uv * 6.0 + time * 0.7) - 0.5) * u_flicker_intensity;
-		flicker += (ridged(uv * 16.0 + time * 1.4) - 0.5) * u_flicker_intensity * 0.5;
+		float flicker = (fbm(uv * 6.0 + u_time * 0.7) - 0.5) * u_flicker_intensity;
+		flicker += (ridged(uv * 16.0 + u_time * 1.4) - 0.5) * u_flicker_intensity * 0.5;
 
 		vec3 granulated = mix(photosphere * gran_dark, photosphere * gran_bright, gc);
 
