@@ -33,7 +33,7 @@ func _ready():
 	pressed.connect(_on_pressed)
 
 func _on_pressed():
-	emit_signal("pause_toggled")
+	pause_toggled.emit()
 
 func set_pause_state(paused: bool):
 	text = "Play" if paused else "Pause"

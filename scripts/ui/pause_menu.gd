@@ -100,24 +100,24 @@ func _setup_menu():
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("ui_cancel"):
-			emit_signal("resume_pressed")
+			resume_pressed.emit()
 			get_viewport().set_input_as_handled()
 
 
 func _on_resume():
-	emit_signal("resume_pressed")
+	resume_pressed.emit()
 
 
 func _on_save():
-	emit_signal("save_pressed")
+	save_pressed.emit()
 
 
 func _on_load():
-	emit_signal("load_pressed")
+	load_pressed.emit()
 
 
 func _on_exit_to_menu():
-	emit_signal("exit_to_menu_pressed")
+	exit_to_menu_pressed.emit()
 
 
 func close():
