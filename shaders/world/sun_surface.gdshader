@@ -8,9 +8,9 @@ uniform float u_granulation_amp : hint_range(0.0, 1.0) = 0.30;
 uniform float u_flicker_intensity : hint_range(0.0, 0.3) = 0.05;
 uniform float u_faculae_intensity : hint_range(0.0, 1.0) = 0.5;
 
-uniform vec3 u_core_0 = vec3(1.0, 0.95, 0.8);
-uniform vec3 u_core_1 = vec3(1.0, 0.7, 0.2);
-uniform vec3 u_core_2 = vec3(0.8, 0.3, 0.05);
+uniform vec3 u_core_0 : source_color = vec3(1.0, 0.95, 0.8);
+uniform vec3 u_core_1 : source_color = vec3(1.0, 0.7, 0.2);
+uniform vec3 u_core_2 : source_color = vec3(0.8, 0.3, 0.05);
 
 uniform int   u_spot_count : hint_range(0, 8) = 0;
 uniform vec2  u_spot_pos[8];

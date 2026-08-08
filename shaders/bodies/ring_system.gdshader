@@ -13,8 +13,8 @@ uniform float u_encke          : hint_range(0.45, 0.60) = 0.55;
 uniform float u_encke_width     = 0.006;
 
 // Colors from PlanetPalette.RING_SATURN_*.
-uniform vec3  u_ring_bright = vec3(0.78, 0.68, 0.45);
-uniform vec3  u_ring_dark   = vec3(0.20, 0.15, 0.08);
+uniform vec3  u_ring_bright : source_color = vec3(0.78, 0.68, 0.45);
+uniform vec3  u_ring_dark : source_color = vec3(0.20, 0.15, 0.08);
 
 // Planet shadow on the ring.
 uniform float u_shadow_strength : hint_range(0.0, 1.0) = 0.4;

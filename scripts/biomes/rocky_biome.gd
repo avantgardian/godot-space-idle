@@ -28,12 +28,12 @@ func get_texture_size() -> int:
 func apply_to_shader(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_limb", 0.35)
 	mat.set_shader_parameter("u_noise_scale", 4.0)
-	mat.set_shader_parameter("u_rocky_hi", _vec3(rocky_hi))
-	mat.set_shader_parameter("u_rocky_lo", _vec3(rocky_lo))
+	mat.set_shader_parameter("u_rocky_hi", rocky_hi)
+	mat.set_shader_parameter("u_rocky_lo", rocky_lo)
 	mat.set_shader_parameter("u_surface_grain_amp", 0.15)
 	mat.set_shader_parameter("u_polar_cap_lat", deg_to_rad(polar_cap_lat_deg))
 	mat.set_shader_parameter("u_polar_softness", polar_softness)
-	mat.set_shader_parameter("u_polar_cap_color", _vec3(polar_cap_color))
+	mat.set_shader_parameter("u_polar_cap_color", polar_cap_color)
 	sync_features(mat)
 
 

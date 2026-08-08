@@ -24,11 +24,11 @@ func get_texture_size() -> int:
 
 func apply_to_shader(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_limb", 0.35)
-	mat.set_shader_parameter("u_venus_cloud_hi", _vec3(cloud_hi))
-	mat.set_shader_parameter("u_venus_cloud_lo", _vec3(cloud_lo))
+	mat.set_shader_parameter("u_venus_cloud_hi", cloud_hi)
+	mat.set_shader_parameter("u_venus_cloud_lo", cloud_lo)
 	mat.set_shader_parameter("u_cloud_swirl_amp", cloud_swirl_amp)
 	mat.set_shader_parameter("u_cloud_swirl_freq", cloud_swirl_freq)
 	mat.set_shader_parameter("u_cloud_contrast", cloud_contrast)
 	mat.set_shader_parameter("u_limb_brighten", limb_brighten)
 	mat.set_shader_parameter("u_surface_lava_leak", surface_lava_leak)
-	mat.set_shader_parameter("u_lava_color", _vec3(lava_color))
+	mat.set_shader_parameter("u_lava_color", lava_color)

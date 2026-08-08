@@ -77,9 +77,9 @@ func _apply_sun_shader():
 	shader_mat.set_shader_parameter("time", 0.0)
 	shader_mat.set_shader_parameter("u_limb_strength", _limb_strength)
 	shader_mat.set_shader_parameter("u_granulation_scale", _granulation_scale)
-	shader_mat.set_shader_parameter("u_core_0", TEX.vec3(_star_core_0))
-	shader_mat.set_shader_parameter("u_core_1", TEX.vec3(_star_core_1))
-	shader_mat.set_shader_parameter("u_core_2", TEX.vec3(_star_core_2))
+	shader_mat.set_shader_parameter("u_core_0", _star_core_0)
+	shader_mat.set_shader_parameter("u_core_1", _star_core_1)
+	shader_mat.set_shader_parameter("u_core_2", _star_core_2)
 	material = shader_mat
 	_shader_mat = shader_mat
 

@@ -92,7 +92,3 @@ func _sync_storms(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_storm_size", sizes)
 	mat.set_shader_parameter("u_storm_strength", strengths)
 	mat.set_shader_parameter("u_storm_kind", kinds)
-
-
-func _vec3(c: Color) -> Vector3:
-	return Vector3(c.r, c.g, c.b)

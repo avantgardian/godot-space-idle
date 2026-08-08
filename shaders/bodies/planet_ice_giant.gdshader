@@ -63,11 +63,11 @@ uniform float u_axial_tilt = 0.0;
 uniform float u_spin_rate = 0.05;
 uniform int   u_seed = 1;
 
-uniform vec3  u_ice_base_color = vec3(0.30, 0.65, 0.85);
+uniform vec3  u_ice_base_color : source_color = vec3(0.30, 0.65, 0.85);
 uniform float u_ice_band_contrast : hint_range(0.0, 0.5) = 0.03;
-uniform vec3  u_ice_haze_color = vec3(0.85, 0.92, 1.00);
+uniform vec3  u_ice_haze_color : source_color = vec3(0.85, 0.92, 1.00);
 uniform float u_ice_haze_strength : hint_range(0.0, 1.0) = 0.0;
-uniform vec3  u_ice_storm_dark = vec3(0.04, 0.10, 0.30);
+uniform vec3  u_ice_storm_dark : source_color = vec3(0.04, 0.10, 0.30);
 uniform int   u_ice_variant : hint_range(0, 1) = 0;
 uniform int   u_band_count : hint_range(1, 20) = 12;
 uniform float u_storm_stretch = 3.0;
@@ -76,7 +76,7 @@ uniform vec2  u_storm_pos[16];
 uniform float u_storm_size[16];
 uniform float u_storm_strength[16];
 uniform int   u_storm_kind[16];
-uniform vec3  u_storm_white = vec3(0.95, 0.95, 0.95);
+uniform vec3  u_storm_white : source_color = vec3(0.95, 0.95, 0.95);
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
