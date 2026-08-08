@@ -57,7 +57,7 @@ void fragment() {
 		col.rgb += bloom;
 	}
 
-	float d = distance(uv, vec2(0.5, 0.5)) * 1.414;
+	float d = distance(uv, vec2(0.5, 0.5)) * sqrt(2.0);
 	float v = 1.0 - smoothstep(u_vignette_radius, 1.0, d) * u_vignette_intensity;
 	col.rgb *= v;
 
