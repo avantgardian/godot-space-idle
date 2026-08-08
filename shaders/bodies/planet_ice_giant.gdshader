@@ -31,7 +31,7 @@ void fragment() {
 		sphere_projection(uv, u_axial_tilt, u_time, u_spin_rate, u_seed, mu, lat, lon, n, seed_off, edge_aa);
 
 		float diff, lighting, limb, night_rim;
-		compute_lighting(n, u_light_dir, u_ambient, u_limb, u_night_rim, mu, diff, lighting, limb, night_rim);
+		compute_lighting(uv, u_light_dir, u_ambient, u_limb, u_night_rim, mu, diff, lighting, limb, night_rim);
 
 		vec3 base = u_ice_base_color;
 
