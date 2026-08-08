@@ -133,7 +133,7 @@ func _apply_atmosphere_shader(tex_size: int):
 	_atm_mat = ShaderMaterial.new()
 	_atm_mat.shader = _ATM_SHADER
 	_atm_mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
-	_atm_mat.set_shader_parameter("u_atm_color", _TEX.vec3(atm_color))
+	_atm_mat.set_shader_parameter("u_atm_color", atm_color)
 	_atm_mat.set_shader_parameter("u_atm_intensity", atm_intensity)
 	_atm_mat.set_shader_parameter("u_atm_ambient", atm_ambient)
 	_atm_mat.set_shader_parameter("u_atm_thickness", 0.03)

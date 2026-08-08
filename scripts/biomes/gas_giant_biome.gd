@@ -31,10 +31,10 @@ func get_texture_size() -> int:
 
 func apply_to_shader(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_limb", 0.35)
-	mat.set_shader_parameter("u_gas_band_hi", _vec3(band_hi))
-	mat.set_shader_parameter("u_gas_band_lo", _vec3(band_lo))
-	mat.set_shader_parameter("u_storm_rust", _vec3(storm_rust))
-	mat.set_shader_parameter("u_storm_white", _vec3(storm_white))
+	mat.set_shader_parameter("u_gas_band_hi", band_hi)
+	mat.set_shader_parameter("u_gas_band_lo", band_lo)
+	mat.set_shader_parameter("u_storm_rust", storm_rust)
+	mat.set_shader_parameter("u_storm_white", storm_white)
 	mat.set_shader_parameter("u_band_count", band_count)
 	mat.set_shader_parameter("u_band_sharp", band_sharp)
 	mat.set_shader_parameter("u_shear_amp", shear_amp)

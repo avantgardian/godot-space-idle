@@ -63,14 +63,14 @@ uniform float u_axial_tilt = 0.0;
 uniform float u_spin_rate = 0.05;
 uniform int   u_seed = 1;
 
-uniform vec3  u_venus_cloud_hi = vec3(0.95, 0.85, 0.55);
-uniform vec3  u_venus_cloud_lo = vec3(0.65, 0.45, 0.20);
+uniform vec3  u_venus_cloud_hi : source_color = vec3(0.95, 0.85, 0.55);
+uniform vec3  u_venus_cloud_lo : source_color = vec3(0.65, 0.45, 0.20);
 uniform float u_cloud_swirl_amp : hint_range(0.0, 0.5) = 0.15;
 uniform float u_cloud_swirl_freq : hint_range(1.0, 16.0) = 6.0;
 uniform float u_cloud_contrast : hint_range(0.0, 1.0) = 0.6;
 uniform float u_limb_brighten : hint_range(0.0, 1.0) = 0.0;
 uniform float u_surface_lava_leak : hint_range(0.0, 1.0) = 0.0;
-uniform vec3  u_lava_color = vec3(0.60, 0.15, 0.05);
+uniform vec3  u_lava_color : source_color = vec3(0.60, 0.15, 0.05);
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);

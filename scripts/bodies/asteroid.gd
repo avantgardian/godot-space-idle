@@ -139,9 +139,9 @@ func _generate_texture():
 	_shader_mat.set_shader_parameter("u_ambient", ambient)
 	_shader_mat.set_shader_parameter("u_seed", abs(_asteroid_seed) % 1023)
 	_shader_mat.set_shader_parameter("u_spin_rate", _spin_rate)
-	_shader_mat.set_shader_parameter("u_base_color", Vector3(1.0, 1.0, 1.0))
-	_shader_mat.set_shader_parameter("u_regolith_hi", Vector3(hi.r, hi.g, hi.b))
-	_shader_mat.set_shader_parameter("u_regolith_lo", Vector3(lo.r, lo.g, lo.b))
+	_shader_mat.set_shader_parameter("u_base_color", Color.WHITE)
+	_shader_mat.set_shader_parameter("u_regolith_hi", hi)
+	_shader_mat.set_shader_parameter("u_regolith_lo", lo)
 	_shader_mat.set_shader_parameter(
 		"u_relief_depth", relief_base + 0.06 * (float(abs(_asteroid_seed) % 50) / 50.0)
 	)

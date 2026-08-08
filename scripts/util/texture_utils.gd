@@ -98,7 +98,3 @@ static func draw_disk_on_image(image: Image, cx: float, cy: float, radius: float
 					var final_color := Color(color.r, color.g, color.b, color.a * alpha)
 					var existing := image.get_pixel(px, py)
 					image.set_pixel(px, py, final_color.blend(existing))
-
-
-static func vec3(c: Color) -> Vector3:
-	return Vector3(c.r, c.g, c.b)

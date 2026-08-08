@@ -31,15 +31,15 @@ func get_texture_size() -> int:
 
 func apply_to_shader(mat: ShaderMaterial) -> void:
 	mat.set_shader_parameter("u_limb", 0.30)
-	mat.set_shader_parameter("u_ice_base_color", _vec3(base_color))
+	mat.set_shader_parameter("u_ice_base_color", base_color)
 	mat.set_shader_parameter("u_ice_band_contrast", ice_band_contrast)
-	mat.set_shader_parameter("u_ice_haze_color", _vec3(haze_color))
+	mat.set_shader_parameter("u_ice_haze_color", haze_color)
 	mat.set_shader_parameter("u_ice_haze_strength", ice_haze_strength)
-	mat.set_shader_parameter("u_ice_storm_dark", _vec3(storm_dark))
+	mat.set_shader_parameter("u_ice_storm_dark", storm_dark)
 	mat.set_shader_parameter("u_ice_variant", ice_variant)
 	mat.set_shader_parameter("u_band_count", band_count)
 	mat.set_shader_parameter("u_storm_stretch", storm_stretch)
-	mat.set_shader_parameter("u_storm_white", _vec3(storm_white))
+	mat.set_shader_parameter("u_storm_white", storm_white)
 	sync_features(mat)
 
 

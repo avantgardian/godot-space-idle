@@ -64,8 +64,8 @@ uniform float u_spin_rate = 0.05;
 uniform int   u_seed = 1;
 
 uniform float u_noise_scale = 4.0;
-uniform vec3  u_rocky_hi = vec3(0.62, 0.58, 0.55);
-uniform vec3  u_rocky_lo = vec3(0.30, 0.27, 0.25);
+uniform vec3  u_rocky_hi : source_color = vec3(0.62, 0.58, 0.55);
+uniform vec3  u_rocky_lo : source_color = vec3(0.30, 0.27, 0.25);
 uniform float u_surface_grain_amp : hint_range(0.0, 0.5) = 0.15;
 uniform int   u_crater_count : hint_range(0, 16) = 0;
 uniform vec2  u_crater_pos[16];
@@ -73,7 +73,7 @@ uniform float u_crater_size[16];
 uniform float u_crater_strength[16];
 uniform float u_polar_cap_lat : hint_range(0.0, 1.5708) = 0.0;
 uniform float u_polar_softness : hint_range(0.01, 0.5) = 0.1;
-uniform vec3  u_polar_cap_color = vec3(0.90, 0.85, 0.80);
+uniform vec3  u_polar_cap_color : source_color = vec3(0.90, 0.85, 0.80);
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
