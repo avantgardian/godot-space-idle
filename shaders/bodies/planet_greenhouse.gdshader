@@ -45,11 +45,11 @@ void fragment() {
 			float s5 = hash21(vec2(float(u_seed) * 0.913, 5.7));
 			float s6 = hash21(vec2(float(u_seed) * 0.197, 6.9));
 			float la1 = (s1 - 0.5) * 2.4;
-			float lo1 = (s2 - 0.5) * 6.2832;
+			float lo1 = (s2 - 0.5) * TAU;
 			float la2 = (s3 - 0.5) * 2.4;
-			float lo2 = (s4 - 0.5) * 6.2832;
+			float lo2 = (s4 - 0.5) * TAU;
 			float la3 = (s5 - 0.5) * 2.4;
-			float lo3 = (s6 - 0.5) * 6.2832;
+			float lo3 = (s6 - 0.5) * TAU;
 			vec3 lp1 = vec3(cos(la1) * sin(lo1), sin(la1), cos(la1) * cos(lo1));
 			vec3 lp2 = vec3(cos(la2) * sin(lo2), sin(la2), cos(la2) * cos(lo2));
 			vec3 lp3 = vec3(cos(la3) * sin(lo3), sin(la3), cos(la3) * cos(lo3));

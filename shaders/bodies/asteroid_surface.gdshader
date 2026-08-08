@@ -28,8 +28,8 @@ float crater_term(vec3 n_spun, float diff) {
 		float h2 = hash21(vec2(float(u_seed * 31 + i * 137 + 2), 0.59));
 		float h3 = hash21(vec2(float(u_seed * 31 + i * 137 + 3), 0.73));
 
-		float lon = h1 * 6.283185307;
-		float lat = (h2 - 0.5) * 3.141592654;
+		float lon = h1 * TAU;
+		float lat = (h2 - 0.5) * PI;
 		float crat_r = 0.25 + h3 * 0.40;
 
 		vec3 center = normalize(vec3(cos(lat) * cos(lon), sin(lat), cos(lat) * sin(lon)));

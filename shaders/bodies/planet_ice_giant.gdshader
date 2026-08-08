@@ -54,7 +54,7 @@ void fragment() {
 			float slon = u_storm_pos[i].y;
 			float dlat = lat - slat;
 			float dlon = lon - slon;
-			dlon = mod(dlon + 3.14159, 6.28318) - 3.14159;
+			dlon = mod(dlon + PI, TAU) - PI;
 
 			float ellip = sqrt(dlon * dlon + dlat * dlat * u_storm_stretch * u_storm_stretch);
 			float sr = u_storm_size[i];
