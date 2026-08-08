@@ -20,30 +20,18 @@ void fragment() {
 		vec2 uv = UV * 2.0 - 1.0;
 		float r = length(uv);
 
-		// Day-side weight: largest at the limb on the sun-ward half, zero on
-		// the night half.
-		vec3 L = normalize(u_light_dir);
-		float day_weight = max(dot(normalize(vec3(uv, 0.0)), L), 0.0);
-
-		// Halo kernel: smooth falloff that BEGINS at the planet disk edge
-		// (r = u_planet_radius_uv) and decays outward. The bright peak sits
-		// just outside the planet's silhouette so the halo envelops the disk
-		// instead of cutting a ring around it. Inside the disk we leave the
-		// planet sprite alone (the additive rim is 0 there, so the planet's
-		// own surface shader shows through unmodified).
 		float rim = 0.0;
 		if (r > u_planet_radius_uv) {
 			float dr = r - u_planet_radius_uv;
-			// e^-dr/thickness -> smooth halo. Tight thickness keeps the glow
-			// hugging the limb like a real thin atmosphere rather than
-			// dispersing far into space.
 			rim = exp(-dr / u_atm_thickness);
+
+			vec3 L = normalize(u_light_dir);
+			float day_weight = max(dot(normalize(vec3(uv, 0.0)), L), 0.0);
+			float alpha_mult = mix(u_atm_ambient, 1.0, day_weight);
+			float alpha = rim * alpha_mult * u_atm_intensity;
+			COLOR = vec4(u_atm_color, alpha * tex.a);
+		} else {
+			COLOR = vec4(0.0);
 		}
-
-		// Day/ambient mix.
-		float alpha_mult = mix(u_atm_ambient, 1.0, day_weight);
-		float alpha = rim * alpha_mult * u_atm_intensity;
-
-		COLOR = vec4(u_atm_color, alpha * tex.a);
 	}
 }
