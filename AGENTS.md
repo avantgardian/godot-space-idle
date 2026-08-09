@@ -4,7 +4,7 @@
 
 Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly planets into a growing sun.
 
-- Entry point: `scenes/main.tscn` (run/main_scene)
+- Entry point: `scenes/main_menu.tscn` (run/main_scene) — the main menu is the launch screen; `scenes/main.tscn` is the sandbox scene and `scenes/progression.tscn` is the progression scene, both reached from the menu
 - All scripts in `scripts/` — GDScript only, no C# or GDExtension
 - Sun clickable (left-click) to increase mass (+0.1/click); `+`/`-` or scroll to zoom; left/middle drag to pan
 - `L` key spawns an asteroid manually; `Esc` toggles pause menu
@@ -13,7 +13,7 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 
 - Open the project: `godot .` from repo root (or open `project.godot` in the Godot editor)
 - **Godot Steam path:** The editor and headless binary are at `/Users/avantgardian/Library/Application Support/Steam/steamapps/common/Godot Engine/Godot.app/Contents/MacOS/Godot` — use this for headless CI/test commands instead of bare `godot`
-- **Run tests (headless CI):** `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize`
+- **Run tests (headless CI):** `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize` (auto-loads config from `.gutconfig.json`)
 - **Run tests (editor):** Open the GUT panel via the editor dock (enabled by `addons/gut/plugin.cfg`) and click "Run All", or load `res://tests/test_runner.tscn` and run the scene
 - **Format/lint:** `gdformat --check scripts/` and `gdlint scripts/` (install via `pip install gdtoolkit==4.5.0`)
 - **Pre-commit:** `pre-commit run --all-files` (install via `pre-commit install`; see `.pre-commit-config.yaml`) — gdtoolkit is pinned to **4.5.0** in both pre-commit hooks and CI
@@ -43,23 +43,29 @@ Every feature or fix follows this sequence:
 
 | Script | Extends | Role |
 |--------|---------|------|
-| `game_controller.gd` | `Node2D` | Base controller for both game modes — owns all shared state (sun mass, settings, pause), orchestrates asteroids, star field, camera, UI. Handles `Esc` pause toggle and pause menu lifecycle. |
-| `main.gd` | `game_controller.gd` | Sandbox mode — adds 8 planets, planet popup, planet collision wiring |
-| `progression.gd` | `game_controller.gd` | Progression mode — adds star type generation, spaceship, ship controls |
-| `orbital_body.gd` | `Node2D` | Base class for all planets — Newtonian orbital mechanics, trail recording, sun collision detection. Single `@export var biome: BiomeConfig` delegates all surface rendering to a `BiomeConfig` Resource (see `scripts/biomes/`). Common shader uniforms (`u_time`, `u_light_dir`, `u_ambient`, `u_night_rim`, `u_axial_tilt`, `u_spin_rate`, `u_seed`) are set here; biome-specific uniforms are applied by `BiomeConfig.apply_to_shader()`. Atmosphere rim is handled cross-biome via `atm_color`/`atm_thickness_mult`/`atm_intensity`/`atm_ambient` exports. |
-| `mercury.gd` | `orbital_body.gd` | Orbit radius 350, period 25s, mass 1.65e-7, grey |
-| `venus.gd` | `orbital_body.gd` | Orbit radius 500, period 47s, mass 2.45e-6, golden |
-| `earth.gd` | `orbital_body.gd` | Orbit radius 700, period 78s, mass 3.0e-6, blue-green |
-| `mars.gd` | `orbital_body.gd` | Orbit radius 950, period 131s, mass 3.21e-7, reddish-brown |
-| `jupiter.gd` | `orbital_body.gd` | Orbit radius 1400, period 355s, mass 9.54e-4, banded texture |
-| `Saturn` | `orbital_body.gd` | Orbit radius 1800, period 616s, mass 2.86e-4 — configured as `OrbitalBody` in `main.tscn` with a `RingSystemComponent` child for procedural rings (Cassini/Encke divisions, animated) |
-| `uranus.gd` | `orbital_body.gd` | Orbit radius 2200, period 1074s, mass 4.35e-5, cyan-blue |
-| `neptune.gd` | `orbital_body.gd` | Orbit radius 2600, period 1599s, mass 5.14e-5, deep blue |
-| `asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave orange trails (TRON accent), despawn >5000u |
-| `texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
-| `tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens (GUI chrome, trails, HUD overlays) |
-| `planet_palette.gd` | `RefCounted` | `class_name PlanetPalette` — single source of truth for realism-side planet biome photometric color tokens (rocky, greenhouse, terrestrial, gas giant, ice giant, atmospheres, rings). Sibling to `TronPalette` — see Visual language section for the split. |
-| `draw_utils.gd` | `RefCounted` | `class_name DrawUtils` — static neon drawing helpers (`neon_polyline`, `neon_arc`, `neon_segmented_ring`, `neon_circle`, `neon_filled_accent`, `pulsate_factor`, `modulate_alpha`) |
+| `controllers/game_controller.gd` | `Node2D` | Base controller for both game modes — owns all shared state (sun mass, settings, pause), orchestrates asteroids, star field, camera, UI. Handles `Esc` pause toggle and pause menu lifecycle. |
+| `controllers/main.gd` | `game_controller.gd` | Sandbox mode — adds 8 planets, planet popup, collision manager wiring |
+| `controllers/progression.gd` | `game_controller.gd` | Progression mode — adds star type generation, spaceship, ship controls, rocket targeting |
+| `controllers/collision_manager.gd` | `RefCounted` | `class_name CollisionManager` — manages all body-body collisions (planet-planet, planet-asteroid, planet-rocket) with mass-based absorption, momentum conservation, and impact effect spawning |
+| `bodies/orbital_body.gd` | `Node2D` | `class_name OrbitalBody` — base class for all planets. Newtonian orbital mechanics via full integration (`a = -GM/r²`), trail recording, sun collision detection. All 8 planets (Mercury through Neptune) are `OrbitalBody` nodes in `main.tscn` configured via `@export` variables (`orbit_radius`, `orbit_period`, `mass`, `biome`, `collision_profile`, `planet_seed`) — no individual planet scripts exist. Single `@export var biome: BiomeConfig` delegates surface rendering to a `BiomeConfig` Resource (see `scripts/biomes/`). Common shader uniforms (`u_time`, `u_light_dir`, `u_ambient`, `u_night_rim`, `u_axial_tilt`, `u_spin_rate`, `u_seed`) are set here; biome-specific uniforms are applied by `BiomeConfig.apply_to_shader()`. Atmosphere rim is handled cross-biome via `atm_color`/`atm_thickness_mult`/`atm_intensity`/`atm_ambient` exports. |
+| `bodies/asteroid.gd` | `Node2D` | Asteroids — spawn from outer field, affected by planet gravity, leave orange trails (TRON accent), despawn >5000u. Biome-driven surface shader via `@export var biome`. |
+| `bodies/sun.gd` | `Sprite2D` | Central sun — procedural surface shader with fbm granulation and Eddington-Milne limb darkening, additive glow sprites (corona), pulsating breathe animation, collision flash on impact. Spot machinery is force-disabled (`sun.gd:69-70`). |
+| `components/spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
+| `components/ring_system.gd` | `Node2D` | `class_name RingSystemComponent` (see issue #199) — builds back/front ring sprites with ring shader materials, updates light direction in `_physics_process`. `@export` params for ring geometry, colors, and seed. Attached as a child of any `OrbitalBody` (currently Saturn). |
+| `components/camera_controller.gd` | `Camera2D` | `class_name CameraController` — smooth zoom/pan via mouse wheel and left/middle drag, screen shake, optional follow-target tracking |
+| `components/asteroid_spawner.gd` | `Node` | `class_name AsteroidSpawner` — spawns asteroids at intervals from the outer field, passing planet data for gravity and sun-hit callbacks |
+| `components/star_field.gd` | `Node2D` | Six-layer procedural parallax star-field — each layer of `Sprite2D`s uses a blur shader driven by camera zoom. Seeded by `star_seed`. |
+| `components/trail_component.gd` | `Node2D` | `class_name TrailComponent` — draws gradient-colored trailing `Line2D` ribbons behind moving bodies (planets, asteroids, rockets) using a ring buffer with graceful downsampling |
+| `components/post_process_manager.gd` | `Node` | `class_name PostProcessManager` — full-screen post-processing: chromatic aberration impact flash, color-blindness correction (via `cb_correct.gdshader`), bloom intensity |
+| `components/impact_fx.gd` | `Node2D` | Spawns TRON-style impact rings and additive glow sprites at collision merge points |
+| `components/rocket.gd` | `Node2D` | `class_name Rocket` — TRON-style homing rocket projectile; seeks targets, draws a neon trail, dies on collision or lifetime expiry. Spawned by the spaceship in progression mode. |
+| `ui/pause_button.gd` | `Button` | Bottom-right Pause/Play button — emits `pause_toggled` signal; controller owns pause state |
+| `ui/pause_menu.gd` | `Panel` | Full-screen TRON pause overlay — Resume (unpause), Save/Load (disabled placeholders), Exit to Main Menu; handles `Esc` to unpause via `_input()` (has `PROCESS_MODE_ALWAYS`) |
+| `ui/planet_popup.gd` | `Panel` | `class_name PlanetPopup` — TRON-styled planet info tooltip; follows a planet on-screen showing mass, orbit stats, and biome details |
+| `ui/sun_popup.gd` | `Panel` | `class_name SunPopup` — TRON-styled sun info tooltip; follows the sun on-screen displaying mass and star type label |
+| `ui/event_log.gd` | `Node` | `class_name EventLog` — scrollable event-log panel; displays timed collision/absorption messages in monospace with auto-fade after 60s |
+| `ui/main_menu.gd` | `Control` | Main menu screen — title, Sandbox/Progression/Settings/Quit buttons with TRON theming |
+| `ui/settings.gd` | `Control` | `class_name SettingsScreen` — settings screen: reduced motion, screen shake, colorblind mode toggles, and key rebinding |
 | `biomes/biome_config.gd` | `Resource` | Abstract `BiomeConfig` base — `get_shader()`, `get_texture_size()`, `apply_to_shader(mat)`, `seed_features(seed_val)`, `sync_features(mat)` |
 | `biomes/rocky_biome.gd` | `BiomeConfig` | Rocky surface shader + crater seeding (Mercury, Mars) |
 | `biomes/greenhouse_biome.gd` | `BiomeConfig` | Thick-cloud greenhouse shader (Venus) |
@@ -68,21 +74,31 @@ Every feature or fix follows this sequence:
 | `biomes/jupiter_biome.gd` | `GasGiantBiomeConfig` | Gas giant with fixed Great Red Spot storm seeding |
 | `biomes/ice_giant_biome.gd` | `BiomeConfig` | Methane-blue ice giant shader + random storm seeding (Uranus) |
 | `biomes/neptune_biome.gd` | `IceGiantBiomeConfig` | Ice giant with fixed Great Dark Spot storm seeding |
-| `spaceship.gd` | `Node2D` | TRON-style vector wireframe mothership — cockpit diamond, swept wings, twin engine jets, segmented indicator ring (see PR #80) |
-| `ring_system.gd` | `Node2D` | Reusable `RingSystemComponent` (see issue #199) — builds back/front ring sprites with ring shader materials, updates light direction in `_physics_process`. `@export` params for ring geometry, colors, and seed. Attached as a child of any `OrbitalBody` (currently Saturn). |
-| `pause_button.gd` | `Button` | Bottom-right Pause/Play button — emits `pause_toggled` signal; controller owns pause state |
-| `pause_menu.gd` | `Panel` | Full-screen TRON pause overlay — Resume (unpause), Save/Load (disabled placeholders), Exit to Main Menu; handles `Esc` to unpause via `_input()` (has `PROCESS_MODE_ALWAYS`) |
+| `util/texture_utils.gd` | — | Static `make_circle_texture(size, color_fn)` — procedural circle textures used by all planets |
+| `util/tron_palette.gd` | `RefCounted` | `class_name TronPalette` — single source of truth for TRON design-language color and tuning tokens (GUI chrome, trails, HUD overlays) |
+| `util/planet_palette.gd` | `RefCounted` | `class_name PlanetPalette` — single source of truth for realism-side planet biome photometric color tokens (rocky, greenhouse, terrestrial, gas giant, ice giant, atmospheres, rings). Sibling to `TronPalette` — see Visual language section for the split. |
+| `util/draw_utils.gd` | `RefCounted` | `class_name DrawUtils` — static neon drawing helpers (`neon_polyline`, `neon_arc`, `neon_segmented_ring`, `neon_circle`, `neon_filled_accent`, `pulsate_factor`, `modulate_alpha`) |
+| `util/settings_manager.gd` | `RefCounted` | `class_name SettingsManager` — persists user settings (reduced motion, screen shake, keybinds, colorblind mode) to `user://settings.cfg` |
+| `util/collision_profile.gd` | `Resource` | `class_name CollisionProfile` — exported resource defining visual parameters for a collision impact ring (flash, color, width, segments, duration) |
+| `util/test_runner_scene.gd` | `Node2D` | GUT test runner scene — instantiates `GutRunner`, loads `.gutconfig.json`, and auto-runs all tests on `_ready()` |
 
 ## Shaders
 
 | Shader | Type | Role |
 |--------|------|------|
-| `shaders/star_blur.gdshader` | `canvas_item` | Per-layer blur for the parallax star field; `blur_amount` driven by camera zoom |
-| `shaders/sun_surface.gdshader` | `canvas_item` | Current stellar surface shader: fbm/ridged/granulation noise in spherical lat/lon space, Eddington-Milne limb darkening, 3-stop core color ramp, flicker |
-| `shaders/planet_surface.gdshader` | `canvas_item` | Planet surface foundation shader (issue #102): spherical pole projection via `mu = sqrt(1 - r²)`, axial tilt around X, longitude spin via `u_time * u_spin_rate`, Lambert diffuse with `u_ambient` floor, optional limb darkening, `u_night_rim` dark-side silhouette brighten, 4-octave fbm tint over `u_base_color`. Per-biome issues #104–#109 layer biome-specific uniforms on top. |
-| `shaders/atmosphere_rim.gdshader` | `canvas_item` (+ `blend_add`) | Atmosphere rim glow sibling sprite (#110): additive limb sprite whose alpha is driven by `dot(pixel_dir, u_light_dir)`, peaks at the disk edge via a Gaussian annulus, fades outward exponentially. Gated per-planet by `atm_color.a > 0`. |
-| `shaders/post_process.gdshader` | `canvas_item` | Screen-space chromatic aberration + scanline tint triggered by sun impacts |
-| `shaders/menu_grid.gdshader` | `canvas_item` | TRON grid plane behind the main menu — repeating cyan lines over `BG`; tunables `line_color`, `cell_size`, `line_width` |
+| `shaders/world/star_blur.gdshader` | `canvas_item` | Per-layer blur for the parallax star field; `blur_amount` driven by camera zoom |
+| `shaders/world/sun_surface.gdshader` | `canvas_item` | Stellar surface shader: fbm/ridged/granulation noise in spherical lat/lon space, Eddington-Milne limb darkening, 3-stop core color ramp, flicker |
+| `shaders/world/post_process.gdshader` | `canvas_item` | Screen-space chromatic aberration + scanline tint triggered by sun impacts |
+| `shaders/world/menu_grid.gdshader` | `canvas_item` | TRON grid plane behind the main menu — repeating cyan lines over `BG`; tunables `line_color`, `cell_size`, `line_width` |
+| `shaders/world/cb_correct.gdshader` | `canvas_item` | Color-blindness correction shader — managed by `PostProcessManager` for deuteranopia/protanopia/tritanopia simulation |
+| `shaders/bodies/planet_rocky.gdshader` | `canvas_item` | Rocky surface shader (Mercury, Mars) — cratered terrain with axial tilt, spin, Lambert diffuse |
+| `shaders/bodies/planet_greenhouse.gdshader` | `canvas_item` | Thick-cloud greenhouse shader (Venus) — dense atmosphere with cloud banding |
+| `shaders/bodies/planet_terrestrial.gdshader` | `canvas_item` | Earth-like land/ocean/cloud shader with biome-driven landmass distribution |
+| `shaders/bodies/planet_gas_giant.gdshader` | `canvas_item` | Banded gas giant shader (Jupiter, Saturn) — latitudinal bands, storm spots |
+| `shaders/bodies/planet_ice_giant.gdshader` | `canvas_item` | Methane-blue ice giant shader (Uranus, Neptune) — hazy atmosphere with storm features |
+| `shaders/bodies/atmosphere_rim.gdshader` | `canvas_item` (+ `blend_add`) | Atmosphere rim glow sibling sprite (#110): additive limb sprite whose alpha is driven by `dot(pixel_dir, u_light_dir)`, peaks at the disk edge via a Gaussian annulus, fades outward exponentially. Gated per-planet by `atm_color.a > 0`. |
+| `shaders/bodies/asteroid_surface.gdshader` | `canvas_item` | Asteroid surface shader — cratered rocky surface with taxonomic archetype colors (C/S/M/X, #175) |
+| `shaders/bodies/ring_system.gdshader` | `canvas_item` | Procedural ring system shader (Saturn) — Cassini/Encke divisions, light-direction driven illumination |
 
 ## Fonts
 
@@ -106,8 +122,8 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 
 - **No autoloads/singletons** — `game_controller.gd` owns all shared state (sun mass, pause, settings) and coordinates child nodes via `%` unique-name access. `main.gd` and `progression.gd` extend it for sandbox and progression modes respectively.
 - **Pause** — `Esc` or the bottom-right PauseButton toggles `get_tree().paused`. A full-screen `PauseMenu` overlay appears with Resume, Save/Load (disabled placeholders), and Exit to Main Menu buttons. `PROCESS_MODE_ALWAYS` nodes (Camera2D, PauseButton, PauseMenu) continue to process input while paused; the rest of the tree freezes.
-- **Planets** inherit from `orbital_body.gd` which handles circular Newtonian orbits (`GM_UNIT` / `_initial_gm()`), trail recording (1200 points, Line2D rendering), and sun-collision detection. When a planet hits the sun it is marked dead (no respawn) and emits `collided_with_sun`. Each planet has a custom `_get_planet_color()` for its procedural texture. Saturn additionally generates a rotating ring sprite.
-- **Body-body collisions** — `main.gd` checks planet-planet, planet-asteroid overlaps each frame. The larger body absorbs the smaller with momentum conservation; collision effects (impact rings + additive glow sprites) spawn at the merge point.
+- **Planets** inherit from `orbital_body.gd` which handles circular Newtonian orbits (`GM_UNIT` / `_initial_gm()`), trail recording (1200 points, Line2D rendering), and sun-collision detection. When a planet hits the sun it is marked dead (no respawn) and emits `collided_with_sun`. All 8 planets (Mercury through Neptune) are `OrbitalBody` nodes in `main.tscn` configured via `@export` variables (`orbit_radius`, `orbit_period`, `mass`, `biome`, `collision_profile`, `planet_seed`) — no individual planet scripts exist. Single `@export var biome: BiomeConfig` delegates surface rendering to a `BiomeConfig` Resource (see `scripts/biomes/`). Saturn additionally has a `RingSystemComponent` child for procedural rings.
+- **Body-body collisions** — `CollisionManager` checks planet-planet, planet-asteroid, and planet-rocket overlaps each frame. The larger body absorbs the smaller with momentum conservation; collision effects (impact rings + additive glow sprites) spawn at the merge point.
 - **Asteroids** spawn every ~35–55s, feel softened gravity from all planets, and despawn when >5000 units from origin.
 - **Star field** — procedural parallax with canvas-item shaders (6 layers, edge-wrapping, seeded by `star_seed`). Blur amount driven by camera zoom via shader parameter.
 - **Sun** — runtime-generated white-disk mask texture + realism shader (`sun_surface.gdshader`), sibling additive-blend glow sprites (corona), pulsating `breathe` animation, collision flash on any impact. Spot machinery exists in `sun.gd` but is force-disabled per user feedback (`sun.gd:69-70`).
@@ -119,11 +135,11 @@ Three-font family in `resources/fonts/` (all SIL Open Font License). `game_theme
 
 The project uses **two distinct visual languages** that should not be mixed:
 
-1. **TRON neon** — GUI chrome only: menus, buttons, panels, the spaceship, HUD overlay rings (e.g. the spaceship indicator ring, selection reticles), mouse-over highlights, and the **trail lines** asteroids/planets leave behind. All TRON visual tokens live in `scripts/tron_palette.gd` (`class_name TronPalette`) and all neon-drawing recipes live in `scripts/draw_utils.gd` (`class_name DrawUtils`). **Never introduce new inline `Color` constants in TRON-scoped component scripts** — pull from `TronPalette` so the look stays tunable from one place. Issues #81–#90 track the rollout.
+1. **TRON neon** — GUI chrome only: menus, buttons, panels, the spaceship, HUD overlay rings (e.g. the spaceship indicator ring, selection reticles), mouse-over highlights, and the **trail lines** asteroids/planets leave behind. All TRON visual tokens live in `scripts/util/tron_palette.gd` (`class_name TronPalette`) and all neon-drawing recipes live in `scripts/util/draw_utils.gd` (`class_name DrawUtils`). **Never introduce new inline `Color` constants in TRON-scoped component scripts** — pull from `TronPalette` so the look stays tunable from one place. Issues #81–#90 track the rollout.
 
-2. **Realism** — the celestial bodies themselves: the sun's surface, planet surfaces/atmospheres, and asteroid bodies. These render with physically-motivated shading (Lambert diffuse, limb darkening, atmospheric scattering, fbm noise) and photometric colors. Do **not** force-fit celestial body colors into the TRON cyan/orange palette. Realism colors live in `scripts/planet_palette.gd` (`class_name PlanetPalette`, sibling to `TronPalette`) for planets/moons/rings/atmospheres, or inline in `shaders/sun_surface.gdshader` uniforms for the sun. The TRON rules (triple-stack neon, GUI-alpha cap, additive bloom glows) do **not** apply to body surfaces; they only apply to TRON-scoped elements (so a planet may have a realistic Earth-blue surface + a TRON-cyan mouse-over ring stacked on top — both languages coexisting on one node).
+2. **Realism** — the celestial bodies themselves: the sun's surface, planet surfaces/atmospheres, and asteroid bodies. These render with physically-motivated shading (Lambert diffuse, limb darkening, atmospheric scattering, fbm noise) and photometric colors. Do **not** force-fit celestial body colors into the TRON cyan/orange palette. Realism colors live in `scripts/util/planet_palette.gd` (`class_name PlanetPalette`, sibling to `TronPalette`) for planets/moons/rings/atmospheres, or inline in `shaders/world/sun_surface.gdshader` uniforms for the sun. The TRON rules (triple-stack neon, GUI-alpha cap, additive bloom glows) do **not** apply to body surfaces; they only apply to TRON-scoped elements (so a planet may have a realistic Earth-blue surface + a TRON-cyan mouse-over ring stacked on top — both languages coexisting on one node).
 
-The sun is the reference implementation of the split: its surface is a realism shader (`shaders/sun_surface.gdshader`), while its corona crown and impact rings are TRON neon overlays.
+The sun is the reference implementation of the split: its surface is a realism shader (`shaders/world/sun_surface.gdshader`), while its corona crown and impact rings are TRON neon overlays.
 
 ### Scope table — which language applies where
 
@@ -135,10 +151,10 @@ The sun is the reference implementation of the split: its surface is a realism s
 | Trail Line2Ds (planet/asteroid trails) | TRON | `TronPalette` + `DrawUtils.trail_head/tail` |
 | Sun surface (granulation, spots, limb darkening) | Realism | `sun_surface.gdshader` uniforms |
 | Sun corona crown + impact ring | TRON overlay | `TronPalette` |
-| Planet surfaces (rocky, greenhouse, terrestrial, gas, ice) | Realism | (planned) `planet_surface.gdshader` + `PlanetPalette` |
+| Planet surfaces (rocky, greenhouse, terrestrial, gas, ice) | Realism | Per-biome shaders (`shaders/bodies/planet_*.gdshader`) + `PlanetPalette` |
 | Planet atmospheres / rim glow | Realism | shader uniforms |
 | Planet rings (Saturn-style) | Realism | shader uniforms |
-| Asteroid bodies | Realism | TBD (shader or procedural texture) |
+| Asteroid bodies | Realism | `asteroid_surface.gdshader` + `PlanetPalette` |
 | Asteroid trails | TRON | `TronPalette` + `DrawUtils.trail_head/tail` |
 
 ### Palette (`TronPalette`)
@@ -155,7 +171,7 @@ The sun is the reference implementation of the split: its surface is a realism s
 
 ### Palette (`PlanetPalette`)
 
-Sibling to `TronPalette`, single source of truth for realism-side biome photometric colors (`class_name PlanetPalette`, `scripts/planet_palette.gd`). Token groups:
+Sibling to `TronPalette`, single source of truth for realism-side biome photometric colors (`class_name PlanetPalette`, `scripts/util/planet_palette.gd`). Token groups:
 
 | Token group | Use |
 |-------------|-----|
@@ -168,7 +184,7 @@ Sibling to `TronPalette`, single source of truth for realism-side biome photomet
 | `ATM_RIM_EARTH/VENUS/MARS/ICE` | Atmospheric rim glow (sibling additive limb sprite, #110) |
 | `RING_SATURN_TAN`, `RING_SATURN_DARK` | Saturn-style ring system (#108) |
 
-**Convention**: planet shaders and biome issues (#104–#109) consume these via `const PAL := preload("res://scripts/planet_palette.gd")` and feed the resulting RGB into shader uniforms as `Vector3(color.r, color.g, color.b)`. Do **not** inline `Color(...)` literals in biome-specific shader / script code — add new biome tokens to `PlanetPalette` instead. Unlike `TronPalette`, `PlanetPalette` does **not** need a `game_theme.tres` mirror (no Button/Label/Panel consumes biome colors — only shader uniforms).
+**Convention**: planet shaders and biome issues (#104–#109) consume these via `const PAL := preload("res://scripts/util/planet_palette.gd")` and feed the resulting RGB into shader uniforms as `Vector3(color.r, color.g, color.b)`. Do **not** inline `Color(...)` literals in biome-specific shader / script code — add new biome tokens to `PlanetPalette` instead. Unlike `TronPalette`, `PlanetPalette` does **not** need a `game_theme.tres` mirror (no Button/Label/Panel consumes biome colors — only shader uniforms).
 
 ### Stroke triple-stack — the TRON look
 
@@ -215,7 +231,7 @@ The caller advances `phase` itself (no hidden time dependence in the helper). Th
 
 ### Conventions for new components
 
-1. **No inline `Color` literals** in component scripts — for TRON-scoped elements import `const PAL := preload("res://scripts/tron_palette.gd")` and reference `PAL.HULL_LINE` etc. For realism-scoped celestial body surfaces import `const PAL := preload("res://scripts/planet_palette.gd")` and reference `PAL.TERRA_OCEAN_DEEP` etc. (See Visual language section for the TRON vs Realism split.) Add `DU := preload("res://scripts/draw_utils.gd")` only when the component actually draws neon.
+1. **No inline `Color` literals** in component scripts — for TRON-scoped elements import `const PAL := preload("res://scripts/util/tron_palette.gd")` and reference `PAL.HULL_LINE` etc. For realism-scoped celestial body surfaces import `const PAL := preload("res://scripts/util/planet_palette.gd")` and reference `PAL.TERRA_OCEAN_DEEP` etc. (See Visual language section for the TRON vs Realism split.) Add `DU := preload("res://scripts/util/draw_utils.gd")` only when the component actually draws neon.
 2. **Preload via `res://` path**, not via `class_name` global — GDScript rejects `const PAL := TronPalette` as a non-constant expression. The preload form is the codebase convention (see `progression.gd:37-42`, `orbital_body.gd:4-5`).
 3. **Inner classes don't inherit preload aliases** — if a component uses inner classes (e.g. `spaceship.gd:_GlowLayer`), each inner class needs its own `const PAL := preload(...)` binding.
 4. **No new shaders** when a `_draw()` + 3-stroke neon polyline achieves the look. Add a shader only when the effect genuinely needs per-pixel work (noise, blur, bloom — see issue #90).
