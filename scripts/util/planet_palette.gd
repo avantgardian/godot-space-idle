@@ -56,10 +56,6 @@ const ATM_RIM_VENUS := Color(0.95, 0.85, 0.55, 1.0)
 const ATM_RIM_MARS := Color(0.85, 0.55, 0.35, 1.0)
 const ATM_RIM_ICE := Color(0.40, 0.65, 1.00, 1.0)
 
-# Asteroid regolith — small irregular rocky bodies (#174).
-const ASTEROID_REGOLITH_HI := Color(0.55, 0.48, 0.42, 1.0)
-const ASTEROID_REGOLITH_LO := Color(0.25, 0.20, 0.16, 1.0)
-
 # Asteroid taxonomic archetypes (Tholen/Bus-DeMeo-inspired, simplified for gameplay, #175).
 const ROCKY_ASTEROID_C_HI := Color(0.30, 0.27, 0.23, 1.0)
 const ROCKY_ASTEROID_C_LO := Color(0.10, 0.09, 0.08, 1.0)
