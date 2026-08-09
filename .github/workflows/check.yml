@@ -1,12 +1,20 @@
 name: Check
 on:
-  push:
-    branches-ignore: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       GODOT_VERSION: 4.7
     steps:
