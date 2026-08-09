@@ -15,9 +15,10 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) idle/clicker where you fly pla
 - **Godot Steam path:** The editor and headless binary are at `/Users/avantgardian/Library/Application Support/Steam/steamapps/common/Godot Engine/Godot.app/Contents/MacOS/Godot` — use this for headless CI/test commands instead of bare `godot`
 - **Run tests (headless CI):** `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize`
 - **Run tests (editor):** Open the GUT panel via the editor dock (enabled by `addons/gut/plugin.cfg`) and click "Run All", or load `res://tests/test_runner.tscn` and run the scene
-- **Format/lint:** `gdformat --check scripts/` and `gdlint scripts/` (install via `pip install gdtoolkit`)
-- **Pre-commit:** `pre-commit run --all-files` (install via `pre-commit install`; see `.pre-commit-config.yaml`)
-- **CI:** `.github/workflows/ci.yml` runs GUT tests on push/PR to non-main branches; `.github/workflows/check.yml` checks script compilation
+- **Format/lint:** `gdformat --check scripts/` and `gdlint scripts/` (install via `pip install gdtoolkit==4.5.0`)
+- **Pre-commit:** `pre-commit run --all-files` (install via `pre-commit install`; see `.pre-commit-config.yaml`) — gdtoolkit is pinned to **4.5.0** in both pre-commit hooks and CI
+- **CI:** `.github/workflows/ci.yml` runs `lint` (gdformat --check + gdlint) and `test` (GUT) jobs on push/PR to non-main branches; `.github/workflows/check.yml` checks script compilation
+- **Dependabot:** `.github/dependabot.yml` auto-bumps GitHub Actions and gdtoolkit on a monthly schedule
 - Git operations use `rtk` wrapper: `rtk git status`, `rtk git diff`, `rtk git commit -m "..."`, `rtk git push`
 - GitHub operations use `gh`: `gh issue create`, `gh pr create`
 
