@@ -1,12 +1,21 @@
 name: CI
 on:
-  push:
-    branches-ignore: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install gdtoolkit==4.5.0
+      - run: gdformat --check scripts/
+      - run: gdlint scripts/
+
   test:
     runs-on: ubuntu-latest
     env:
