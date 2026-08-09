@@ -5,4 +5,12 @@ updates:
     schedule:
       interval: monthly
 
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
 
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: monthly
