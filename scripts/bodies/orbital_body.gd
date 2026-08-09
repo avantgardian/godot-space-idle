@@ -45,7 +45,7 @@ var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
 var _last_light_dir := Vector2.ZERO
 
-signal collided_with_sun
+signal collided_with_sun(body: Node2D)
 
 
 func is_dead() -> bool:
@@ -209,7 +209,7 @@ func _physics_process(delta):
 			_trail_component.fade_out()
 		_dead = true
 		visible = false
-		collided_with_sun.emit()
+		collided_with_sun.emit(self)
 
 	if _trail_component:
 		_trail_component.record(position)

@@ -1,7 +1,7 @@
 class_name Asteroid
 extends Node2D
 
-signal collided_with_sun
+signal collided_with_sun(body: Node2D)
 
 enum AsteroidArchetype { C_TYPE, S_TYPE, M_TYPE, X_TYPE }
 
@@ -239,7 +239,7 @@ func _physics_process(delta):
 			_trail_component.fade_out()
 		_alive = false
 		visible = false
-		collided_with_sun.emit()
+		collided_with_sun.emit(self)
 		return
 
 	if r > 5000.0:

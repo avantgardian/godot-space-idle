@@ -22,7 +22,7 @@ func _ready():
 		%Neptune,
 	]
 	for planet in _planet_data:
-		planet.collided_with_sun.connect(_on_planet_collided.bind(planet))
+		planet.collided_with_sun.connect(_on_planet_collided)
 		planet.setup_trail(planet.planet_color)
 		_planet_data_cache.append({pos = Vector2.ZERO, mass = 0.0})
 	var ring := _RING_SYSTEM.new()
@@ -95,8 +95,8 @@ func _find_planet_idx(node: Node2D) -> int:
 	return -1
 
 
-func _on_planet_collided(planet: Node2D):
-	_on_body_hit_sun(planet.mass, planet.collision_profile, planet.planet_name)
+func _on_planet_collided(body: Node2D):
+	_on_body_hit_sun(body.mass, body.collision_profile, body.planet_name)
 
 
 func _show_planet_popup(planet_node: Node2D):
