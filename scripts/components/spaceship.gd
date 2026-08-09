@@ -89,8 +89,8 @@ var _angle: float = 0.0
 var _alive: bool = true
 var _fire_cooldown: float = 0.0
 
-var _thrust_node: Node2D
-var _ring_node: Node2D
+var _thrust_node: _GlowLayer
+var _ring_node: _RingLayer
 var _flicker: float = 0.0
 var _pulse_phase: float = 0.0
 const _PULSE_SPEED: float = PAL.RING_PULSE_SPEED  # rad/s pulsation when not selected
@@ -143,12 +143,10 @@ func _physics_process(delta):
 			thrusting = true
 
 		_thrust_node.visible = thrusting
-		if _thrust_node is _GlowLayer:
-			(_thrust_node as _GlowLayer).thrusting = thrusting
+		_thrust_node.thrusting = thrusting
 	else:
 		_thrust_node.visible = false
-		if _thrust_node is _GlowLayer:
-			(_thrust_node as _GlowLayer).thrusting = false
+		_thrust_node.thrusting = false
 
 	_vel *= max(1.0 - DAMPING * delta, 0.0)
 
@@ -161,17 +159,15 @@ func _physics_process(delta):
 	rotation = _angle
 
 	_flicker += delta * 22.0
-	if _thrust_node is _GlowLayer:
-		(_thrust_node as _GlowLayer)._phase = _flicker
-		_thrust_node.queue_redraw()
+	_thrust_node._phase = _flicker
+	_thrust_node.queue_redraw()
 
 	# Indicator ring pulses only when the ship is not selected (input_active
 	# == false), to hint at clickability. When selected, it holds steady.
 	_pulse_phase += delta * _PULSE_SPEED
-	if _ring_node is _RingLayer:
-		(_ring_node as _RingLayer).pulsate = not input_active
-		(_ring_node as _RingLayer).pulse_phase = _pulse_phase
-		_ring_node.queue_redraw()
+	_ring_node.pulsate = not input_active
+	_ring_node.pulse_phase = _pulse_phase
+	_ring_node.queue_redraw()
 
 	queue_redraw()
 
@@ -222,9 +218,8 @@ func disable():
 
 
 func set_reduced_motion(enabled: bool) -> void:
-	if _ring_node is _RingLayer:
-		(_ring_node as _RingLayer).reduced_motion = enabled
-		_ring_node.queue_redraw()
+	_ring_node.reduced_motion = enabled
+	_ring_node.queue_redraw()
 
 
 # ---------------------------------------------------------------------------
