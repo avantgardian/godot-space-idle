@@ -248,9 +248,6 @@ func _draw():
 
 class _GlowLayer:
 	extends Node2D
-	# Inner classes don't inherit the outer-class preload aliases, so each
-	# inner class references TronPalette / DrawUtils via its own preload.
-	const PAL = TronPalette
 	const _PORTS := [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]
 
 	var thrusting := false
@@ -290,10 +287,6 @@ class _GlowLayer:
 
 class _RingLayer:
 	extends Node2D
-	# Inner classes don't inherit the outer-class preload aliases, so each
-	# inner class references TronPalette / DrawUtils via its own preload.
-	const PAL = TronPalette
-	const DU = DrawUtils
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 	var reduced_motion: bool = false
