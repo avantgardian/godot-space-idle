@@ -38,7 +38,7 @@ jobs:
           ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --export-release "Web" ./build/web/index.html
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./build/web
 
