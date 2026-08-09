@@ -32,10 +32,8 @@ var _asteroid_seed: int = 0
 var _archetype: int = AsteroidArchetype.C_TYPE
 var _trail_component: Node
 var _planets: Array[Dictionary] = []
-var _body_color: Color = Color.WHITE
 var _visual_radius_px: float = 12.0
 var _spin_rate: float = 1.5
-var _density_ratio: float = 1.0
 
 
 func disable():
@@ -127,8 +125,6 @@ func _generate_texture():
 			crater_count = 2
 			crater_depth = 0.4
 			limb_strength = 0.25
-	_body_color = hi.lerp(lo, 0.5)
-
 	_sprite.texture = TEX.make_disk_mask(TEXTURE_SIZE)
 	_sprite.centered = true
 
@@ -163,7 +159,6 @@ func spawn():
 
 	var m_norm := clampf((mass - 1.5e-8) / (6e-8 - 1.5e-8), 0.0, 1.0)
 	_visual_radius_px = lerpf(2.0, 10.0, pow(m_norm, 1.0 / 3.0))
-	_visual_radius_px /= pow(_density_ratio, 1.0 / 3.0)
 
 	collision_radius = _visual_radius_px * 0.7
 

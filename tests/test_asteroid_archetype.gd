@@ -18,31 +18,20 @@ func test_archetype_empirical_frequencies():
 		var a: Node2D = autofree(ASTEROID.new())
 		add_child(a)
 		var archetype: int = a._archetype
-		assert_between(archetype, 0, ASTEROID.ARCHETYPE_WEIGHTS.size() - 1, "archetype in valid range")
+		assert_between(
+			archetype, 0, ASTEROID.ARCHETYPE_WEIGHTS.size() - 1, "archetype in valid range"
+		)
 		counts[archetype] += 1
 
 	for i in range(ASTEROID.ARCHETYPE_WEIGHTS.size()):
 		var empirical: float = float(counts[i]) / float(N)
 		var target: float = ASTEROID.ARCHETYPE_WEIGHTS[i]
-		assert_between(empirical, target - 0.05, target + 0.05,
-			"archetype %d freq %.3f within ±0.05 of weight %.3f" % [i, empirical, target])
-
-
-func test_every_archetype_produces_valid_base_color():
-	for archetype in range(ASTEROID.ARCHETYPE_WEIGHTS.size()):
-		# Force each archetype via seed search: try seeds until we get the desired archetype.
-		var found := false
-		for seed in range(10000):
-			var a: Node2D = autofree(ASTEROID.new())
-			a._asteroid_seed = seed
-			add_child(a)
-			if a._archetype == archetype:
-				var bc: Color = a._body_color
-				assert_ne(bc, Color(0, 0, 0, 1),
-					"archetype %d base_color is nonzero" % archetype)
-				found = true
-				break
-		assert_true(found, "found seed for archetype %d" % archetype)
+		assert_between(
+			empirical,
+			target - 0.05,
+			target + 0.05,
+			"archetype %d freq %.3f within ±0.05 of weight %.3f" % [i, empirical, target]
+		)
 
 
 func test_every_archetype_has_palette_tokens():

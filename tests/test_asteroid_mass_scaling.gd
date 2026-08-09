@@ -82,13 +82,6 @@ func test_sprite_scale_from_mass():
 	)
 
 
-func test_density_ratio_default():
-	var a: Node2D = autofree(ASTEROID.new())
-	add_child(a)
-	a.spawn()
-	assert_eq(a._density_ratio, 1.0, "_density_ratio defaults to 1.0")
-
-
 func test_sprite_rotation_stays_zero():
 	var a: Node2D = autofree(ASTEROID.new())
 	add_child(a)
