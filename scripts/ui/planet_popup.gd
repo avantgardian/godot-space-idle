@@ -5,11 +5,12 @@ const PAL := preload("res://scripts/util/tron_palette.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
 const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
+var reduced_motion: bool = false
 var _planet_node: Node2D
 var _camera: Camera2D
-var reduced_motion: bool = false
 var _popup_labels: Dictionary = {}
 var _planet_color: Color
+
 
 func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	_planet_node = planet_node
@@ -65,10 +66,10 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	vbox.add_child(sep)
 
 	var fields := [
-		{ key = "mass",   label = "Mass",   fmt = "%s  Msun" },
-		{ key = "speed",  label = "Speed",  fmt = "%.1f  u/s" },
-		{ key = "radius", label = "Orbit",  fmt = "%.0f  u" },
-		{ key = "period", label = "Period", fmt = "%.0f  s" },
+		{key = "mass", label = "Mass", fmt = "%s  Msun"},
+		{key = "speed", label = "Speed", fmt = "%.1f  u/s"},
+		{key = "radius", label = "Orbit", fmt = "%.0f  u"},
+		{key = "period", label = "Period", fmt = "%.0f  s"},
 	]
 	for f in fields:
 		var hbox := HBoxContainer.new()
@@ -94,7 +95,13 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 		modulate = Color(1, 1, 1, 1)
 	else:
 		var tween := create_tween()
-		tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		(
+			tween
+			. tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_CUBIC)
+		)
+
 
 func _process(_delta):
 	if not _planet_node or not _camera:
@@ -117,6 +124,7 @@ func _process(_delta):
 	position = screen_pos + Vector2(planet_screen_r + 16, -ps.y - 36)
 	position.x = clamp(position.x, 10, viewport_size.x - ps.x - 10)
 	position.y = clamp(position.y, 10, viewport_size.y - ps.y - 10)
+
 
 func close():
 	if reduced_motion:

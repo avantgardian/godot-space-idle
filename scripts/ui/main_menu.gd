@@ -3,6 +3,7 @@ extends Control
 const PAL := preload("res://scripts/util/tron_palette.gd")
 const FONT_BOLD := preload("res://resources/fonts/Orbitron-Bold.ttf")
 
+
 func _ready():
 	var game_theme := load("res://resources/game_theme.tres") as Theme
 	self.theme = game_theme
@@ -39,14 +40,18 @@ func _ready():
 	$CenterContainer/MenuContainer/SettingsBtn.pressed.connect(_on_settings_pressed)
 	$CenterContainer/MenuContainer/QuitBtn.pressed.connect(_on_quit_pressed)
 
+
 func _on_sandbox_pressed():
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
 
 func _on_progression_pressed():
 	get_tree().change_scene_to_file("res://scenes/progression.tscn")
 
+
 func _on_settings_pressed():
 	get_tree().change_scene_to_file("res://scenes/settings.tscn")
+
 
 func _on_quit_pressed():
 	get_tree().quit()

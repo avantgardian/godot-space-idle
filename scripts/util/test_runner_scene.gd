@@ -1,5 +1,6 @@
 extends Node2D
 
+
 func _ready() -> void:
 	var cfg_class: GDScript = load("res://addons/gut/gut_config.gd")
 	var cfg: RefCounted = cfg_class.new()

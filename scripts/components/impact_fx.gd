@@ -5,6 +5,7 @@ const TEX := preload("res://scripts/util/texture_utils.gd")
 
 var _rings: Array[Dictionary] = []
 
+
 func spawn_ring(color: Color, width: float, segments: int, timer: float):
 	var ring := Line2D.new()
 	ring.default_color = color
@@ -16,16 +17,19 @@ func spawn_ring(color: Color, width: float, segments: int, timer: float):
 		pts.append(Vector2(cos(a), sin(a)))
 	ring.points = pts
 	add_child(ring)
-	_rings.append({ ring = ring, timer = timer })
+	_rings.append({ring = ring, timer = timer})
+
 
 func spawn_glow(pos: Vector2, mass: float, contact_radius: float = 1.0):
 	var t := clampf(mass * 10.0, 0.2, 1.0)
 
 	var glow_alpha := t
 	var glow := Sprite2D.new()
-	glow.texture = TEX.make_circle_texture(64, func(r, _x, _y) -> Color:
-		var alpha: float = (1.0 - r * r) * glow_alpha * 0.8
-		return Color(1.0, 0.85, 0.3, alpha)
+	glow.texture = TEX.make_circle_texture(
+		64,
+		func(r, _x, _y) -> Color:
+			var alpha: float = (1.0 - r * r) * glow_alpha * 0.8
+			return Color(1.0, 0.85, 0.3, alpha)
 	)
 	glow.centered = true
 	glow.position = pos
@@ -35,7 +39,19 @@ func spawn_glow(pos: Vector2, mass: float, contact_radius: float = 1.0):
 	glow.material = mat
 	add_child(glow)
 	var duration := 0.5 + t * 1.0
-	_rings.append({ ring = glow, timer = duration, initial = duration, base_scale = contact_radius / 32.0, is_glow = true })
+	(
+		_rings
+		. append(
+			{
+				ring = glow,
+				timer = duration,
+				initial = duration,
+				base_scale = contact_radius / 32.0,
+				is_glow = true,
+			}
+		)
+	)
+
 
 func _process(delta):
 	for i in range(_rings.size() - 1, -1, -1):

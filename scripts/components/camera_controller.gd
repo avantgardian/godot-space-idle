@@ -16,10 +16,12 @@ var _screen_shake_enabled: bool = true
 var _scroll_accum: float = 0.0
 var _follow_target: Node2D = null
 
+
 func _ready():
 	process_mode = PROCESS_MODE_ALWAYS
 	zoom = Vector2(1, 1)
 	position = Vector2.ZERO
+
 
 func _physics_process(delta):
 	var cur_zoom: float = zoom.x
@@ -67,6 +69,7 @@ func _physics_process(delta):
 			if star_field.has_method("set_blur"):
 				star_field.set_blur(get_blur_amount())
 
+
 func _input(event):
 	if get_tree().paused:
 		if event is InputEventMouseButton:
@@ -95,18 +98,27 @@ func _input(event):
 			zoom_in()
 			_scroll_accum += 0.3
 
+
 func follow_node(node: Node2D):
 	_follow_target = node
 	target_zoom = max_zoom
 
+
 func unfollow():
 	_follow_target = null
 
+
 func is_following() -> bool:
-	return _follow_target != null and is_instance_valid(_follow_target) and not _follow_target.is_dead()
+	return (
+		_follow_target != null
+		and is_instance_valid(_follow_target)
+		and not _follow_target.is_dead()
+	)
+
 
 func get_follow_target() -> Node2D:
 	return _follow_target
+
 
 func zoom_in():
 	var prev_zoom := zoom.x
@@ -117,6 +129,7 @@ func zoom_in():
 	zoom = Vector2(target_zoom, target_zoom)
 	position = cursor_world + (position - cursor_world) * prev_zoom / target_zoom
 
+
 func zoom_out():
 	var prev_zoom := zoom.x
 	target_zoom = clamp(target_zoom - zoom_step, min_zoom, max_zoom)
@@ -126,13 +139,16 @@ func zoom_out():
 	zoom = Vector2(target_zoom, target_zoom)
 	position = cursor_world + (position - cursor_world) * prev_zoom / target_zoom
 
+
 func start_drag(screen_pos: Vector2):
 	_follow_target = null
 	_dragging = true
 	_drag_prev = screen_pos
 
+
 func end_drag():
 	_dragging = false
+
 
 func update_drag(screen_pos: Vector2):
 	if not _dragging:
@@ -141,11 +157,14 @@ func update_drag(screen_pos: Vector2):
 	position -= delta_vec / zoom.x
 	_drag_prev = screen_pos
 
+
 func trigger_shake(intensity: float):
 	shake_intensity = min(shake_intensity + intensity, 40.0)
 
+
 func set_screen_shake_enabled(on: bool) -> void:
 	_screen_shake_enabled = on
+
 
 func get_blur_amount() -> float:
 	var t := (zoom.x - min_zoom) / (max_zoom - min_zoom)

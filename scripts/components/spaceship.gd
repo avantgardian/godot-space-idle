@@ -17,6 +17,7 @@ const FIRE_MUZZLE_SPEED: float = 175.0
 const PAL := preload("res://scripts/util/tron_palette.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
 const _ROCKET := preload("res://scripts/components/rocket.gd")
+const _PULSE_SPEED: float = PAL.RING_PULSE_SPEED  # rad/s pulsation when not selected
 
 # Constant geometry arrays — built once at class-load time, never
 # allocated inside _draw. Pointed nose up, swept-back wings, twin engine
@@ -93,7 +94,6 @@ var _thrust_node: _GlowLayer
 var _ring_node: _RingLayer
 var _flicker: float = 0.0
 var _pulse_phase: float = 0.0
-const _PULSE_SPEED: float = PAL.RING_PULSE_SPEED  # rad/s pulsation when not selected
 
 
 func _ready():
@@ -250,7 +250,7 @@ class _GlowLayer:
 	extends Node2D
 	# Inner classes don't inherit the outer-class preload aliases, so each
 	# inner class references TronPalette / DrawUtils via its own preload.
-	const PAL := preload("res://scripts/util/tron_palette.gd")
+	const PAL = TronPalette
 	const _PORTS := [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]
 
 	var thrusting := false
@@ -292,8 +292,8 @@ class _RingLayer:
 	extends Node2D
 	# Inner classes don't inherit the outer-class preload aliases, so each
 	# inner class references TronPalette / DrawUtils via its own preload.
-	const PAL := preload("res://scripts/util/tron_palette.gd")
-	const DU := preload("res://scripts/util/draw_utils.gd")
+	const PAL = TronPalette
+	const DU = DrawUtils
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 	var reduced_motion: bool = false

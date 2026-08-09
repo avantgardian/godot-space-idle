@@ -20,9 +20,11 @@ var screen_shake: bool = true
 var colorblind_mode: int = 0
 var _file: ConfigFile
 
+
 func _init():
 	_file = ConfigFile.new()
 	_load()
+
 
 func _load():
 	var err := _file.load(PATH)
@@ -34,6 +36,7 @@ func _load():
 	colorblind_mode = _file.get_value("accessibility", "colorblind_mode", 0)
 	_load_keybindings()
 
+
 func _save_defaults():
 	_file.set_value("accessibility", "reduced_motion", false)
 	_file.set_value("accessibility", "screen_shake", true)
@@ -41,12 +44,14 @@ func _save_defaults():
 	_save_keybindings(_default_keybindings())
 	_file.save(PATH)
 
+
 func save():
 	_file.set_value("accessibility", "reduced_motion", reduced_motion)
 	_file.set_value("accessibility", "screen_shake", screen_shake)
 	_file.set_value("accessibility", "colorblind_mode", colorblind_mode)
 	_save_keybindings(_current_keybindings())
 	_file.save(PATH)
+
 
 func _default_keybindings() -> Dictionary:
 	var out := {}
@@ -59,6 +64,7 @@ func _default_keybindings() -> Dictionary:
 		out[action] = scancodes
 	return out
 
+
 func _current_keybindings() -> Dictionary:
 	var out := {}
 	for action in REBINDABLE_ACTIONS:
@@ -70,10 +76,12 @@ func _current_keybindings() -> Dictionary:
 		out[action] = scancodes
 	return out
 
+
 func _save_keybindings(bindings: Dictionary):
 	for action in REBINDABLE_ACTIONS:
 		var scancodes: Array = bindings.get(action, [])
 		_file.set_value("bindings", action, scancodes)
+
 
 func _load_keybindings():
 	for action in REBINDABLE_ACTIONS:
@@ -91,6 +99,7 @@ func _load_keybindings():
 			var ke := InputEventKey.new()
 			ke.keycode = code as Key
 			InputMap.action_add_event(action, ke)
+
 
 func set_keybinding(action: String, scancodes: Array[int]):
 	if not action in REBINDABLE_ACTIONS:
