@@ -10,8 +10,10 @@ const MAX_ENTRIES := 30
 var _entries: Array[Dictionary] = []
 var _container: VBoxContainer
 
+
 func _ready():
 	setup()
+
 
 func setup():
 	var panel := Panel.new()
@@ -36,6 +38,7 @@ func setup():
 	_container.add_theme_constant_override("separation", 2)
 	panel.add_child(_container)
 
+
 func log_message(msg: String):
 	var lbl := Label.new()
 	lbl.text = msg
@@ -44,11 +47,12 @@ func log_message(msg: String):
 	lbl.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	_container.add_child(lbl)
 	_container.move_child(lbl, 0)
-	_entries.append({ label = lbl, age = 0.0 })
+	_entries.append({label = lbl, age = 0.0})
 	while _entries.size() > MAX_ENTRIES:
 		var oldest := _entries[0]
 		_entries.remove_at(0)
 		oldest.label.queue_free()
+
 
 func _process(delta):
 	for i in range(_entries.size() - 1, -1, -1):

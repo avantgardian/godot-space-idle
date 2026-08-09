@@ -22,14 +22,17 @@ var _spawn_protection: float = SPAWN_PROTECTION_TIME
 var _target: Node2D = null
 var _trail_component: Node
 
+
 func init(start_pos: Vector2, start_vel: Vector2, target: Node2D) -> void:
 	_pos = start_pos
 	_vel = start_vel
 	_target = target
 	position = _pos
 
+
 func is_alive() -> bool:
 	return _alive
+
 
 func disable() -> void:
 	if _trail_component:
@@ -37,23 +40,27 @@ func disable() -> void:
 	_alive = false
 	visible = false
 
+
 func get_vel() -> Vector2:
 	return _vel
+
 
 func set_vel(v: Vector2) -> void:
 	_vel = v
 
+
 func has_spawn_protection() -> bool:
 	return _spawn_protection > 0.0
+
 
 func _ready() -> void:
 	_trail_component = _TRAIL.new()
 	var accent := PAL.ACCENT
 	_trail_component.setup(
-		Color(accent.r, accent.g, accent.b, 0.0),
-		Color(accent.r, accent.g, accent.b, 0.7),
-		1.5, 200)
+		Color(accent.r, accent.g, accent.b, 0.0), Color(accent.r, accent.g, accent.b, 0.7), 1.5, 200
+	)
 	add_child(_trail_component)
+
 
 func _physics_process(delta: float) -> void:
 	if not _alive:
@@ -89,6 +96,7 @@ func _physics_process(delta: float) -> void:
 		_trail_component.record(position)
 
 	queue_redraw()
+
 
 func _draw() -> void:
 	if not _alive:

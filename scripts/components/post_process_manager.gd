@@ -11,6 +11,7 @@ var _bloom_intensity: float = 0.7
 var _screen_shake_enabled: bool = true
 var _colorblind_mode: int = 0
 
+
 func _ready():
 	var pp_layer := CanvasLayer.new()
 	pp_layer.name = "PostProcessLayer"
@@ -48,18 +49,22 @@ func _ready():
 	_cb_mat.set_shader_parameter("u_mode", 0)
 	_cb_rect.material = _cb_mat
 
+
 func trigger():
 	_ca_impact = min(_ca_impact + 0.008, 0.015)
 	if _screen_shake_enabled:
 		get_parent().get_node("Camera2D").trigger_shake(12.5)
+
 
 func set_bloom_intensity(value: float) -> void:
 	_bloom_intensity = clamp(value, 0.0, 2.0)
 	if _mat:
 		_mat.set_shader_parameter("u_bloom_intensity", _bloom_intensity)
 
+
 func set_screen_shake_enabled(enabled: bool) -> void:
 	_screen_shake_enabled = enabled
+
 
 func set_colorblind_mode(mode: int) -> void:
 	_colorblind_mode = mode
@@ -68,8 +73,10 @@ func set_colorblind_mode(mode: int) -> void:
 	if _cb_rect:
 		_cb_rect.visible = mode > 0
 
+
 func get_bloom_intensity() -> float:
 	return _bloom_intensity
+
 
 func _process(delta):
 	if _ca_impact > 0.0:

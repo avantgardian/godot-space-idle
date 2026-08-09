@@ -5,11 +5,12 @@ const PAL := preload("res://scripts/util/tron_palette.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
 const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
+var reduced_motion: bool = false
 var _controller: Node
 var _camera: Camera2D
 var _sun_node: Sprite2D
-var reduced_motion: bool = false
 var _mass_val: Label
+
 
 func show_for_sun(controller: Node, camera: Camera2D, sun_node: Sprite2D, star_type_label: String):
 	_controller = controller
@@ -88,7 +89,13 @@ func show_for_sun(controller: Node, camera: Camera2D, sun_node: Sprite2D, star_t
 		modulate = Color(1, 1, 1, 1)
 	else:
 		var tween := create_tween()
-		tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		(
+			tween
+			. tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25)
+			. set_ease(Tween.EASE_OUT)
+			. set_trans(Tween.TRANS_CUBIC)
+		)
+
 
 func _process(_delta):
 	if not _controller or not _camera or not _sun_node:
@@ -106,6 +113,7 @@ func _process(_delta):
 	position = screen_pos + Vector2(sun_screen_r + 16, -ps.y - 36)
 	position.x = clamp(position.x, 10, viewport_size.x - ps.x - 10)
 	position.y = clamp(position.y, 10, viewport_size.y - ps.y - 10)
+
 
 func close():
 	if reduced_motion:

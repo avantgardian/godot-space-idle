@@ -1,6 +1,8 @@
 class_name TrailComponent
 extends Node2D
 
+const DOWNSAMPLE_THRESHOLD: int = 8000
+
 var _line: Line2D
 var _ring: PackedVector2Array
 var _head: int = 0
@@ -10,7 +12,6 @@ var _tick: int = 0
 var _fading: bool = false
 var _stride: int = 1
 
-const DOWNSAMPLE_THRESHOLD: int = 8000
 
 func setup(color0: Color, color1: Color, width: float, max_points: int):
 	_max_points = max_points
@@ -35,6 +36,7 @@ func setup(color0: Color, color1: Color, width: float, max_points: int):
 	_line.gradient = grad
 	add_child(_line)
 
+
 func record(pos: Vector2):
 	if _fading:
 		return
@@ -46,6 +48,7 @@ func record(pos: Vector2):
 	if _line and _filled >= 2:
 		_line.points = _visible_slice()
 
+
 func _visible_slice() -> PackedVector2Array:
 	var count := _filled
 	var start := (_head - count + _max_points) % _max_points
@@ -56,6 +59,7 @@ func _visible_slice() -> PackedVector2Array:
 		result[i] = _ring[(start + i * _stride) % _max_points]
 	return result
 
+
 func clear():
 	_ring.fill(Vector2.ZERO)
 	_head = 0
@@ -63,6 +67,7 @@ func clear():
 	_tick = 0
 	if _line:
 		_line.points = PackedVector2Array()
+
 
 func fade_out(fade_seconds: float = 4.0):
 	if _fading or not _line:

@@ -9,6 +9,7 @@ var _settings: SettingsManager
 var _rebind_popup: Control
 var _rebind_action: String = ""
 
+
 func _ready():
 	var game_theme := load("res://resources/game_theme.tres") as Theme
 	self.theme = game_theme
@@ -16,6 +17,7 @@ func _ready():
 	_setup_background()
 	_setup_rebind_popup()
 	_build_ui()
+
 
 func _setup_background():
 	var bg := ColorRect.new()
@@ -40,6 +42,7 @@ func _setup_background():
 	grid.color = Color(0, 0, 0, 0)
 	grid.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(grid)
+
 
 func _setup_rebind_popup():
 	_rebind_popup = Control.new()
@@ -74,6 +77,7 @@ func _setup_rebind_popup():
 	popup_label.add_theme_font_size_override("font_size", 24)
 	popup_label.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	_rebind_popup.add_child(popup_label)
+
 
 func _build_ui():
 	var margin := MarginContainer.new()
@@ -143,18 +147,25 @@ func _build_ui():
 	# ---- Display ----
 	sections.add_child(_section_header("Display"))
 
-	var fullscreen_cb := _checkbox("Fullscreen", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN)
-	fullscreen_cb.toggled.connect(func(on: bool):
-		if on:
-			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-		else:
-			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var fullscreen_cb := _checkbox(
+		"Fullscreen", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	)
+	fullscreen_cb.toggled.connect(
+		func(on: bool):
+			if on:
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+			else:
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	)
 	sections.add_child(_margin_child(fullscreen_cb))
 
-	var vsync_cb := _checkbox("VSync", DisplayServer.window_get_vsync_mode() == DisplayServer.VSYNC_ENABLED)
-	vsync_cb.toggled.connect(func(on: bool):
-		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if on else DisplayServer.VSYNC_DISABLED)
+	var vsync_cb := _checkbox(
+		"VSync", DisplayServer.window_get_vsync_mode() == DisplayServer.VSYNC_ENABLED
+	)
+	vsync_cb.toggled.connect(
+		func(on: bool):
+			var mode := DisplayServer.VSYNC_ENABLED if on else DisplayServer.VSYNC_DISABLED
+			DisplayServer.window_set_vsync_mode(mode)
 	)
 	sections.add_child(_margin_child(vsync_cb))
 
@@ -162,16 +173,18 @@ func _build_ui():
 	sections.add_child(_section_header("Accessibility"))
 
 	var motion_cb := _checkbox("Reduced Motion", _settings.reduced_motion)
-	motion_cb.toggled.connect(func(on: bool):
-		_settings.reduced_motion = on
-		_settings.save()
+	motion_cb.toggled.connect(
+		func(on: bool):
+			_settings.reduced_motion = on
+			_settings.save()
 	)
 	sections.add_child(_margin_child(motion_cb))
 
 	var shake_cb := _checkbox("Screen Shake", _settings.screen_shake)
-	shake_cb.toggled.connect(func(on: bool):
-		_settings.screen_shake = on
-		_settings.save()
+	shake_cb.toggled.connect(
+		func(on: bool):
+			_settings.screen_shake = on
+			_settings.save()
 	)
 	sections.add_child(_margin_child(shake_cb))
 
@@ -181,9 +194,10 @@ func _build_ui():
 	cb_option.add_item("Deuteranopia", 2)
 	cb_option.add_item("Tritanopia", 3)
 	cb_option.selected = _settings.colorblind_mode
-	cb_option.item_selected.connect(func(idx: int):
-		_settings.colorblind_mode = idx
-		_settings.save()
+	cb_option.item_selected.connect(
+		func(idx: int):
+			_settings.colorblind_mode = idx
+			_settings.save()
 	)
 	sections.add_child(_margin_child(_labelled_control("Colorblind Preset", cb_option)))
 
@@ -199,6 +213,7 @@ func _build_ui():
 	back_btn.pressed.connect(_on_back)
 	footer.add_child(back_btn)
 	main_vbox.add_child(footer)
+
 
 func _build_keybindings_section() -> VBoxContainer:
 	var keys_vbox := VBoxContainer.new()
@@ -235,6 +250,7 @@ func _build_keybindings_section() -> VBoxContainer:
 
 	return keys_vbox
 
+
 func _key_label_text(action: String) -> String:
 	var keys: Array[String] = []
 	if InputMap.has_action(action):
@@ -245,6 +261,7 @@ func _key_label_text(action: String) -> String:
 		return "(none)"
 	return ", ".join(keys)
 
+
 func _section_header(title_text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = title_text
@@ -254,6 +271,7 @@ func _section_header(title_text: String) -> Label:
 	lbl.add_theme_constant_override("outline_size", 2)
 	return lbl
 
+
 func _checkbox(label_text: String, checked: bool) -> CheckBox:
 	var cb := CheckBox.new()
 	cb.text = label_text
@@ -261,6 +279,7 @@ func _checkbox(label_text: String, checked: bool) -> CheckBox:
 	cb.add_theme_font_size_override("font_size", 14)
 	cb.add_theme_color_override("font_color", PAL.HULL_LINE)
 	return cb
+
 
 func _labelled_control(label_text: String, ctrl: Control) -> HBoxContainer:
 	var hbox := HBoxContainer.new()
@@ -274,6 +293,7 @@ func _labelled_control(label_text: String, ctrl: Control) -> HBoxContainer:
 	hbox.add_child(ctrl)
 	return hbox
 
+
 func _margin_child(child: Control) -> MarginContainer:
 	var mc := MarginContainer.new()
 	mc.add_theme_constant_override("margin_left", 24)
@@ -281,10 +301,14 @@ func _margin_child(child: Control) -> MarginContainer:
 	mc.add_child(child)
 	return mc
 
+
 func _on_rebind_pressed(action: String):
 	_rebind_action = action
 	_rebind_popup.show()
-	_rebind_popup.get_node("RebindLabel").text = "Press a key for: " + action.capitalize().replace("_", " ")
+	_rebind_popup.get_node("RebindLabel").text = (
+		"Press a key for: " + action.capitalize().replace("_", " ")
+	)
+
 
 func _input(event):
 	if not _rebind_popup.visible:
@@ -297,6 +321,7 @@ func _input(event):
 		_apply_rebind(event.keycode)
 		_rebind_popup.hide()
 
+
 func _apply_rebind(keycode: int):
 	if _rebind_action.is_empty():
 		return
@@ -305,6 +330,7 @@ func _apply_rebind(keycode: int):
 	if key_node is Label:
 		key_node.text = OS.get_keycode_string(keycode)
 	_rebind_action = ""
+
 
 func _on_back():
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")

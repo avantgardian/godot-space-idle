@@ -1,9 +1,9 @@
 class_name AsteroidSpawner
 extends Node
 
+var sun_mass: float = 1.0
 var _asteroids: Array = []
 var _spawn_timer: float = 5.0
-var sun_mass: float = 1.0
 var _gm_unit: float = 0.0
 var _asteroid_script: GDScript
 var _on_hit_sun: Callable

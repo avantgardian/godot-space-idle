@@ -8,13 +8,22 @@ var _event_log: Node
 var _find_planet_idx: Callable
 var _trigger_impact: Callable
 
-func _init(planet_data: Array[Node2D], asteroid_script: GDScript, impact_fx: Node, event_log: Node, find_planet_idx: Callable, trigger_impact: Callable):
+
+func _init(
+	planet_data: Array[Node2D],
+	asteroid_script: GDScript,
+	impact_fx: Node,
+	event_log: Node,
+	find_planet_idx: Callable,
+	trigger_impact: Callable,
+):
 	_planet_data = planet_data
 	_asteroid_script = asteroid_script
 	_impact_fx = impact_fx
 	_event_log = event_log
 	_find_planet_idx = find_planet_idx
 	_trigger_impact = trigger_impact
+
 
 func check_collisions(asteroids: Array):
 	var all_bodies: Array[Node2D] = []
@@ -37,22 +46,27 @@ func check_collisions(asteroids: Array):
 			if a.position.distance_squared_to(b.position) < sum_r * sum_r:
 				_resolve(a, b)
 
+
 func _is_alive(body: Node2D) -> bool:
 	if body.get_script() == _asteroid_script:
 		return body.is_alive()
 	return not body.is_dead()
 
+
 func _disable(body: Node2D):
 	body.disable()
+
 
 func _body_name(body: Node2D) -> String:
 	var idx: int = _find_planet_idx.call(body)
 	return _planet_data[idx].planet_name if idx >= 0 else "Asteroid"
 
+
 func _collision_msg(victim: Node2D, absorber: Node2D) -> String:
 	if _find_planet_idx.call(victim) < 0 or _find_planet_idx.call(absorber) < 0:
 		return _body_name(victim) + " collided with " + _body_name(absorber)
 	return _body_name(victim) + " was destroyed by " + _body_name(absorber)
+
 
 func _resolve(a: Node2D, b: Node2D):
 	var contact_r: float = a.collision_radius + b.collision_radius

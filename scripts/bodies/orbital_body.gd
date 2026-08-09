@@ -1,6 +1,8 @@
 class_name OrbitalBody
 extends Node2D
 
+signal collided_with_sun(body: Node2D)
+
 const _TEX := preload("res://scripts/util/texture_utils.gd")
 const _TRAIL := preload("res://scripts/components/trail_component.gd")
 const DU := preload("res://scripts/util/draw_utils.gd")
@@ -8,44 +10,37 @@ const _ATM_SHADER := preload("res://shaders/bodies/atmosphere_rim.gdshader")
 const PAL := preload("res://scripts/util/planet_palette.gd")
 const _COLLISION := preload("res://scripts/util/collision_profile.gd")
 
-var _sprite: Sprite2D
-var _atm_sprite: Sprite2D
-var _atm_mat: ShaderMaterial
-
 @export var orbit_radius: float = 500.0
 @export var orbit_period: float = 48.0
 @export var start_angle: float = 0.0
-
-var sun_mass: float = 1.0
 @export var mass: float = 1.0
 @export var collision_radius: float = 20.0
 @export var planet_name: String = ""
 @export var planet_color: Color = Color.WHITE
 @export var collision_profile: CollisionProfile
-var _pos: Vector2
-var _vel: Vector2
-var _dead: bool = false
 @export var trail_max: int = 1200
-var _gm: float = 0.0
-var _trail_component: Node
-
 @export var use_shader: bool = false
 @export var planet_seed: int = 0
 @export var axial_tilt_deg: float = 0.0
 @export var rotation_rate: float = 0.05
-
 @export var biome: BiomeConfig
-
 @export var atm_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 @export var atm_thickness_mult: float = 2.5
 @export var atm_intensity: float = 1.2
 @export var atm_ambient: float = 0.05
 
+var sun_mass: float = 1.0
+var _pos: Vector2
+var _vel: Vector2
+var _dead: bool = false
+var _gm: float = 0.0
+var _trail_component: Node
+var _sprite: Sprite2D
+var _atm_sprite: Sprite2D
+var _atm_mat: ShaderMaterial
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
 var _last_light_dir := Vector2.ZERO
-
-signal collided_with_sun(body: Node2D)
 
 
 func is_dead() -> bool:

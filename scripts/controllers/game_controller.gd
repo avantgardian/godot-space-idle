@@ -1,7 +1,5 @@
 extends Node2D
 
-@export var star_seed: int = 42
-
 const BG_COLOR := Color(0x0a / 255.0, 0x0a / 255.0, 0x1a / 255.0)
 const PAL := preload("res://scripts/util/tron_palette.gd")
 const _SUN_POPUP := preload("res://scripts/ui/sun_popup.gd")
@@ -13,21 +11,22 @@ const _POST_PROCESS := preload("res://scripts/components/post_process_manager.gd
 const _SETTINGS := preload("res://scripts/util/settings_manager.gd")
 const _PAUSE_MENU := preload("res://scripts/ui/pause_menu.gd")
 
+@export var star_seed: int = 42
+@export var asteroid_collision_profile: CollisionProfile = _ASTEROID_COLLISION
+
 var sun_mass: float = 1.0
 var _paused := false
 var _pause_menu: PauseMenu
-@export var asteroid_collision_profile: CollisionProfile = _ASTEROID_COLLISION
-
 var _collision_mgr: RefCounted
 var _sun_popup: Panel
 var _settings: SettingsManager
+var _spawner: AsteroidSpawner
+var _post_fx: PostProcessManager
 
 @onready var _sun: Sprite2D = %Sun
-var _spawner: AsteroidSpawner
 @onready var _camera: CameraController = %Camera2D
 @onready var _star_field: Node2D = %StarField
 @onready var _impact_fx: ImpactFX = %ImpactFX
-var _post_fx: PostProcessManager
 @onready var _event_log: EventLog = %EventLog
 @onready var _event_log_panel: Panel = %EventLogPanel
 @onready var _pause_btn: Button = %PauseButton
