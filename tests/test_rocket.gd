@@ -132,3 +132,45 @@ func test_mass_defaults_to_zero():
 	add_child(r)
 	r.init(Vector2.ZERO, Vector2.ZERO, null)
 	assert_eq(r.mass, 0.0, "rocket mass = 0")
+
+
+func test_disable_emits_resolved_once():
+	var r: Node2D = autofree(ROCKET.new())
+	add_child(r)
+	r.init(Vector2.ZERO, Vector2.ZERO, null)
+	var emissions: Array = []
+	r.resolved.connect(func(reason): emissions.append(reason))
+	r.disable()
+	r.disable()
+	assert_eq(emissions.size(), 1, "resolved emitted exactly once despite double disable")
+
+
+func test_disable_passes_reason():
+	var r: Node2D = autofree(ROCKET.new())
+	add_child(r)
+	r.init(Vector2.ZERO, Vector2.ZERO, null)
+	var got: Array = []
+	r.resolved.connect(func(reason): got.append(reason))
+	r.disable(ROCKET.Resolution.HIT_TARGET)
+	assert_eq(got, [ROCKET.Resolution.HIT_TARGET], "reason forwarded to listeners")
+
+
+func test_disable_defaults_to_lost():
+	var r: Node2D = autofree(ROCKET.new())
+	add_child(r)
+	r.init(Vector2.ZERO, Vector2.ZERO, null)
+	var got: Array = []
+	r.resolved.connect(func(reason): got.append(reason))
+	r.disable()
+	assert_eq(got, [ROCKET.Resolution.LOST], "default reason is LOST")
+
+
+func test_lifetime_expiry_emits_depleted():
+	var r: Node2D = autofree(ROCKET.new())
+	add_child(r)
+	r.init(Vector2.ZERO, Vector2.ZERO, null)
+	var got: Array = []
+	r.resolved.connect(func(reason): got.append(reason))
+	r._lifetime = 0.01
+	r._physics_process(0.1)
+	assert_eq(got, [ROCKET.Resolution.DEPLETED], "lifetime expiry resolves with DEPLETED")

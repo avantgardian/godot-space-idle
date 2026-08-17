@@ -22,9 +22,24 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) gravity sandbox with idle/clic
 - Git operations use `rtk` wrapper: `rtk git status`, `rtk git diff`, `rtk git commit -m "..."`, `rtk git push`
 - GitHub operations use `gh`: `gh issue create`, `gh pr create`
 
-## Workflow
+## GDScript conventions
 
-Every feature or fix follows this sequence:
+- **Class definition order is fixed** — gdlint `class-definitions-order` (enforced by CI and pre-commit) rejects any other arrangement. Write members in exactly this order:
+  1. `tool`
+  2. `extends`
+  3. `class_name`
+  4. `enum`
+  5. `const`
+  6. `signal`
+  7. `var` (member variables)
+  8. `onready`
+  9. `func` / methods
+
+  **Forward references are allowed:** a `signal` may name a type defined by an `enum`/`const` below it, and vice versa — but the declaration order above still applies regardless of dependencies. (e.g. `signal resolved(reason: Resolution)` is valid even though `enum Resolution` must appear before it.)
+- **Lambda capture is by value** — a lambda connected to a signal captures local variables at connect time; `count += 1` inside the lambda does not mutate the outer local. Use a shared container (`var got: Array = []` + `got.append(...)`) or a method instead when the callback must write back.
+- **No inline `Color` literals** in component scripts — TRON-scoped elements pull from `TronPalette`, realism-scoped body surfaces pull from `PlanetPalette` (see Visual language section).
+
+## Workflow
 
 Every feature or fix follows this sequence:
 
