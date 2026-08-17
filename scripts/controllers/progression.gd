@@ -214,7 +214,7 @@ func _physics_process(delta):
 
 		var rocket_dist: float = r.position.length()
 		if rocket_dist < sun_r + r.collision_radius or rocket_dist > 5000.0:
-			r.disable()
+			r.disable(Rocket.Resolution.LOST)
 			continue
 
 		var hit_asteroid := false
@@ -225,7 +225,7 @@ func _physics_process(delta):
 			if r.position.distance_squared_to(a.position) < contact_r * contact_r:
 				var hit_pos: Vector2 = a.position.lerp(r.position, 0.5)
 				a.disable()
-				r.disable()
+				r.disable(Rocket.Resolution.HIT_TARGET)
 				_impact_fx.spawn_glow(hit_pos, a.mass, contact_r)
 				_post_fx.trigger()
 				_event_log.log_message("Asteroid destroyed by rocket")

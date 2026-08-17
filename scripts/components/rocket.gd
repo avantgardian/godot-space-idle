@@ -1,6 +1,14 @@
 class_name Rocket
 extends Node2D
 
+signal resolved(reason: Resolution)
+
+enum Resolution {
+	HIT_TARGET,
+	DEPLETED,
+	LOST,
+}
+
 const SPEED: float = 200.0
 const HOMING_STRENGTH: float = 125.0
 const LIFETIME: float = 10.0
@@ -21,6 +29,7 @@ var _lifetime: float = LIFETIME
 var _spawn_protection: float = SPAWN_PROTECTION_TIME
 var _target: Node2D = null
 var _trail_component: Node
+var _resolved: bool = false
 
 
 func init(start_pos: Vector2, start_vel: Vector2, target: Node2D) -> void:
@@ -34,11 +43,15 @@ func is_alive() -> bool:
 	return _alive
 
 
-func disable() -> void:
+func disable(reason: Resolution = Resolution.LOST) -> void:
+	if _resolved:
+		return
+	_resolved = true
 	if _trail_component:
 		_trail_component.fade_out()
 	_alive = false
 	visible = false
+	resolved.emit(reason)
 
 
 func get_vel() -> Vector2:
@@ -70,7 +83,7 @@ func _physics_process(delta: float) -> void:
 	_spawn_protection -= delta
 
 	if _lifetime <= 0.0:
-		disable()
+		disable(Resolution.DEPLETED)
 		return
 
 	if _target and is_instance_valid(_target):
