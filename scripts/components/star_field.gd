@@ -15,6 +15,7 @@ const _STAR_SHADER := preload("res://shaders/world/star_blur.gdshader")
 
 var _sprites: Array[Sprite2D]
 var _motion_scales: Array[float]
+var _blur_amount: float = -1.0
 
 
 func generate(seed_val: int, min_zoom: float):
@@ -69,6 +70,9 @@ func update_parallax(camera_position: Vector2, camera_zoom: float):
 
 
 func set_blur(amount: float):
+	if is_equal_approx(amount, _blur_amount):
+		return
+	_blur_amount = amount
 	for sprite in _sprites:
 		var mat := sprite.material as ShaderMaterial
 		if mat:
