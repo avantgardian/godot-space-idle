@@ -15,12 +15,14 @@ var _drag_prev: Vector2
 var _screen_shake_enabled: bool = true
 var _scroll_accum: float = 0.0
 var _follow_target: Node2D = null
+var _star_field: Node2D
 
 
 func _ready():
 	process_mode = PROCESS_MODE_ALWAYS
 	zoom = Vector2(1, 1)
 	position = Vector2.ZERO
+	_star_field = get_node_or_null("../StarField") as Node2D
 
 
 func _physics_process(delta):
@@ -62,12 +64,11 @@ func _physics_process(delta):
 	else:
 		offset = Vector2.ZERO
 
-	if get_tree().paused:
-		var star_field := get_node("../StarField") as Node2D
-		if star_field and star_field.has_method("update_parallax"):
-			star_field.update_parallax(position, zoom.x)
-			if star_field.has_method("set_blur"):
-				star_field.set_blur(get_blur_amount())
+	if get_tree().paused and _star_field:
+		if _star_field.has_method("update_parallax"):
+			_star_field.update_parallax(position, zoom.x)
+			if _star_field.has_method("set_blur"):
+				_star_field.set_blur(get_blur_amount())
 
 
 func _input(event):
