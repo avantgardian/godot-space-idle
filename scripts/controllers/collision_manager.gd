@@ -86,9 +86,12 @@ func _resolve(a: Node2D, b: Node2D) -> void:
 		@warning_ignore("unsafe_property_access")
 		a.mass = total
 		_disable(b)
-		@warning_ignore("unsafe_property_access", "unsafe_method_access")
-		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), b.mass, contact_r)
+		@warning_ignore(
+			"unsafe_property_access", "unsafe_method_access", "unsafe_call_argument", "unsafe_cast"
+		)
+		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), b.mass as float, contact_r)
 		_trigger_impact.call()
+		@warning_ignore("unsafe_method_access")
 		_event_log.log_message(_collision_msg(b, a))
 	else:
 		@warning_ignore("unsafe_property_access", "unsafe_method_access")
@@ -98,7 +101,10 @@ func _resolve(a: Node2D, b: Node2D) -> void:
 		@warning_ignore("unsafe_property_access")
 		b.mass = total
 		_disable(a)
-		@warning_ignore("unsafe_property_access", "unsafe_method_access")
-		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), a.mass, contact_r)
+		@warning_ignore(
+			"unsafe_property_access", "unsafe_method_access", "unsafe_call_argument", "unsafe_cast"
+		)
+		_impact_fx.spawn_glow(a.position.lerp(b.position, 0.5), a.mass as float, contact_r)
 		_trigger_impact.call()
+		@warning_ignore("unsafe_method_access")
 		_event_log.log_message(_collision_msg(a, b))

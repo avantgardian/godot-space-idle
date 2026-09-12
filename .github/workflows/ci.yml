@@ -24,6 +24,42 @@ jobs:
       - run: gdformat --check scripts/
       - run: gdlint scripts/
 
+  typing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GODOT_VERSION: 4.7
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download Godot
+        run: |
+          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
+          unzip godot.zip
+          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
+
+      - name: Import project
+        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
+
+      - name: Check strict typing (warnings as errors)
+        run: |
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit 2>&1 | tee godot.log
+          if grep -q "SCRIPT ERROR" godot.log; then
+            echo "::error::Strict typing errors found (warnings treated as errors)"
+            grep "SCRIPT ERROR" godot.log
+            exit 1
+          fi
+          # Also check each GDScript file individually (catches unreferenced new files)
+          for f in $(find scripts -name "*.gd"); do
+            ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --check-only --script "res://$f" 2>&1 | tee -a godot.log
+          done
+          if grep -q "SCRIPT ERROR" godot.log; then
+            echo "::error::Strict typing errors found in per-file check"
+            grep "SCRIPT ERROR" godot.log
+            exit 1
+          fi
+          echo "Strict typing check passed"
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -41,5 +77,10 @@ jobs:
       - name: Import project
         run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
 
-      - name: Run GUT tests
-        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize
+      - name: Run GUT tests (relax warnings for tests)
+        run: |
+          cp project.godot project.godot.bak
+          sed -i 's/=2/=1/g' project.godot
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize; EXIT=$?
+          mv project.godot.bak project.godot
+          exit $EXIT

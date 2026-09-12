@@ -98,10 +98,15 @@ func _setup_menu() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.is_action_pressed("ui_cancel"):
-			resume_pressed.emit()
-			get_viewport().set_input_as_handled()
+	if event is InputEventKey:
+		@warning_ignore("unsafe_property_access")
+		var is_pressed: bool = event.pressed
+		@warning_ignore("unsafe_property_access")
+		var is_echo: bool = event.echo
+		if is_pressed and not is_echo:
+			if event.is_action_pressed("ui_cancel"):
+				resume_pressed.emit()
+				get_viewport().set_input_as_handled()
 
 
 func _on_resume() -> void:

@@ -47,7 +47,7 @@ func _ready() -> void:
 	_cos_ring_rot = cos(-_ring_rotation)
 	_sin_ring_rot = sin(-_ring_rotation)
 
-	@warning_ignore("unsafe_method_access")
+	@warning_ignore("unsafe_method_access", "unsafe_cast")
 	var tex: Texture2D = TEX.make_white_square() as Texture2D
 	var ring_scale: Vector2 = Vector2(ring_size, ring_size * ring_aspect)
 

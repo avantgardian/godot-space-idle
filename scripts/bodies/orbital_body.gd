@@ -71,7 +71,9 @@ func _ready() -> void:
 func setup_trail(color: Color) -> void:
 	@warning_ignore("unsafe_cast")
 	_trail_component = _TRAIL.new() as TrailComponent
+	@warning_ignore("unsafe_method_access")
 	var head: Color = DU.trail_head(color)
+	@warning_ignore("unsafe_method_access")
 	var tail: Color = DU.trail_tail(color)
 	_trail_component.setup(tail, head, 1.5, trail_max)
 	add_child(_trail_component)

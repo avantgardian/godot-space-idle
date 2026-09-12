@@ -140,9 +140,11 @@ func _generate_texture() -> void:
 	_shader_mat.set_shader_parameter("u_base_color", Color.WHITE)
 	_shader_mat.set_shader_parameter("u_regolith_hi", hi)
 	_shader_mat.set_shader_parameter("u_regolith_lo", lo)
+	@warning_ignore("unsafe_call_argument", "unsafe_cast")
 	_shader_mat.set_shader_parameter(
 		"u_relief_depth", relief_base + 0.06 * (float(abs(_asteroid_seed) % 50) / 50.0)
 	)
+	@warning_ignore("unsafe_call_argument", "unsafe_cast")
 	_shader_mat.set_shader_parameter(
 		"u_irregularity", 0.15 + 0.20 * (float(abs((_asteroid_seed * 7) % 100)) / 100.0)
 	)

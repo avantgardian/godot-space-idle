@@ -17,12 +17,13 @@ func init(asteroid_script: GDScript, gm_unit: float, on_hit_sun: Callable) -> vo
 
 
 func spawn() -> void:
+	@warning_ignore("unsafe_cast")
 	var a: Node2D = _asteroid_script.new() as Node2D
 	@warning_ignore("unsafe_property_access")
 	a.sun_mass = sun_mass
 	@warning_ignore("unsafe_property_access")
 	a.gm_unit = _gm_unit
-	@warning_ignore("unsafe_method_access")
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	a.collided_with_sun.connect(_on_asteroid_collided)
 	@warning_ignore("unsafe_method_access")
 	a.spawn()

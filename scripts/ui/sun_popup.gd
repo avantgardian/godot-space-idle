@@ -24,6 +24,7 @@ func show_for_sun(
 
 	var stripe: ColorRect = ColorRect.new()
 	stripe.name = "AccentStripe"
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	stripe.color = DU.modulate_alpha(PAL.ACCENT, 0.9)
 	stripe.anchor_left = 0.0
 	stripe.anchor_top = 0.0
@@ -60,12 +61,14 @@ func show_for_sun(
 	var name_label: Label = Label.new()
 	name_label.text = name_text
 	name_label.add_theme_font_size_override("font_size", 18)
+	@warning_ignore("unsafe_property_access")
 	name_label.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	vbox.add_child(name_label)
 
 	var sep: ColorRect = ColorRect.new()
 	sep.custom_minimum_size = Vector2(0, 1)
 	sep.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	sep.color = DU.modulate_alpha(PAL.HULL_LINE, 0.3)
 	vbox.add_child(sep)
 
@@ -74,12 +77,14 @@ func show_for_sun(
 	var mass_lbl: Label = Label.new()
 	mass_lbl.text = "Mass"
 	mass_lbl.add_theme_font_size_override("font_size", 11)
+	@warning_ignore("unsafe_method_access", "unsafe_property_access", "unsafe_call_argument")
 	mass_lbl.add_theme_color_override("font_color", DU.modulate_alpha(PAL.HULL_LINE, 0.7))
 	mass_lbl.custom_minimum_size = Vector2(48, 0)
 	mass_hbox.add_child(mass_lbl)
 	_mass_val = Label.new()
 	_mass_val.add_theme_font_override("font", FONT_MONO)
 	_mass_val.add_theme_font_size_override("font_size", 11)
+	@warning_ignore("unsafe_property_access")
 	_mass_val.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	mass_hbox.add_child(_mass_val)
 	vbox.add_child(mass_hbox)

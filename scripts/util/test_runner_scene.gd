@@ -4,7 +4,7 @@ extends Node2D
 func _ready() -> void:
 	@warning_ignore("unsafe_cast")
 	var cfg_class: GDScript = load("res://addons/gut/gut_config.gd") as GDScript
-	@warning_ignore("unsafe_method_access")
+	@warning_ignore("unsafe_method_access", "unsafe_cast")
 	var cfg: RefCounted = cfg_class.new() as RefCounted
 	@warning_ignore("unsafe_cast")
 	var runner_scene: PackedScene = load("res://addons/gut/gui/GutRunner.tscn") as PackedScene

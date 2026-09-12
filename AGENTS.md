@@ -16,8 +16,8 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) gravity sandbox with idle/clic
 - **Run tests (headless CI):** `godot --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize` (auto-loads config from `.gutconfig.json`)
 - **Run tests (editor):** Open the GUT panel via the editor dock (enabled by `addons/gut/plugin.cfg`) and click "Run All", or load `res://tests/test_runner.tscn` and run the scene
 - **Format/lint:** `gdformat --check scripts/` and `gdlint scripts/` (install via `pip install gdtoolkit==4.5.0`)
-- **Pre-commit:** `pre-commit run --all-files` (install via `pre-commit install`; see `.pre-commit-config.yaml`) — gdtoolkit is pinned to **4.5.0** in both pre-commit hooks and CI
-- **CI:** `.github/workflows/ci.yml` runs `lint` (gdformat --check + gdlint) and `test` (GUT) jobs on push/PR to non-main branches; `.github/workflows/check.yml` checks script compilation
+- **Pre-commit:** `pre-commit run --all-files` (install via `pre-commit install`; see `.pre-commit-config.yaml`) — gdtoolkit is pinned to **4.5.0** in both pre-commit hooks and CI; includes `godot-typing` local hook that mirrors CI strict-typing check (`GODOT_BIN` env override, Steam path default)
+- **CI:** `.github/workflows/ci.yml` runs `lint` (gdformat --check + gdlint), `typing` (Godot `--headless --editor --quit` fails on `SCRIPT ERROR` with warnings=2), and `test` (GUT) jobs on pull_request to `main`; `.github/workflows/check.yml` also fails on `SCRIPT ERROR` for script compilation
 - **Dependabot:** `.github/dependabot.yml` auto-bumps GitHub Actions and gdtoolkit on a monthly schedule
 - Git operations use `rtk` wrapper: `rtk git status`, `rtk git diff`, `rtk git commit -m "..."`, `rtk git push`
 - GitHub operations use `gh`: `gh issue create`, `gh pr create`
@@ -38,6 +38,14 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) gravity sandbox with idle/clic
   **Forward references are allowed:** a `signal` may name a type defined by an `enum`/`const` below it, and vice versa — but the declaration order above still applies regardless of dependencies. (e.g. `signal resolved(reason: Resolution)` is valid even though `enum Resolution` must appear before it.)
 - **Lambda capture is by value** — a lambda connected to a signal captures local variables at connect time; `count += 1` inside the lambda does not mutate the outer local. Use a shared container (`var got: Array = []` + `got.append(...)`) or a method instead when the callback must write back.
 - **No inline `Color` literals** in component scripts — TRON-scoped elements pull from `TronPalette`, realism-scoped body surfaces pull from `PlanetPalette` (see Visual language section).
+- **Strict typing is enforced** — `project.godot:99-106` `debug/gdscript/warnings/*` are all `2` (error), so the editor and CI treat missing types as hard errors:
+  - Every `func` has an explicit return type (`-> void` or `-> Type`); lambdas likewise `func(x: Type) -> void:`.
+  - Every `var` is typed: `var x: Type`, `var x: Type = val`, or inferred `var x := typed_val` (right-hand side must already be typed). No bare `var x = val` (Variant).
+  - Signal declarations, `@export` vars, and `const` are typed. `Array`/`Dictionary` use typed variants (`Array[Node2D]`, `Array[String]`) where element type is known.
+  - `unsafe_property_access`, `unsafe_method_access`, `unsafe_cast`, `unsafe_call_argument` must be eliminated or, when Variant is intentional (scene `%UniqueName` lookups, `Dictionary` star_data/planet_data, `InputEvent` variant, `ConfigFile.get_value()` `Variant`), suppressed with `@warning_ignore("unsafe_*", "unsafe_cast", ...)` on the **immediately preceding line** and `as Type` where a cast is required.
+  - `inferred_declaration` (`:=`) is allowed only when the inferred type is static (e.g., `var x := 0.0` is fine, but `var x := some_variant` is not). Prefer explicit `var x: Type =` when the right-hand side is Variant.
+  - New file with `func foo():` (missing `-> void`) fails CI/editor as error — use `func foo() -> void:`.
+  - To intentionally keep Variant, annotate the line with `@warning_ignore("untyped_declaration")` or the specific `unsafe_*` group; do not globally disable warnings.
 
 ## Workflow
 

@@ -31,8 +31,11 @@ func _load() -> void:
 	if err != OK:
 		_save_defaults()
 		return
+	@warning_ignore("unsafe_cast")
 	reduced_motion = _file.get_value("accessibility", "reduced_motion", false) as bool
+	@warning_ignore("unsafe_cast")
 	screen_shake = _file.get_value("accessibility", "screen_shake", true) as bool
+	@warning_ignore("unsafe_cast")
 	colorblind_mode = _file.get_value("accessibility", "colorblind_mode", 0) as int
 	_load_keybindings()
 
@@ -107,6 +110,7 @@ func _load_keybindings() -> void:
 				InputMap.action_erase_event(action, ev)
 		for code: Variant in stored:
 			var ke: InputEventKey = InputEventKey.new()
+			@warning_ignore("unsafe_cast")
 			ke.keycode = code as Key
 			InputMap.action_add_event(action, ke)
 
@@ -123,6 +127,7 @@ func set_keybinding(action: String, scancodes: Array[int]) -> void:
 			InputMap.action_erase_event(action, ev)
 	for code: int in scancodes:
 		var ke: InputEventKey = InputEventKey.new()
+		@warning_ignore("unsafe_cast")
 		ke.keycode = code as Key
 		InputMap.action_add_event(action, ke)
 	save()

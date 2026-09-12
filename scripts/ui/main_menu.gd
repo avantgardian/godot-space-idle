@@ -23,6 +23,7 @@ func _ready() -> void:
 	$CenterContainer/MenuContainer.add_child(title_underline)
 	$CenterContainer/MenuContainer.move_child(title_underline, title.get_index() + 1)
 
+	@warning_ignore("unsafe_method_access")
 	$CenterContainer/MenuContainer.add_theme_constant_override("separation", 14)
 
 	var buttons: Array[Button] = [
@@ -35,9 +36,13 @@ func _ready() -> void:
 	for btn: Button in buttons:
 		btn.custom_minimum_size = Vector2(320, 52)
 
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	$CenterContainer/MenuContainer/SandboxBtn.pressed.connect(_on_sandbox_pressed)
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	$CenterContainer/MenuContainer/ProgressionBtn.pressed.connect(_on_progression_pressed)
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	$CenterContainer/MenuContainer/SettingsBtn.pressed.connect(_on_settings_pressed)
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	$CenterContainer/MenuContainer/QuitBtn.pressed.connect(_on_quit_pressed)
 
 

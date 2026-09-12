@@ -16,7 +16,7 @@ static func make_circle_texture(size: int, color_fn: Callable) -> ImageTexture:
 			var dist: float = sqrt(dx * dx + dy * dy)
 			if dist <= max_r:
 				var t: float = dist / max_r
-				@warning_ignore("unsafe_method_access")
+				@warning_ignore("unsafe_method_access", "unsafe_cast")
 				var col: Color = color_fn.call(t, x, y) as Color
 				image.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(image)
@@ -72,7 +72,7 @@ static func make_noisy_blob(size: int, rng_seed: int, color_fn: Callable) -> Ima
 				var noise: float = rng.randf_range(0.7, 1.0)
 				if dist <= max_r * noise:
 					var t: float = dist / max_r
-					@warning_ignore("unsafe_method_access")
+					@warning_ignore("unsafe_method_access", "unsafe_cast")
 					var base_color: Color = color_fn.call(t, x, y) as Color
 					var bright_factor: float = rng.randf_range(0.6, 1.0)
 					var c: Color = Color(

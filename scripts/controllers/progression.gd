@@ -160,10 +160,10 @@ var _spaceship: Spaceship
 func _ready() -> void:
 	super._ready()
 	var star_data: Dictionary = _pick_star_type()
-	@warning_ignore("unsafe_property_access")
-	sun_mass = randf_range(star_data.mass_min, star_data.mass_max)
-	@warning_ignore("unsafe_property_access")
-	_star_type = star_data.type
+	@warning_ignore("unsafe_property_access", "unsafe_cast", "unsafe_call_argument")
+	sun_mass = randf_range(star_data.mass_min as float, star_data.mass_max as float)
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
+	_star_type = star_data.type as String
 	star_data["start_mass"] = sun_mass
 	star_data["mass_span"] = sun_mass
 	@warning_ignore("unsafe_method_access")
@@ -230,14 +230,15 @@ func _physics_process(delta: float) -> void:
 			@warning_ignore("unsafe_method_access")
 			if not a.is_alive():
 				continue
+			@warning_ignore("unsafe_property_access")
 			var contact_r: float = r.collision_radius + a.collision_radius
 			if r.position.distance_squared_to(a.position) < contact_r * contact_r:
 				var hit_pos: Vector2 = a.position.lerp(r.position, 0.5)
 				@warning_ignore("unsafe_method_access")
 				a.disable()
 				r.disable(Rocket.Resolution.HIT_TARGET)
-				@warning_ignore("unsafe_property_access")
-				_impact_fx.spawn_glow(hit_pos, a.mass, contact_r)
+				@warning_ignore("unsafe_property_access", "unsafe_call_argument", "unsafe_cast")
+				_impact_fx.spawn_glow(hit_pos, a.mass as float, contact_r)
 				_post_fx.trigger()
 				_event_log.log_message("Asteroid destroyed by rocket")
 				hit_asteroid = true
@@ -282,13 +283,13 @@ func _dummy_planet_idx(_node: Node2D) -> int:
 func _pick_star_type() -> Dictionary:
 	var total: int = 0
 	for entry: Dictionary in STAR_TYPES:
-		@warning_ignore("unsafe_property_access")
-		total += entry.weight
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
+		total += entry.weight as int
 	var roll: float = randf() * total
 	var cumulative: float = 0.0
 	for entry: Dictionary in STAR_TYPES:
-		@warning_ignore("unsafe_property_access")
-		cumulative += entry.weight
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
+		cumulative += entry.weight as int
 		if roll <= cumulative:
 			return entry.duplicate(true)
 	return STAR_TYPES[-1]

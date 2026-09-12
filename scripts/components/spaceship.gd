@@ -202,6 +202,7 @@ func try_fire(target: Node2D) -> Rocket:
 	if _rocket_in_flight or not _alive:
 		return null
 	_rocket_in_flight = true
+	@warning_ignore("unsafe_cast")
 	var rocket: Rocket = _ROCKET.new() as Rocket
 	var muzzle_vel: Vector2 = Vector2.UP.rotated(_angle) * FIRE_MUZZLE_SPEED
 	rocket.init(_pos, _vel + muzzle_vel, target)
@@ -229,16 +230,24 @@ func set_reduced_motion(enabled: bool) -> void:
 
 
 func _draw() -> void:
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	DU.neon_polyline(self, _hull_points, PAL.HULL_GLOW, PAL.HULL_LINE, PAL.HULL_BRIGHT)
 
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	DU.neon_filled_accent(self, _accent_left, PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	DU.neon_filled_accent(self, _accent_right, PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
 
+	@warning_ignore("unsafe_property_access")
 	draw_line(Vector2(0.0, -16.0), Vector2(0.0, -10.0), PAL.HULL_LINE, 0.75, true)
+	@warning_ignore("unsafe_property_access")
 	draw_line(Vector2(-5.0, -2.0), Vector2(5.0, -2.0), PAL.HULL_LINE, 0.75, true)
+	@warning_ignore("unsafe_property_access")
 	draw_line(Vector2(-4.0, 3.0), Vector2(4.0, 3.0), PAL.HULL_LINE, 0.75, true)
 
+	@warning_ignore("unsafe_property_access")
 	draw_colored_polygon(_halo_points, PAL.COCKPIT_GLOW)
+	@warning_ignore("unsafe_property_access")
 	draw_colored_polygon(_cockpit_points, PAL.COCKPIT)
 
 
@@ -249,6 +258,8 @@ func _draw() -> void:
 
 class _GlowLayer:
 	extends Node2D
+	# gdlint: disable=duplicated-load
+	const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
 	const _PORTS: Array[Vector2] = [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]
 
 	var thrusting: bool = false
@@ -265,7 +276,9 @@ class _GlowLayer:
 
 	func _draw() -> void:
 		for port: Vector2 in _PORTS:
+			@warning_ignore("unsafe_property_access")
 			draw_circle(port, 3.5, PAL.ENGINE_PORT)
+			@warning_ignore("unsafe_property_access")
 			draw_circle(port, 1.5, PAL.PORT_CORE)
 
 		if not thrusting:
@@ -278,16 +291,21 @@ class _GlowLayer:
 			_flame_buf_outer[1] = port + Vector2(hf, 0.0)
 			_flame_buf_outer[2] = port + Vector2(hf * 0.6, length)
 			_flame_buf_outer[3] = port + Vector2(-hf * 0.6, length)
+			@warning_ignore("unsafe_property_access")
 			draw_colored_polygon(_flame_buf_outer, PAL.FLAME_OUTER)
 			_flame_buf_inner[0] = port + Vector2(-hf * 0.45, 0.0)
 			_flame_buf_inner[1] = port + Vector2(hf * 0.45, 0.0)
 			_flame_buf_inner[2] = port + Vector2(hf * 0.20, length * 0.85)
 			_flame_buf_inner[3] = port + Vector2(-hf * 0.20, length * 0.85)
+			@warning_ignore("unsafe_property_access")
 			draw_colored_polygon(_flame_buf_inner, PAL.FLAME_INNER)
 
 
 class _RingLayer:
 	extends Node2D
+	# gdlint: disable=duplicated-load
+	const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+	const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
 	var reduced_motion: bool = false
@@ -308,10 +326,15 @@ class _RingLayer:
 		# RING_PULSE_MIN and 1.0 of the (already capped) base values.
 		var alpha_mult: float = 1.0
 		if pulsate and not reduced_motion:
+			@warning_ignore("unsafe_method_access", "unsafe_property_access")
 			alpha_mult = DU.pulsate_factor(pulse_phase, PAL.RING_PULSE_MIN)
 
+		@warning_ignore("unsafe_method_access", "unsafe_property_access")
 		var glow_c: Color = DU.modulate_alpha(PAL.RING_GLOW, alpha_mult)
+		@warning_ignore("unsafe_method_access", "unsafe_property_access")
 		var line_c: Color = DU.modulate_alpha(PAL.RING_LINE, alpha_mult)
+		@warning_ignore("unsafe_method_access", "unsafe_property_access")
 		var bright_c: Color = DU.modulate_alpha(PAL.RING_BRIGHT, alpha_mult)
 
+		@warning_ignore("unsafe_method_access")
 		DU.neon_segmented_ring(self, Vector2.ZERO, r, segments, gap, glow_c, line_c, bright_c)

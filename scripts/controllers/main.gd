@@ -86,13 +86,14 @@ func _check_planet_click(screen_pos: Vector2) -> Node2D:
 	var canvas: Transform2D = _camera.get_canvas_transform()
 	var zoom: float = _camera.zoom.x
 	for planet: Node2D in _planet_data:
-		@warning_ignore("unsafe_method_access")
+		@warning_ignore("unsafe_method_access", "unsafe_property_access", "unsafe_call_argument")
 		if planet.is_dead():
 			continue
 		var planet_screen: Vector2 = canvas * planet.position
-		var d: float = planet_screen.distance_to(screen_pos)
 		@warning_ignore("unsafe_property_access")
-		var hit_r: float = max(planet.collision_radius * zoom, 12.0)
+		var coll_r: float = planet.collision_radius
+		var d: float = planet_screen.distance_to(screen_pos)
+		var hit_r: float = max(coll_r * zoom, 12.0)
 		if d < hit_r and d < closest_dist:
 			closest = planet
 			closest_dist = d
@@ -107,7 +108,7 @@ func _find_planet_idx(node: Node2D) -> int:
 
 
 func _on_planet_collided(body: Node2D) -> void:
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_call_argument")
 	_on_body_hit_sun(body.mass, body.collision_profile, body.planet_name)
 
 

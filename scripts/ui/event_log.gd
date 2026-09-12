@@ -44,6 +44,7 @@ func log_message(msg: String) -> void:
 	lbl.text = msg
 	lbl.add_theme_font_override("font", FONT_MONO)
 	lbl.add_theme_font_size_override("font_size", 11)
+	@warning_ignore("unsafe_property_access")
 	lbl.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	_container.add_child(lbl)
 	_container.move_child(lbl, 0)
@@ -51,7 +52,7 @@ func log_message(msg: String) -> void:
 	while _entries.size() > MAX_ENTRIES:
 		var oldest: Variant = _entries[0]
 		_entries.remove_at(0)
-		@warning_ignore("unsafe_property_access")
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
 		var oldest_lbl: Label = oldest.label as Label
 		oldest_lbl.queue_free()
 
@@ -59,18 +60,18 @@ func log_message(msg: String) -> void:
 func _process(delta: float) -> void:
 	for i: int in range(_entries.size() - 1, -1, -1):
 		var entry: Variant = _entries[i]
-		@warning_ignore("unsafe_property_access")
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
 		var age: float = entry.age as float
 		age += delta
 		@warning_ignore("unsafe_property_access")
 		entry.age = age
 		var t: float = age / DURATION
 		if t >= 1.0:
-			@warning_ignore("unsafe_property_access")
+			@warning_ignore("unsafe_property_access", "unsafe_cast")
 			var lbl: Label = entry.label as Label
 			lbl.queue_free()
 			_entries.remove_at(i)
 		else:
-			@warning_ignore("unsafe_property_access")
+			@warning_ignore("unsafe_property_access", "unsafe_cast")
 			var lbl2: Label = entry.label as Label
 			lbl2.modulate.a = 1.0 - ease(t, 0.5)
