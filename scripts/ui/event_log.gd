@@ -51,16 +51,26 @@ func log_message(msg: String) -> void:
 	while _entries.size() > MAX_ENTRIES:
 		var oldest: Variant = _entries[0]
 		_entries.remove_at(0)
-		oldest.label.queue_free()
+		@warning_ignore("unsafe_property_access")
+		var oldest_lbl: Label = oldest.label as Label
+		oldest_lbl.queue_free()
 
 
 func _process(delta: float) -> void:
-	for i in range(_entries.size() - 1, -1, -1):
+	for i: int in range(_entries.size() - 1, -1, -1):
 		var entry: Variant = _entries[i]
-		entry.age += delta
-		var t: float = entry.age / DURATION
+		@warning_ignore("unsafe_property_access")
+		var age: float = entry.age as float
+		age += delta
+		@warning_ignore("unsafe_property_access")
+		entry.age = age
+		var t: float = age / DURATION
 		if t >= 1.0:
-			entry.label.queue_free()
+			@warning_ignore("unsafe_property_access")
+			var lbl: Label = entry.label as Label
+			lbl.queue_free()
 			_entries.remove_at(i)
 		else:
-			entry.label.modulate.a = 1.0 - ease(t, 0.5)
+			@warning_ignore("unsafe_property_access")
+			var lbl2: Label = entry.label as Label
+			lbl2.modulate.a = 1.0 - ease(t, 0.5)

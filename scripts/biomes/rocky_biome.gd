@@ -1,7 +1,7 @@
 class_name RockyBiomeConfig
 extends BiomeConfig
 
-const ROCKY_SHADER := preload("res://shaders/bodies/planet_rocky.gdshader")
+const ROCKY_SHADER: Shader = preload("res://shaders/bodies/planet_rocky.gdshader")
 
 @export var rocky_hi: Color = Color(0.62, 0.58, 0.55, 1.0)
 @export var rocky_lo: Color = Color(0.30, 0.27, 0.25, 1.0)
@@ -45,13 +45,13 @@ func seed_features(seed_val: int) -> void:
 	var count: int = clampi(crater_count, 0, MAX_FEATURES)
 	if count == 0:
 		return
-	var rng := RandomNumberGenerator.new()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = seed_val * 31 + 7
-	for _i in range(count):
-		var lat := rng.randf_range(-1.4, 1.4)
-		var lon := rng.randf_range(-PI, PI)
-		var size := deg_to_rad(rng.randf_range(crater_size_min_deg, crater_size_max_deg))
-		var strength := rng.randf_range(0.45, 0.80)
+	for _i: int in range(count):
+		var lat: float = rng.randf_range(-1.4, 1.4)
+		var lon: float = rng.randf_range(-PI, PI)
+		var size: float = deg_to_rad(rng.randf_range(crater_size_min_deg, crater_size_max_deg))
+		var strength: float = rng.randf_range(0.45, 0.80)
 		_crater_lats.append(lat)
 		_crater_lons.append(lon)
 		_crater_sizes.append(size)
@@ -59,17 +59,17 @@ func seed_features(seed_val: int) -> void:
 
 
 func sync_features(mat: ShaderMaterial) -> void:
-	var count := _crater_lats.size()
+	var count: int = _crater_lats.size()
 	mat.set_shader_parameter("u_crater_count", count)
 	if count == 0:
 		return
-	var pos := PackedVector2Array()
-	var sizes := PackedFloat32Array()
-	var strengths := PackedFloat32Array()
+	var pos: PackedVector2Array = PackedVector2Array()
+	var sizes: PackedFloat32Array = PackedFloat32Array()
+	var strengths: PackedFloat32Array = PackedFloat32Array()
 	pos.resize(MAX_FEATURES)
 	sizes.resize(MAX_FEATURES)
 	strengths.resize(MAX_FEATURES)
-	for i in range(MAX_FEATURES):
+	for i: int in range(MAX_FEATURES):
 		if i < count:
 			pos[i] = Vector2(_crater_lats[i], _crater_lons[i])
 			sizes[i] = _crater_sizes[i]

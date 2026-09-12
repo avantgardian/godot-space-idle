@@ -1,7 +1,7 @@
 class_name IceGiantBiomeConfig
 extends BiomeConfig
 
-const ICE_GIANT_SHADER := preload("res://shaders/bodies/planet_ice_giant.gdshader")
+const ICE_GIANT_SHADER: Shader = preload("res://shaders/bodies/planet_ice_giant.gdshader")
 
 const STORM_WHITE: int = 1
 const STORM_DARK: int = 2

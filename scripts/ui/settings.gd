@@ -219,7 +219,7 @@ func _build_keybindings_section() -> VBoxContainer:
 	var keys_vbox: VBoxContainer = VBoxContainer.new()
 	keys_vbox.add_theme_constant_override("separation", 6)
 
-	for action in SettingsManager.REBINDABLE_ACTIONS:
+	for action: String in SettingsManager.REBINDABLE_ACTIONS:
 		var hbox: HBoxContainer = HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", 12)
 
@@ -254,9 +254,11 @@ func _build_keybindings_section() -> VBoxContainer:
 func _key_label_text(action: String) -> String:
 	var keys: Array[String] = []
 	if InputMap.has_action(action):
-		for ev in InputMap.action_get_events(action):
+		@warning_ignore("unsafe_cast")
+		var evs: Array[InputEvent] = InputMap.action_get_events(action) as Array[InputEvent]
+		for ev: InputEvent in evs:
 			if ev is InputEventKey:
-				keys.append(OS.get_keycode_string(ev.keycode))
+				keys.append(OS.get_keycode_string((ev as InputEventKey).keycode))
 	if keys.is_empty():
 		return "(none)"
 	return ", ".join(keys)
@@ -314,11 +316,12 @@ func _input(event: InputEvent) -> void:
 	if not _rebind_popup.visible:
 		return
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE:
+		var ke: InputEventKey = event as InputEventKey
+		if ke.keycode == KEY_ESCAPE:
 			_rebind_popup.hide()
 			_rebind_action = ""
 			return
-		_apply_rebind(event.keycode)
+		_apply_rebind(ke.keycode)
 		_rebind_popup.hide()
 
 
@@ -326,9 +329,9 @@ func _apply_rebind(keycode: int) -> void:
 	if _rebind_action.is_empty():
 		return
 	_settings.set_keybinding(_rebind_action, [keycode])
-	var key_node: Variant = find_child("KeyLabel_%s" % _rebind_action, true, false)
+	var key_node: Node = find_child("KeyLabel_%s" % _rebind_action, true, false)
 	if key_node is Label:
-		key_node.text = OS.get_keycode_string(keycode)
+		(key_node as Label).text = OS.get_keycode_string(keycode)
 	_rebind_action = ""
 
 
