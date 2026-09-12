@@ -168,8 +168,9 @@ func _ready() -> void:
 	star_data["mass_span"] = sun_mass
 	@warning_ignore("unsafe_method_access")
 	_sun.generate(star_data)
+	var empty_planets: Array[Node2D] = []
 	_collision_mgr = _COLLISION_MGR.new(
-		[], _ASTEROID_SCRIPT, _impact_fx, _event_log, _dummy_planet_idx, _post_fx.trigger
+		empty_planets, _ASTEROID_SCRIPT, _impact_fx, _event_log, _dummy_planet_idx, _post_fx.trigger
 	)
 	var ship: Spaceship = _SPACESHIP.new()
 	ship.name = "Spaceship"
