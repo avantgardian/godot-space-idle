@@ -136,7 +136,7 @@
 # value will return the default when it has not been set.
 #-------------------------------------------------------------------------------
 class OptParseOption:
-	var _has_been_set = false
+	var _has_been_set: bool = false
 	var _value = null
 	# REMEMBER that when this option is an array, you have to set the value
 	# before you alter the contents of the array (append etc) or has_been_set
@@ -150,12 +150,12 @@ class OptParseOption:
 			_has_been_set = true
 			_value = val
 
-	var option_name = ''
+	var option_name: String = ''
 	var default = null
-	var description = ''
-	var required = false
-	var aliases: Array[String] = []
-	var show_in_help = true
+	var description: String = ''
+	var required: bool = false
+	var aliases: Arrvar required = falseay[String] = []
+	var show_in_help: bool = true
 
 
 	func _init(name,default_value,desc=''):
@@ -166,9 +166,9 @@ class OptParseOption:
 
 
 	func wrap_text(text, left_indent, max_length, wiggle_room=15):
-		var line_indent = str("\n", " ".repeat(left_indent + 1))
-		var wrapped = ''
-		var position = 0
+		var line_indent: String = str("\n", " ".repeat(left_indent + 1))
+		var wrapped: String = ''
+		var position: int = 0
 		var split_length = max_length
 		while(position < text.length()):
 			if(position > 0):
@@ -198,14 +198,14 @@ class OptParseOption:
 
 
 	func to_s(min_space=0, wrap_length=100):
-		var line_indent = str("\n", " ".repeat(min_space + 1))
+		var line_indent: String = str("\n", " ".repeat(min_space + 1))
 		var subbed_desc = description
 		if not aliases.is_empty():
 			subbed_desc += "\naliases: " + ", ".join(aliases)
 		subbed_desc = subbed_desc.replace('[default]', str(default))
 		subbed_desc = subbed_desc.replace("\n", line_indent)
 
-		var final = str(option_name.rpad(min_space), ' ', subbed_desc)
+		var final: String = str(option_name.rpad(min_space), ' ', subbed_desc)
 		if(wrap_length != -1):
 			final = wrap_text(final, min_space, wrap_length)
 
@@ -222,8 +222,8 @@ class OptParseOption:
 # A struct for organizing options by a heading
 #-------------------------------------------------------------------------------
 class OptParseOptionHeading:
-	var options = []
-	var display = 'default'
+	var options: Array[Variant] = []
+	var display: String = 'default'
 
 
 
@@ -233,13 +233,13 @@ class OptParseOptionHeading:
 # help related text generation.
 #-------------------------------------------------------------------------------
 class OptParseOptions:
-	var options = []
-	var positional = []
+	var options: Array[Variant] = []
+	var positional: Array[Variant] = []
 	var default_heading = OptParseOptionHeading.new()
 	var script_option = OptParseOption.new('-s', '?', 'script option provided by Godot')
 
-	var _options_by_name = {"--script": script_option, "-s": script_option}
-	var _options_by_heading = [default_heading]
+	var _options_by_name: Dictionary[Variant, Variant] = {"--script": script_option, "-s": script_option}
+	var _options_by_heading: Array[Variant] = [default_heading]
 	var _cur_heading = default_heading
 
 
@@ -275,8 +275,8 @@ class OptParseOptions:
 
 
 	func get_help_text():
-		var longest = 0
-		var text = ""
+		var longest: int = 0
+		var text: String = ""
 		for i in range(options.size()):
 			if(options[i].option_name.length() > longest):
 				longest = options[i].option_name.length()
@@ -292,8 +292,8 @@ class OptParseOptions:
 
 
 	func get_option_value_text():
-		var text = ""
-		var i = 0
+		var text: String = ""
+		var i: int = 0
 		for option in positional:
 			text += str(i, '.  ', option.option_name, ' = ', option.value)
 
@@ -316,7 +316,7 @@ class OptParseOptions:
 
 
 	func get_missing_required_options():
-		var to_return = []
+		var to_return: Array[Variant] = []
 		for opt in options:
 			if(opt.required and !opt.has_been_set()):
 				to_return.append(opt)
@@ -329,7 +329,7 @@ class OptParseOptions:
 
 
 	func get_usage_text():
-		var pos_text = ""
+		var pos_text: String = ""
 		for opt in positional:
 			pos_text += str("[", opt.description, "] ")
 
@@ -357,9 +357,9 @@ var banner := ''
 ## to change it.
 var option_name_prefix := '-'
 ## @ignore
-var unused = []
+var unused: Array[Variant] = []
 ## @ignore
-var parsed_args = []
+var parsed_args: Array[Variant] = []
 ## @ignore
 var values: Dictionary = {}
 
@@ -385,7 +385,7 @@ func _convert_value_to_array(raw_value):
 
 # REMEMBER raw_value not used for bools.
 func _set_option_value(option, raw_value):
-	var t = typeof(option.default)
+	var t: int = typeof(option.default)
 	# only set values that were specified at the command line so that
 	# we can punch through default and config values correctly later.
 	# Without this check, you can't tell the difference between the
@@ -412,12 +412,12 @@ func _set_option_value(option, raw_value):
 
 func _parse_command_line_arguments(args):
 	var parsed_opts = args.duplicate()
-	var i = 0
-	var positional_index = 0
+	var i: int = 0
+	var positional_index: int = 0
 
 	while i < parsed_opts.size():
-		var opt  = ''
-		var value = ''
+		var opt: String = ''
+		var value: String = ''
 		var entry = parsed_opts[i]
 
 		if(is_option(entry)):
@@ -562,7 +562,7 @@ func add_positional(op_name, default, desc: String) -> OptParseOption:
 ## option occurs), an error message will be printed and [code]null[/code]
 ## will be returned.
 func add_positional_required(op_name, default, desc: String) -> OptParseOption:
-	var op = add_positional(op_name, default, desc)
+	var op: OptParseOption = add_positional(op_name, default, desc)
 	if(op != null):
 		op.required = true
 	return op
