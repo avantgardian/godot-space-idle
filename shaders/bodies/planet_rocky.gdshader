@@ -31,7 +31,6 @@ void fragment() {
 		compute_lighting(uv, u_light_dir, u_ambient, u_limb, u_night_rim, mu, diff, lighting, limb, night_rim);
 
 		float grain = fbm(vec2(lon, lat) * u_noise_scale + seed_off);
-		float g2 = grain * 2.0 - 1.0;
 		vec3 base = mix(u_rocky_lo, u_rocky_hi, smoothstep(0.2, 0.8, grain));
 
 		float speckle = fbm(vec2(lon, lat) * u_noise_scale * 3.5 + seed_off * 1.7);
