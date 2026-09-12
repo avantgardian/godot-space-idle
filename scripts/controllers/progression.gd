@@ -148,7 +148,7 @@ const STAR_TYPES: Array[Dictionary] = [
 	},
 ]
 
-const _SPACESHIP := preload("res://scripts/components/spaceship.gd")
+const _SPACESHIP: GDScript = preload("res://scripts/components/spaceship.gd")
 
 const AUTO_FIRE_RANGE: float = 800.0
 
@@ -157,28 +157,32 @@ var _rockets: Array[Rocket] = []
 var _spaceship: Spaceship
 
 
-func _ready():
+func _ready() -> void:
 	super._ready()
-	var star_data := _pick_star_type()
+	var star_data: Dictionary = _pick_star_type()
+	@warning_ignore("unsafe_property_access")
 	sun_mass = randf_range(star_data.mass_min, star_data.mass_max)
+	@warning_ignore("unsafe_property_access")
 	_star_type = star_data.type
 	star_data["start_mass"] = sun_mass
 	star_data["mass_span"] = sun_mass
+	@warning_ignore("unsafe_method_access")
 	_sun.generate(star_data)
 	_collision_mgr = _COLLISION_MGR.new(
 		[], _ASTEROID_SCRIPT, _impact_fx, _event_log, _dummy_planet_idx, _post_fx.trigger
 	)
-	var ship := _SPACESHIP.new()
+	var ship: Spaceship = _SPACESHIP.new()
 	ship.name = "Spaceship"
 	ship.init(Vector2(500, 0))
 	add_child(ship)
 	ship.owner = self
 	ship.unique_name_in_owner = true
 	ship.set_reduced_motion(_settings.reduced_motion)
-	_spaceship = %Spaceship
+	@warning_ignore("unsafe_cast")
+	_spaceship = %Spaceship as Spaceship
 
 
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	var cam_following_ship: bool = (
 		_camera.is_following() and _camera.get_follow_target() == _spaceship
@@ -192,7 +196,9 @@ func _physics_process(delta):
 	if cam_following_ship:
 		var nearest: Node2D = null
 		var nearest_dist: float = AUTO_FIRE_RANGE
-		for a in _spawner._asteroids:
+		@warning_ignore("unsafe_property_access")
+		for a: Node2D in _spawner._asteroids:
+			@warning_ignore("unsafe_method_access")
 			if a.is_alive():
 				var d: float = _spaceship.position.distance_to(a.position)
 				if d < nearest_dist:
@@ -205,7 +211,7 @@ func _physics_process(delta):
 				_rockets.append(rocket)
 
 	var sun_r: float = OrbitalBody.sun_collision_r(sun_mass)
-	for i in range(_rockets.size() - 1, -1, -1):
+	for i: int in range(_rockets.size() - 1, -1, -1):
 		var r: Rocket = _rockets[i]
 		if not r.is_alive():
 			r.queue_free()
@@ -217,15 +223,19 @@ func _physics_process(delta):
 			r.disable(Rocket.Resolution.LOST)
 			continue
 
-		var hit_asteroid := false
-		for a in _spawner._asteroids:
+		var hit_asteroid: bool = false
+		@warning_ignore("unsafe_property_access")
+		for a: Node2D in _spawner._asteroids:
+			@warning_ignore("unsafe_method_access")
 			if not a.is_alive():
 				continue
 			var contact_r: float = r.collision_radius + a.collision_radius
 			if r.position.distance_squared_to(a.position) < contact_r * contact_r:
 				var hit_pos: Vector2 = a.position.lerp(r.position, 0.5)
+				@warning_ignore("unsafe_method_access")
 				a.disable()
 				r.disable(Rocket.Resolution.HIT_TARGET)
+				@warning_ignore("unsafe_property_access")
 				_impact_fx.spawn_glow(hit_pos, a.mass, contact_r)
 				_post_fx.trigger()
 				_event_log.log_message("Asteroid destroyed by rocket")
@@ -249,7 +259,7 @@ func _get_click_target(screen_pos: Vector2) -> Node2D:
 	return null
 
 
-func _on_key_pressed(event):
+func _on_key_pressed(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_ship_follow"):
 		if _camera.is_following() and _camera.get_follow_target() == _spaceship:
 			_camera.unfollow()
@@ -259,7 +269,7 @@ func _on_key_pressed(event):
 
 func _check_ship_click(screen_pos: Vector2) -> bool:
 	var ship_screen: Vector2 = _camera.get_canvas_transform() * _spaceship.position
-	var d := ship_screen.distance_to(screen_pos)
+	var d: float = ship_screen.distance_to(screen_pos)
 	var hit_r: float = max(28.0 * _camera.zoom.x, 14.0)
 	return d < hit_r
 
@@ -269,12 +279,14 @@ func _dummy_planet_idx(_node: Node2D) -> int:
 
 
 func _pick_star_type() -> Dictionary:
-	var total := 0
-	for entry in STAR_TYPES:
+	var total: int = 0
+	for entry: Dictionary in STAR_TYPES:
+		@warning_ignore("unsafe_property_access")
 		total += entry.weight
-	var roll := randf() * total
-	var cumulative := 0.0
-	for entry in STAR_TYPES:
+	var roll: float = randf() * total
+	var cumulative: float = 0.0
+	for entry: Dictionary in STAR_TYPES:
+		@warning_ignore("unsafe_property_access")
 		cumulative += entry.weight
 		if roll <= cumulative:
 			return entry.duplicate(true)
