@@ -6,13 +6,13 @@ signal save_pressed
 signal load_pressed
 signal exit_to_menu_pressed
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
-const FONT_BOLD := preload("res://resources/fonts/Orbitron-Bold.ttf")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+const FONT_BOLD: Font = preload("res://resources/fonts/Orbitron-Bold.ttf")
 
-var _closing := false
+var _closing: bool = false
 
 
-func _ready():
+func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	mouse_filter = MOUSE_FILTER_IGNORE
 
@@ -27,12 +27,12 @@ func _ready():
 	_setup_menu()
 
 	modulate = Color(1, 1, 1, 0)
-	var tween := create_tween()
+	var tween: Tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.2)
 
 
-func _setup_overlay():
-	var overlay := ColorRect.new()
+func _setup_overlay() -> void:
+	var overlay: ColorRect = ColorRect.new()
 	overlay.name = "Overlay"
 	overlay.anchor_left = 0.0
 	overlay.anchor_top = 0.0
@@ -43,8 +43,8 @@ func _setup_overlay():
 	add_child(overlay)
 
 
-func _setup_menu():
-	var center := CenterContainer.new()
+func _setup_menu() -> void:
+	var center: CenterContainer = CenterContainer.new()
 	center.anchor_left = 0.0
 	center.anchor_top = 0.0
 	center.anchor_right = 1.0
@@ -52,11 +52,11 @@ func _setup_menu():
 	center.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(center)
 
-	var vbox := VBoxContainer.new()
+	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 12)
 	center.add_child(vbox)
 
-	var title := Label.new()
+	var title: Label = Label.new()
 	title.text = "PAUSED"
 	title.add_theme_font_override("font", FONT_BOLD)
 	title.add_theme_font_size_override("font_size", 48)
@@ -66,64 +66,64 @@ func _setup_menu():
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
-	var spacer := Control.new()
+	var spacer: Control = Control.new()
 	spacer.custom_minimum_size = Vector2(0.0, 16.0)
 	vbox.add_child(spacer)
 
-	var resume_btn := Button.new()
+	var resume_btn: Button = Button.new()
 	resume_btn.text = "Resume"
 	resume_btn.custom_minimum_size = Vector2(260.0, 44.0)
 	resume_btn.pressed.connect(_on_resume)
 	vbox.add_child(resume_btn)
 
-	var save_btn := Button.new()
+	var save_btn: Button = Button.new()
 	save_btn.text = "Save"
 	save_btn.custom_minimum_size = Vector2(260.0, 44.0)
 	save_btn.disabled = true
 	save_btn.pressed.connect(_on_save)
 	vbox.add_child(save_btn)
 
-	var load_btn := Button.new()
+	var load_btn: Button = Button.new()
 	load_btn.text = "Load"
 	load_btn.custom_minimum_size = Vector2(260.0, 44.0)
 	load_btn.disabled = true
 	load_btn.pressed.connect(_on_load)
 	vbox.add_child(load_btn)
 
-	var exit_btn := Button.new()
+	var exit_btn: Button = Button.new()
 	exit_btn.text = "Exit to Main Menu"
 	exit_btn.custom_minimum_size = Vector2(260.0, 44.0)
 	exit_btn.pressed.connect(_on_exit_to_menu)
 	vbox.add_child(exit_btn)
 
 
-func _input(event):
+func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("ui_cancel"):
 			resume_pressed.emit()
 			get_viewport().set_input_as_handled()
 
 
-func _on_resume():
+func _on_resume() -> void:
 	resume_pressed.emit()
 
 
-func _on_save():
+func _on_save() -> void:
 	save_pressed.emit()
 
 
-func _on_load():
+func _on_load() -> void:
 	load_pressed.emit()
 
 
-func _on_exit_to_menu():
+func _on_exit_to_menu() -> void:
 	exit_to_menu_pressed.emit()
 
 
-func close():
+func close() -> void:
 	if _closing:
 		return
 	_closing = true
-	var tween := create_tween()
+	var tween: Tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.15)
 	tween.tween_callback(queue_free)

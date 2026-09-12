@@ -3,7 +3,7 @@ extends Button
 signal pause_toggled
 
 
-func _ready():
+func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	name = "PauseButton"
 	anchor_left = 1.0
@@ -21,9 +21,9 @@ func _ready():
 	pressed.connect(_on_pressed)
 
 
-func _on_pressed():
+func _on_pressed() -> void:
 	pause_toggled.emit()
 
 
-func set_pause_state(paused: bool):
+func set_pause_state(paused: bool) -> void:
 	text = "Play" if paused else "Pause"

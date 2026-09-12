@@ -21,12 +21,12 @@ var colorblind_mode: int = 0
 var _file: ConfigFile
 
 
-func _init():
+func _init() -> void:
 	_file = ConfigFile.new()
 	_load()
 
 
-func _load():
+func _load() -> void:
 	var err := _file.load(PATH)
 	if err != OK:
 		_save_defaults()
@@ -37,7 +37,7 @@ func _load():
 	_load_keybindings()
 
 
-func _save_defaults():
+func _save_defaults() -> void:
 	_file.set_value("accessibility", "reduced_motion", false)
 	_file.set_value("accessibility", "screen_shake", true)
 	_file.set_value("accessibility", "colorblind_mode", 0)
@@ -45,7 +45,7 @@ func _save_defaults():
 	_file.save(PATH)
 
 
-func save():
+func save() -> void:
 	_file.set_value("accessibility", "reduced_motion", reduced_motion)
 	_file.set_value("accessibility", "screen_shake", screen_shake)
 	_file.set_value("accessibility", "colorblind_mode", colorblind_mode)
@@ -77,13 +77,13 @@ func _current_keybindings() -> Dictionary:
 	return out
 
 
-func _save_keybindings(bindings: Dictionary):
+func _save_keybindings(bindings: Dictionary) -> void:
 	for action in REBINDABLE_ACTIONS:
 		var scancodes: Array = bindings.get(action, [])
 		_file.set_value("bindings", action, scancodes)
 
 
-func _load_keybindings():
+func _load_keybindings() -> void:
 	for action in REBINDABLE_ACTIONS:
 		if not _file.has_section_key("bindings", action):
 			continue
@@ -101,7 +101,7 @@ func _load_keybindings():
 			InputMap.action_add_event(action, ke)
 
 
-func set_keybinding(action: String, scancodes: Array[int]):
+func set_keybinding(action: String, scancodes: Array[int]) -> void:
 	if not action in REBINDABLE_ACTIONS:
 		return
 	if not InputMap.has_action(action):

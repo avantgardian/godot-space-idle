@@ -15,9 +15,9 @@ const LIFETIME: float = 10.0
 const COLLISION_RADIUS: float = 5.0
 const SPAWN_PROTECTION_TIME: float = 0.3
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
-const DU := preload("res://scripts/util/draw_utils.gd")
-const _TRAIL := preload("res://scripts/components/trail_component.gd")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
+const _TRAIL: GDScript = preload("res://scripts/components/trail_component.gd")
 
 var collision_radius: float = COLLISION_RADIUS
 var mass: float = 0.0
@@ -28,7 +28,7 @@ var _alive: bool = true
 var _lifetime: float = LIFETIME
 var _spawn_protection: float = SPAWN_PROTECTION_TIME
 var _target: Node2D = null
-var _trail_component: Node
+var _trail_component: TrailComponent
 var _resolved: bool = false
 
 
@@ -67,8 +67,9 @@ func has_spawn_protection() -> bool:
 
 
 func _ready() -> void:
-	_trail_component = _TRAIL.new()
-	var accent := PAL.ACCENT
+	@warning_ignore("unsafe_cast")
+	_trail_component = _TRAIL.new() as TrailComponent
+	var accent: Color = PAL.ACCENT
 	_trail_component.setup(
 		Color(accent.r, accent.g, accent.b, 0.0), Color(accent.r, accent.g, accent.b, 0.7), 1.5, 200
 	)
@@ -115,11 +116,13 @@ func _draw() -> void:
 	if not _alive:
 		return
 
-	var nose := Vector2(0.0, -6.0)
-	var left := Vector2(-3.0, 4.0)
-	var right := Vector2(3.0, 4.0)
-	var tail_left := Vector2(-1.5, 0.0)
-	var tail_right := Vector2(1.5, 0.0)
-	var points := PackedVector2Array([nose, left, tail_left, tail_right, right, nose])
+	var nose: Vector2 = Vector2(0.0, -6.0)
+	var left: Vector2 = Vector2(-3.0, 4.0)
+	var right: Vector2 = Vector2(3.0, 4.0)
+	var tail_left: Vector2 = Vector2(-1.5, 0.0)
+	var tail_right: Vector2 = Vector2(1.5, 0.0)
+	var points: PackedVector2Array = PackedVector2Array(
+		[nose, left, tail_left, tail_right, right, nose]
+	)
 
 	DU.neon_polyline(self, points, PAL.ACCENT_GLOW, PAL.ACCENT, PAL.HULL_BRIGHT)

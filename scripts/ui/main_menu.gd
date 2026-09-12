@@ -1,21 +1,21 @@
 extends Control
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
-const FONT_BOLD := preload("res://resources/fonts/Orbitron-Bold.ttf")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+const FONT_BOLD: Font = preload("res://resources/fonts/Orbitron-Bold.ttf")
 
 
-func _ready():
-	var game_theme := load("res://resources/game_theme.tres") as Theme
+func _ready() -> void:
+	var game_theme: Theme = load("res://resources/game_theme.tres") as Theme
 	self.theme = game_theme
 
-	var title := $CenterContainer/MenuContainer/Title as Label
+	var title: Variant = $CenterContainer/MenuContainer/Title as Label
 	title.add_theme_font_override("font", FONT_BOLD)
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	title.add_theme_color_override("font_outline_color", PAL.HULL_GLOW)
 	title.add_theme_constant_override("outline_size", 4)
 
-	var title_underline := ColorRect.new()
+	var title_underline: ColorRect = ColorRect.new()
 	title_underline.name = "TitleUnderline"
 	title_underline.custom_minimum_size = Vector2(420, 2)
 	title_underline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -41,17 +41,17 @@ func _ready():
 	$CenterContainer/MenuContainer/QuitBtn.pressed.connect(_on_quit_pressed)
 
 
-func _on_sandbox_pressed():
+func _on_sandbox_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
-func _on_progression_pressed():
+func _on_progression_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/progression.tscn")
 
 
-func _on_settings_pressed():
+func _on_settings_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/settings.tscn")
 
 
-func _on_quit_pressed():
+func _on_quit_pressed() -> void:
 	get_tree().quit()

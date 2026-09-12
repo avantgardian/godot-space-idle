@@ -1,9 +1,9 @@
 class_name PlanetPopup
 extends Panel
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
-const DU := preload("res://scripts/util/draw_utils.gd")
-const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
+const FONT_MONO: Font = preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 var reduced_motion: bool = false
 var _planet_node: Node2D
@@ -12,7 +12,7 @@ var _popup_labels: Dictionary = {}
 var _planet_color: Color
 
 
-func show_for_planet(planet_node: Node2D, camera: Camera2D):
+func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 	_planet_node = planet_node
 	_camera = camera
 	_planet_color = planet_node.planet_color
@@ -21,7 +21,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 
 	theme = load("res://resources/game_theme.tres") as Theme
 
-	var stripe := ColorRect.new()
+	var stripe: ColorRect = ColorRect.new()
 	stripe.name = "AccentStripe"
 	stripe.color = DU.modulate_alpha(_planet_color, 0.9)
 	stripe.anchor_left = 0.0
@@ -34,7 +34,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	stripe.offset_bottom = -8.0
 	add_child(stripe)
 
-	var margin := MarginContainer.new()
+	var margin: MarginContainer = MarginContainer.new()
 	margin.anchor_left = 0.0
 	margin.anchor_top = 0.0
 	margin.anchor_right = 1.0
@@ -45,7 +45,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	margin.add_theme_constant_override("margin_bottom", 14)
 	add_child(margin)
 
-	var vbox := VBoxContainer.new()
+	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.anchor_left = 0.0
 	vbox.anchor_top = 0.0
 	vbox.anchor_right = 1.0
@@ -53,34 +53,34 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 
-	var name_label := Label.new()
+	var name_label: Label = Label.new()
 	name_label.text = planet_node.planet_name
 	name_label.add_theme_font_size_override("font_size", 18)
 	name_label.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	vbox.add_child(name_label)
 
-	var sep := ColorRect.new()
+	var sep: ColorRect = ColorRect.new()
 	sep.custom_minimum_size = Vector2(0, 1)
 	sep.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	sep.color = DU.modulate_alpha(PAL.HULL_LINE, 0.3)
 	vbox.add_child(sep)
 
-	var fields := [
+	var fields: Variant = [
 		{key = "mass", label = "Mass", fmt = "%s  Msun"},
 		{key = "speed", label = "Speed", fmt = "%.1f  u/s"},
 		{key = "radius", label = "Orbit", fmt = "%.0f  u"},
 		{key = "period", label = "Period", fmt = "%.0f  s"},
 	]
 	for f in fields:
-		var hbox := HBoxContainer.new()
+		var hbox: HBoxContainer = HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", 8)
-		var lbl := Label.new()
+		var lbl: Label = Label.new()
 		lbl.text = f.label
 		lbl.add_theme_font_size_override("font_size", 11)
 		lbl.add_theme_color_override("font_color", DU.modulate_alpha(PAL.HULL_LINE, 0.7))
 		lbl.custom_minimum_size = Vector2(48, 0)
 		hbox.add_child(lbl)
-		var val := Label.new()
+		var val: Label = Label.new()
 		val.add_theme_font_override("font", FONT_MONO)
 		val.add_theme_font_size_override("font_size", 11)
 		val.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
@@ -94,7 +94,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 	if reduced_motion:
 		modulate = Color(1, 1, 1, 1)
 	else:
-		var tween := create_tween()
+		var tween: Tween = create_tween()
 		(
 			tween
 			. tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25)
@@ -103,14 +103,14 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D):
 		)
 
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if not _planet_node or not _camera:
 		return
 	if not is_instance_valid(_planet_node):
 		close()
 		return
 
-	var viewport_size := get_viewport_rect().size
+	var viewport_size: Variant = get_viewport_rect().size
 
 	_popup_labels.mass.text = "%s  Msun" % str(_planet_node.mass)
 	_popup_labels.speed.text = "%.1f  u/s" % _planet_node.get_vel().length()
@@ -118,7 +118,7 @@ func _process(_delta):
 	_popup_labels.period.text = "%.0f  s" % _planet_node.orbit_period
 
 	var screen_pos: Vector2 = _camera.get_canvas_transform() * _planet_node.position
-	var ps := size
+	var ps: Variant = size
 
 	var planet_screen_r: float = max(_planet_node.collision_radius * _camera.zoom.x, 12.0)
 	position = screen_pos + Vector2(planet_screen_r + 16, -ps.y - 36)
@@ -126,10 +126,10 @@ func _process(_delta):
 	position.y = clamp(position.y, 10, viewport_size.y - ps.y - 10)
 
 
-func close():
+func close() -> void:
 	if reduced_motion:
 		queue_free()
 	else:
-		var tween := create_tween()
+		var tween: Tween = create_tween()
 		tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.15)
 		tween.tween_callback(queue_free)

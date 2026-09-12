@@ -13,15 +13,15 @@ const COLLISION_RADIUS: float = 14.0
 # introduce new inline colors.
 const FIRE_MUZZLE_SPEED: float = 175.0
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
-const DU := preload("res://scripts/util/draw_utils.gd")
-const _ROCKET := preload("res://scripts/components/rocket.gd")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
+const _ROCKET: GDScript = preload("res://scripts/components/rocket.gd")
 const _PULSE_SPEED: float = PAL.RING_PULSE_SPEED  # rad/s pulsation when not selected
 
 # Constant geometry arrays — built once at class-load time, never
 # allocated inside _draw. Pointed nose up, swept-back wings, twin engine
 # pods, notched tail. Closed polylines (last point == first).
-static var _hull_points := PackedVector2Array(
+static var _hull_points: PackedVector2Array = PackedVector2Array(
 	[
 		Vector2(0.0, -18.0),
 		Vector2(-5.0, -8.0),
@@ -41,7 +41,7 @@ static var _hull_points := PackedVector2Array(
 	]
 )
 
-static var _accent_left := PackedVector2Array(
+static var _accent_left: PackedVector2Array = PackedVector2Array(
 	[
 		Vector2(2.0, -6.0),
 		Vector2(4.5, 1.5),
@@ -51,7 +51,7 @@ static var _accent_left := PackedVector2Array(
 	]
 )
 
-static var _accent_right := PackedVector2Array(
+static var _accent_right: PackedVector2Array = PackedVector2Array(
 	[
 		Vector2(-2.0, -6.0),
 		Vector2(-4.5, 1.5),
@@ -61,7 +61,7 @@ static var _accent_right := PackedVector2Array(
 	]
 )
 
-static var _cockpit_points := PackedVector2Array(
+static var _cockpit_points: PackedVector2Array = PackedVector2Array(
 	[
 		Vector2(0.0, -12.5),
 		Vector2(2.25, -9.0),
@@ -70,7 +70,7 @@ static var _cockpit_points := PackedVector2Array(
 	]
 )
 
-static var _halo_points := PackedVector2Array(
+static var _halo_points: PackedVector2Array = PackedVector2Array(
 	[
 		Vector2(0.0, -14.0),
 		Vector2(3.75, -9.0),
@@ -95,7 +95,7 @@ var _flicker: float = 0.0
 var _pulse_phase: float = 0.0
 
 
-func _ready():
+func _ready() -> void:
 	_ring_node = _RingLayer.new()
 	_ring_node.name = "IndicatorRing"
 	add_child(_ring_node)
@@ -108,29 +108,29 @@ func _ready():
 	position = _pos
 
 
-func init(start_pos: Vector2):
+func init(start_pos: Vector2) -> void:
 	_pos = start_pos
 	position = start_pos
 
 
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	if not _alive:
 		return
 
 	if input_active:
-		var rotate_left := Input.is_action_pressed("ship_rotate_left")
-		var rotate_right := Input.is_action_pressed("ship_rotate_right")
-		var thrust_forward := Input.is_action_pressed("ship_thrust_forward")
-		var thrust_reverse := Input.is_action_pressed("ship_thrust_reverse")
+		var rotate_left: bool = Input.is_action_pressed("ship_rotate_left")
+		var rotate_right: bool = Input.is_action_pressed("ship_rotate_right")
+		var thrust_forward: bool = Input.is_action_pressed("ship_thrust_forward")
+		var thrust_reverse: bool = Input.is_action_pressed("ship_thrust_reverse")
 
 		if rotate_left and not rotate_right:
 			_angle -= ROTATION_SPEED * delta
 		elif rotate_right and not rotate_left:
 			_angle += ROTATION_SPEED * delta
 
-		var thrust_dir := Vector2.UP.rotated(_angle)
+		var thrust_dir: Vector2 = Vector2.UP.rotated(_angle)
 
-		var thrusting := false
+		var thrusting: bool = false
 		if thrust_forward:
 			_vel += thrust_dir * THRUST_FORCE * delta
 			thrusting = true
@@ -146,7 +146,7 @@ func _physics_process(delta):
 
 	_vel *= max(1.0 - DAMPING * delta, 0.0)
 
-	var speed := _vel.length()
+	var speed: float = _vel.length()
 	if speed > MAX_SPEED:
 		_vel = _vel.normalized() * MAX_SPEED
 
@@ -168,16 +168,16 @@ func _physics_process(delta):
 	queue_redraw()
 
 
-func enforce_sun_barrier(min_dist: float):
-	var r := _pos.length()
+func enforce_sun_barrier(min_dist: float) -> void:
+	var r: float = _pos.length()
 	if r < min_dist:
 		if r < 0.01:
 			_pos = Vector2(min_dist, 0.0)
 		else:
 			_pos = _pos.normalized() * min_dist
 		position = _pos
-		var radial_dir := _pos.normalized()
-		var radial_vel := _vel.dot(radial_dir)
+		var radial_dir: Vector2 = _pos.normalized()
+		var radial_vel: float = _vel.dot(radial_dir)
 		if radial_vel < 0.0:
 			_vel -= radial_dir * radial_vel
 
@@ -194,7 +194,7 @@ func get_vel() -> Vector2:
 	return _vel
 
 
-func set_vel(v: Vector2):
+func set_vel(v: Vector2) -> void:
 	_vel = v
 
 
@@ -202,8 +202,8 @@ func try_fire(target: Node2D) -> Rocket:
 	if _rocket_in_flight or not _alive:
 		return null
 	_rocket_in_flight = true
-	var rocket := _ROCKET.new()
-	var muzzle_vel := Vector2.UP.rotated(_angle) * FIRE_MUZZLE_SPEED
+	var rocket: Rocket = _ROCKET.new() as Rocket
+	var muzzle_vel: Vector2 = Vector2.UP.rotated(_angle) * FIRE_MUZZLE_SPEED
 	rocket.init(_pos, _vel + muzzle_vel, target)
 	rocket.resolved.connect(_on_rocket_resolved, CONNECT_ONE_SHOT)
 	return rocket
@@ -213,7 +213,7 @@ func _on_rocket_resolved(_reason: Rocket.Resolution) -> void:
 	_rocket_in_flight = false
 
 
-func disable():
+func disable() -> void:
 	_alive = false
 	visible = false
 
@@ -228,7 +228,7 @@ func set_reduced_motion(enabled: bool) -> void:
 # ---------------------------------------------------------------------------
 
 
-func _draw():
+func _draw() -> void:
 	DU.neon_polyline(self, _hull_points, PAL.HULL_GLOW, PAL.HULL_LINE, PAL.HULL_BRIGHT)
 
 	DU.neon_filled_accent(self, _accent_left, PAL.ACCENT, PAL.ACCENT_GLOW, PAL.ACCENT)
@@ -249,31 +249,31 @@ func _draw():
 
 class _GlowLayer:
 	extends Node2D
-	const _PORTS := [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]
+	const _PORTS: Array[Vector2] = [Vector2(-8.0, 11.0), Vector2(8.0, 11.0)]
 
-	var thrusting := false
-	var _phase := 0.0
-	var _flame_buf_outer := PackedVector2Array()
-	var _flame_buf_inner := PackedVector2Array()
+	var thrusting: bool = false
+	var _phase: float = 0.0
+	var _flame_buf_outer: PackedVector2Array = PackedVector2Array()
+	var _flame_buf_inner: PackedVector2Array = PackedVector2Array()
 
 	func _init() -> void:
-		var mat := CanvasItemMaterial.new()
+		var mat: CanvasItemMaterial = CanvasItemMaterial.new()
 		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		material = mat
 		_flame_buf_outer.resize(4)
 		_flame_buf_inner.resize(4)
 
 	func _draw() -> void:
-		for port in _PORTS:
+		for port: Vector2 in _PORTS:
 			draw_circle(port, 3.5, PAL.ENGINE_PORT)
 			draw_circle(port, 1.5, PAL.PORT_CORE)
 
 		if not thrusting:
 			return
 
-		for port in _PORTS:
-			var length := 22.0 + sin(_phase) * 6.0
-			var hf := 2.5
+		for port: Vector2 in _PORTS:
+			var length: float = 22.0 + sin(_phase) * 6.0
+			var hf: float = 2.5
 			_flame_buf_outer[0] = port + Vector2(-hf, 0.0)
 			_flame_buf_outer[1] = port + Vector2(hf, 0.0)
 			_flame_buf_outer[2] = port + Vector2(hf * 0.6, length)
@@ -293,25 +293,25 @@ class _RingLayer:
 	var reduced_motion: bool = false
 
 	func _init() -> void:
-		var mat := CanvasItemMaterial.new()
+		var mat: CanvasItemMaterial = CanvasItemMaterial.new()
 		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		material = mat
 
 	func _draw() -> void:
-		var r := 29.0
+		var r: float = 29.0
 		# Four arc segments with symmetric gaps (no heading marker; the
 		# pointed hull already conveys direction).
-		var segments := 4
-		var gap := 0.28
+		var segments: int = 4
+		var gap: float = 0.28
 
 		# Pulsation: when not selected the ring's alpha swings between
 		# RING_PULSE_MIN and 1.0 of the (already capped) base values.
-		var alpha_mult := 1.0
+		var alpha_mult: float = 1.0
 		if pulsate and not reduced_motion:
 			alpha_mult = DU.pulsate_factor(pulse_phase, PAL.RING_PULSE_MIN)
 
-		var glow_c := DU.modulate_alpha(PAL.RING_GLOW, alpha_mult)
-		var line_c := DU.modulate_alpha(PAL.RING_LINE, alpha_mult)
-		var bright_c := DU.modulate_alpha(PAL.RING_BRIGHT, alpha_mult)
+		var glow_c: Color = DU.modulate_alpha(PAL.RING_GLOW, alpha_mult)
+		var line_c: Color = DU.modulate_alpha(PAL.RING_LINE, alpha_mult)
+		var bright_c: Color = DU.modulate_alpha(PAL.RING_BRIGHT, alpha_mult)
 
 		DU.neon_segmented_ring(self, Vector2.ZERO, r, segments, gap, glow_c, line_c, bright_c)

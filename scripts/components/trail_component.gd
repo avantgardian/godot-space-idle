@@ -13,7 +13,7 @@ var _fading: bool = false
 var _stride: int = 1
 
 
-func setup(color0: Color, color1: Color, width: float, max_points: int):
+func setup(color0: Color, color1: Color, width: float, max_points: int) -> void:
 	_max_points = max_points
 	_ring.resize(_max_points)
 	_ring.fill(Vector2.ZERO)
@@ -27,17 +27,17 @@ func setup(color0: Color, color1: Color, width: float, max_points: int):
 	_line.joint_mode = Line2D.LINE_JOINT_ROUND
 	_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	_line.end_cap_mode = Line2D.LINE_CAP_ROUND
-	var mat := CanvasItemMaterial.new()
+	var mat: CanvasItemMaterial = CanvasItemMaterial.new()
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	_line.material = mat
-	var grad := Gradient.new()
+	var grad: Gradient = Gradient.new()
 	grad.set_color(0, color0)
 	grad.set_color(1, color1)
 	_line.gradient = grad
 	add_child(_line)
 
 
-func record(pos: Vector2):
+func record(pos: Vector2) -> void:
 	if _fading:
 		return
 	_tick += 1
@@ -50,17 +50,17 @@ func record(pos: Vector2):
 
 
 func _visible_slice() -> PackedVector2Array:
-	var count := _filled
-	var start := (_head - count + _max_points) % _max_points
-	var vis_count := ceili(float(count) / _stride)
-	var result := PackedVector2Array()
+	var count: int = _filled
+	var start: int = (_head - count + _max_points) % _max_points
+	var vis_count: int = ceili(float(count) / _stride)
+	var result: PackedVector2Array = PackedVector2Array()
 	result.resize(vis_count)
-	for i in range(vis_count):
+	for i: int in range(vis_count):
 		result[i] = _ring[(start + i * _stride) % _max_points]
 	return result
 
 
-func clear():
+func clear() -> void:
 	_ring.fill(Vector2.ZERO)
 	_head = 0
 	_filled = 0
@@ -69,13 +69,13 @@ func clear():
 		_line.points = PackedVector2Array()
 
 
-func fade_out(fade_seconds: float = 4.0):
+func fade_out(fade_seconds: float = 4.0) -> void:
 	if _fading or not _line:
 		return
 	_fading = true
-	var scene_root := get_tree().current_scene
+	var scene_root: Node = get_tree().current_scene
 	if scene_root:
 		reparent(scene_root)
-	var tw := create_tween()
+	var tw: Tween = create_tween()
 	tw.tween_property(_line, "self_modulate:a", 0.0, fade_seconds)
 	tw.tween_callback(queue_free)

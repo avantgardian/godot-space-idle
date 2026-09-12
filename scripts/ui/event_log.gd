@@ -1,22 +1,22 @@
 class_name EventLog
 extends Node
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
-const FONT_MONO := preload("res://resources/fonts/ShareTechMono-Regular.ttf")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
+const FONT_MONO: Font = preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
-const DURATION := 60.0
-const MAX_ENTRIES := 30
+const DURATION: float = 60.0
+const MAX_ENTRIES: int = 30
 
 var _entries: Array[Dictionary] = []
 var _container: VBoxContainer
 
 
-func _ready():
+func _ready() -> void:
 	setup()
 
 
-func setup():
-	var panel := Panel.new()
+func setup() -> void:
+	var panel: Panel = Panel.new()
 	panel.name = "EventLogPanel"
 	panel.anchor_left = 0.0
 	panel.anchor_top = 1.0
@@ -39,8 +39,8 @@ func setup():
 	panel.add_child(_container)
 
 
-func log_message(msg: String):
-	var lbl := Label.new()
+func log_message(msg: String) -> void:
+	var lbl: Label = Label.new()
 	lbl.text = msg
 	lbl.add_theme_font_override("font", FONT_MONO)
 	lbl.add_theme_font_size_override("font_size", 11)
@@ -49,14 +49,14 @@ func log_message(msg: String):
 	_container.move_child(lbl, 0)
 	_entries.append({label = lbl, age = 0.0})
 	while _entries.size() > MAX_ENTRIES:
-		var oldest := _entries[0]
+		var oldest: Variant = _entries[0]
 		_entries.remove_at(0)
 		oldest.label.queue_free()
 
 
-func _process(delta):
+func _process(delta: float) -> void:
 	for i in range(_entries.size() - 1, -1, -1):
-		var entry := _entries[i]
+		var entry: Variant = _entries[i]
 		entry.age += delta
 		var t: float = entry.age / DURATION
 		if t >= 1.0:

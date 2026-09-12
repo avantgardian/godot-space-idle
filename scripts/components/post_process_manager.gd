@@ -1,7 +1,7 @@
 class_name PostProcessManager
 extends Node
 
-const _CB_SHADER := preload("res://shaders/world/cb_correct.gdshader")
+const _CB_SHADER: Shader = preload("res://shaders/world/cb_correct.gdshader")
 
 var _mat: ShaderMaterial
 var _cb_mat: ShaderMaterial
@@ -12,13 +12,13 @@ var _screen_shake_enabled: bool = true
 var _colorblind_mode: int = 0
 
 
-func _ready():
-	var pp_layer := CanvasLayer.new()
+func _ready() -> void:
+	var pp_layer: CanvasLayer = CanvasLayer.new()
 	pp_layer.name = "PostProcessLayer"
 	pp_layer.layer = 1
 	add_child(pp_layer)
 
-	var cr := ColorRect.new()
+	var cr: ColorRect = ColorRect.new()
 	cr.name = "PostProcess"
 	cr.anchor_left = 0.0
 	cr.anchor_top = 0.0
@@ -50,9 +50,10 @@ func _ready():
 	_cb_rect.material = _cb_mat
 
 
-func trigger():
+func trigger() -> void:
 	_ca_impact = min(_ca_impact + 0.008, 0.015)
 	if _screen_shake_enabled:
+		@warning_ignore("unsafe_method_access", "unsafe_property_access")
 		get_parent().get_node("Camera2D").trigger_shake(12.5)
 
 
@@ -78,7 +79,7 @@ func get_bloom_intensity() -> float:
 	return _bloom_intensity
 
 
-func _process(delta):
+func _process(delta: float) -> void:
 	if _ca_impact > 0.0:
 		_ca_impact = max(_ca_impact - 0.02 * delta, 0.0)
 		if _mat:
