@@ -35,6 +35,7 @@ var _post_fx: PostProcessManager
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(BG_COLOR)
+	@warning_ignore("unsafe_method_access")
 	_star_field.generate(star_seed, _camera.min_zoom)
 	_apply_theme()
 	_add_post_process()
@@ -51,6 +52,7 @@ func _apply_theme() -> void:
 	var game_theme: Theme = load("res://resources/game_theme.tres") as Theme
 	_event_log_panel.theme = game_theme
 	_pause_btn.theme = game_theme
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	_pause_btn.pause_toggled.connect(_on_pause_toggled)
 
 
@@ -84,7 +86,9 @@ func _physics_process(_delta: float) -> void:
 	if _collision_mgr:
 		@warning_ignore("unsafe_property_access")
 		_collision_mgr.check_collisions(_spawner._asteroids)
+	@warning_ignore("unsafe_method_access")
 	_star_field.update_parallax(_camera.position, _camera.zoom.x)
+	@warning_ignore("unsafe_method_access")
 	_star_field.set_blur(_camera.get_blur_amount())
 
 
@@ -98,43 +102,60 @@ func _load_settings() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		if event.is_action_pressed("select"):
-			var sun_screen: Vector2 = _camera.get_canvas_transform() * _sun.position
-			var on_sun: bool = sun_screen.distance_to(event.position) < 60.0
-			if on_sun:
-				_on_sun_clicked()
-				return
+	if event is InputEventMouseButton:
+		@warning_ignore("unsafe_property_access")
+		var mb_pressed: bool = event.pressed
+		@warning_ignore("unsafe_property_access")
+		var mb_pos: Vector2 = event.position
+		if mb_pressed:
+			if event.is_action_pressed("select"):
+				var sun_screen: Vector2 = _camera.get_canvas_transform() * _sun.position
+				var on_sun: bool = sun_screen.distance_to(mb_pos) < 60.0
+				if on_sun:
+					_on_sun_clicked()
+					return
 
-			var clicked: Node2D = _get_click_target(event.position)
-			if clicked:
+				var clicked: Node2D = _get_click_target(mb_pos)
+				if clicked:
+					_close_sun_popup()
+					_on_select_target(clicked)
+					return
+
 				_close_sun_popup()
-				_on_select_target(clicked)
-				return
 
-			_close_sun_popup()
+			if event.is_action_pressed("drag"):
+				_close_sun_popup()
+				@warning_ignore("unsafe_call_argument")
+				_on_drag_pressed(mb_pos)
 
-		if event.is_action_pressed("drag"):
-			_close_sun_popup()
-			_on_drag_pressed(event.position)
+	if event is InputEventMouseButton:
+		@warning_ignore("unsafe_property_access")
+		var mb_pressed2: bool = event.pressed
+		if not mb_pressed2:
+			if event.is_action_released("drag"):
+				_camera.end_drag()
 
-	if event is InputEventMouseButton and not event.pressed:
-		if event.is_action_released("drag"):
-			_camera.end_drag()
+	if event is InputEventMouseMotion:
+		@warning_ignore("unsafe_property_access")
+		var mm_pos: Vector2 = event.position
+		if Input.is_action_pressed("drag"):
+			_camera.update_drag(mm_pos)
 
-	if event is InputEventMouseMotion and Input.is_action_pressed("drag"):
-		_camera.update_drag(event.position)
-
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.is_action_pressed("ui_cancel"):
-			_toggle_pause()
-		elif event.is_action_pressed("zoom_in"):
-			_camera.zoom_in()
-		elif event.is_action_pressed("zoom_out"):
-			_camera.zoom_out()
-		elif event.is_action_pressed("spawn_asteroid"):
-			_spawner.spawn()
-		_on_key_pressed(event)
+	if event is InputEventKey:
+		@warning_ignore("unsafe_property_access")
+		var key_pressed: bool = event.pressed
+		@warning_ignore("unsafe_property_access")
+		var key_echo: bool = event.echo
+		if key_pressed and not key_echo:
+			if event.is_action_pressed("ui_cancel"):
+				_toggle_pause()
+			elif event.is_action_pressed("zoom_in"):
+				_camera.zoom_in()
+			elif event.is_action_pressed("zoom_out"):
+				_camera.zoom_out()
+			elif event.is_action_pressed("spawn_asteroid"):
+				_spawner.spawn()
+			_on_key_pressed(event)
 
 
 func _get_click_target(_screen_pos: Vector2) -> Node2D:
@@ -180,7 +201,7 @@ func _on_key_pressed(_event: InputEvent) -> void:
 
 
 func _on_asteroid_collided(ast: Node2D, profile: CollisionProfile) -> void:
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_call_argument")
 	_on_body_hit_sun(ast.mass, profile, "Asteroid")
 
 
@@ -202,6 +223,7 @@ func _on_pause_toggled() -> void:
 func _toggle_pause() -> void:
 	_paused = not _paused
 	get_tree().paused = _paused
+	@warning_ignore("unsafe_method_access")
 	_pause_btn.set_pause_state(_paused)
 	if _paused:
 		_show_pause_menu()
@@ -210,14 +232,19 @@ func _toggle_pause() -> void:
 
 
 func _show_pause_menu() -> void:
-	_pause_menu = _PAUSE_MENU.new()
+	@warning_ignore("unsafe_cast")
+	_pause_menu = _PAUSE_MENU.new() as PauseMenu
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	_pause_menu.resume_pressed.connect(_toggle_pause)
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	_pause_menu.exit_to_menu_pressed.connect(_on_exit_to_menu)
+	@warning_ignore("unsafe_call_argument")
 	_ui.add_child(_pause_menu)
 
 
 func _hide_pause_menu() -> void:
 	if _pause_menu and is_instance_valid(_pause_menu):
+		@warning_ignore("unsafe_method_access")
 		_pause_menu.close()
 	_pause_menu = null
 

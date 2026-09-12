@@ -69,6 +69,7 @@ func has_spawn_protection() -> bool:
 func _ready() -> void:
 	@warning_ignore("unsafe_cast")
 	_trail_component = _TRAIL.new() as TrailComponent
+	@warning_ignore("unsafe_property_access")
 	var accent: Color = PAL.ACCENT
 	_trail_component.setup(
 		Color(accent.r, accent.g, accent.b, 0.0), Color(accent.r, accent.g, accent.b, 0.7), 1.5, 200
@@ -125,4 +126,5 @@ func _draw() -> void:
 		[nose, left, tail_left, tail_right, right, nose]
 	)
 
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	DU.neon_polyline(self, points, PAL.ACCENT_GLOW, PAL.ACCENT, PAL.HULL_BRIGHT)

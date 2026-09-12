@@ -15,7 +15,7 @@ var _planet_color: Color
 func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 	_planet_node = planet_node
 	_camera = camera
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	_planet_color = planet_node.planet_color as Color
 
 	mouse_filter = MOUSE_FILTER_IGNORE
@@ -24,6 +24,7 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 
 	var stripe: ColorRect = ColorRect.new()
 	stripe.name = "AccentStripe"
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	stripe.color = DU.modulate_alpha(_planet_color, 0.9)
 	stripe.anchor_left = 0.0
 	stripe.anchor_top = 0.0
@@ -55,15 +56,17 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 	margin.add_child(vbox)
 
 	var name_label: Label = Label.new()
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	name_label.text = planet_node.planet_name as String
 	name_label.add_theme_font_size_override("font_size", 18)
+	@warning_ignore("unsafe_property_access")
 	name_label.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	vbox.add_child(name_label)
 
 	var sep: ColorRect = ColorRect.new()
 	sep.custom_minimum_size = Vector2(0, 1)
 	sep.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	@warning_ignore("unsafe_method_access", "unsafe_property_access")
 	sep.color = DU.modulate_alpha(PAL.HULL_LINE, 0.3)
 	vbox.add_child(sep)
 
@@ -77,19 +80,21 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 		var hbox: HBoxContainer = HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", 8)
 		var lbl: Label = Label.new()
-		@warning_ignore("unsafe_property_access")
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
 		var flabel: String = f.label as String
 		lbl.text = flabel
 		lbl.add_theme_font_size_override("font_size", 11)
+		@warning_ignore("unsafe_method_access", "unsafe_property_access", "unsafe_call_argument")
 		lbl.add_theme_color_override("font_color", DU.modulate_alpha(PAL.HULL_LINE, 0.7))
 		lbl.custom_minimum_size = Vector2(48, 0)
 		hbox.add_child(lbl)
 		var val: Label = Label.new()
 		val.add_theme_font_override("font", FONT_MONO)
 		val.add_theme_font_size_override("font_size", 11)
+		@warning_ignore("unsafe_property_access")
 		val.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 		hbox.add_child(val)
-		@warning_ignore("unsafe_property_access")
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
 		var fkey: String = f.key as String
 		_popup_labels[fkey] = val
 		vbox.add_child(hbox)
@@ -118,27 +123,27 @@ func _process(_delta: float) -> void:
 
 	var viewport_size: Vector2 = get_viewport_rect().size
 
-	@warning_ignore("unsafe_property_access", "unsafe_method_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var mass_label: Label = _popup_labels.mass as Label
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	mass_label.text = "%s  Msun" % str(_planet_node.mass as float)
-	@warning_ignore("unsafe_property_access", "unsafe_method_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var speed_label: Label = _popup_labels.speed as Label
-	@warning_ignore("unsafe_property_access", "unsafe_method_access")
+	@warning_ignore("unsafe_property_access", "unsafe_method_access", "unsafe_cast")
 	speed_label.text = "%.1f  u/s" % (_planet_node.get_vel() as Vector2).length()
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var radius_label: Label = _popup_labels.radius as Label
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	radius_label.text = "%.0f  u" % (_planet_node.orbit_radius as float)
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var period_label: Label = _popup_labels.period as Label
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	period_label.text = "%.0f  s" % (_planet_node.orbit_period as float)
 
 	var screen_pos: Vector2 = _camera.get_canvas_transform() * _planet_node.position
 	var ps: Vector2 = size
 
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var planet_screen_r: float = max(
 		(_planet_node.collision_radius as float) * _camera.zoom.x, 12.0
 	)

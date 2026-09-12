@@ -27,4 +27,18 @@ jobs:
           chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
 
       - name: Check scripts
-        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit
+        run: |
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit 2>&1 | tee godot.log
+          if grep -q "SCRIPT ERROR" godot.log; then
+            echo "::error::SCRIPT ERROR found (strict typing)"
+            cat godot.log
+            exit 1
+          fi
+          for f in $(find scripts -name "*.gd"); do
+            ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --check-only --script "res://$f" 2>&1 | tee -a godot.log
+          done
+          if grep -q "SCRIPT ERROR" godot.log; then
+            echo "::error::SCRIPT ERROR found in per-file check"
+            cat godot.log
+            exit 1
+          fi

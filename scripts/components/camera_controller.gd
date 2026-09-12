@@ -83,24 +83,36 @@ func _physics_process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if get_tree().paused:
 		if event is InputEventMouseButton:
-			if event.pressed and event.is_action_pressed("drag"):
+			@warning_ignore("unsafe_property_access")
+			var mb_pressed: bool = event.pressed
+			@warning_ignore("unsafe_property_access")
+			var mb_pos: Vector2 = event.position
+			if mb_pressed and event.is_action_pressed("drag"):
 				_follow_target = null
 				_dragging = true
-				_drag_prev = event.position
-			elif not event.pressed and event.is_action_released("drag"):
+				_drag_prev = mb_pos
+			elif not mb_pressed and event.is_action_released("drag"):
 				_dragging = false
-		if event is InputEventMouseMotion and _dragging:
-			var delta_vec: Vector2 = event.position - _drag_prev
-			position -= delta_vec / zoom.x
-			_drag_prev = event.position
+		if event is InputEventMouseMotion:
+			@warning_ignore("unsafe_property_access")
+			var mm_pos: Vector2 = event.position
+			if _dragging:
+				var delta_vec: Vector2 = mm_pos - _drag_prev
+				position -= delta_vec / zoom.x
+				_drag_prev = mm_pos
 
-	if event is InputEventMouseButton and event.pressed:
-		if event.is_action_pressed("zoom_in"):
-			zoom_in()
-		elif event.is_action_pressed("zoom_out"):
-			zoom_out()
+	if event is InputEventMouseButton:
+		@warning_ignore("unsafe_property_access")
+		var mb_pressed2: bool = event.pressed
+		if mb_pressed2:
+			if event.is_action_pressed("zoom_in"):
+				zoom_in()
+			elif event.is_action_pressed("zoom_out"):
+				zoom_out()
 	if event is InputEventPanGesture:
-		_scroll_accum += event.delta.y
+		@warning_ignore("unsafe_property_access")
+		var pan_delta: Vector2 = event.delta
+		_scroll_accum += pan_delta.y
 		while _scroll_accum >= 0.3:
 			zoom_out()
 			_scroll_accum -= 0.3

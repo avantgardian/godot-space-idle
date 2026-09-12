@@ -141,17 +141,18 @@ func _build_ui() -> void:
 
 	# ---- Key bindings ----
 	sections.add_child(_section_header("Key Bindings"))
-	var keys_container: Variant = _margin_child(_build_keybindings_section())
+	var keys_container: MarginContainer = _margin_child(_build_keybindings_section())
 	sections.add_child(keys_container)
 
 	# ---- Display ----
 	sections.add_child(_section_header("Display"))
 
-	var fullscreen_cb: Variant = _checkbox(
+	var fullscreen_cb: CheckBox = _checkbox(
 		"Fullscreen", DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	)
+	@warning_ignore("unsafe_method_access")
 	fullscreen_cb.toggled.connect(
-		func(on: bool):
+		func(on: bool) -> void:
 			if on:
 				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 			else:
@@ -159,12 +160,15 @@ func _build_ui() -> void:
 	)
 	sections.add_child(_margin_child(fullscreen_cb))
 
-	var vsync_cb: Variant = _checkbox(
+	var vsync_cb: CheckBox = _checkbox(
 		"VSync", DisplayServer.window_get_vsync_mode() == DisplayServer.VSYNC_ENABLED
 	)
+	@warning_ignore("unsafe_method_access")
 	vsync_cb.toggled.connect(
-		func(on: bool):
-			var mode: Variant = DisplayServer.VSYNC_ENABLED if on else DisplayServer.VSYNC_DISABLED
+		func(on: bool) -> void:
+			var mode: DisplayServer.VSyncMode = (
+				DisplayServer.VSYNC_ENABLED if on else DisplayServer.VSYNC_DISABLED
+			)
 			DisplayServer.window_set_vsync_mode(mode)
 	)
 	sections.add_child(_margin_child(vsync_cb))
@@ -172,17 +176,19 @@ func _build_ui() -> void:
 	# ---- Accessibility ----
 	sections.add_child(_section_header("Accessibility"))
 
-	var motion_cb: Variant = _checkbox("Reduced Motion", _settings.reduced_motion)
+	var motion_cb: CheckBox = _checkbox("Reduced Motion", _settings.reduced_motion)
+	@warning_ignore("unsafe_method_access")
 	motion_cb.toggled.connect(
-		func(on: bool):
+		func(on: bool) -> void:
 			_settings.reduced_motion = on
 			_settings.save()
 	)
 	sections.add_child(_margin_child(motion_cb))
 
-	var shake_cb: Variant = _checkbox("Screen Shake", _settings.screen_shake)
+	var shake_cb: CheckBox = _checkbox("Screen Shake", _settings.screen_shake)
+	@warning_ignore("unsafe_method_access")
 	shake_cb.toggled.connect(
-		func(on: bool):
+		func(on: bool) -> void:
 			_settings.screen_shake = on
 			_settings.save()
 	)
@@ -195,7 +201,7 @@ func _build_ui() -> void:
 	cb_option.add_item("Tritanopia", 3)
 	cb_option.selected = _settings.colorblind_mode
 	cb_option.item_selected.connect(
-		func(idx: int):
+		func(idx: int) -> void:
 			_settings.colorblind_mode = idx
 			_settings.save()
 	)
@@ -307,6 +313,7 @@ func _margin_child(child: Control) -> MarginContainer:
 func _on_rebind_pressed(action: String) -> void:
 	_rebind_action = action
 	_rebind_popup.show()
+	@warning_ignore("unsafe_property_access", "unsafe_call_argument", "unsafe_cast")
 	_rebind_popup.get_node("RebindLabel").text = (
 		"Press a key for: " + action.capitalize().replace("_", " ")
 	)
@@ -315,14 +322,17 @@ func _on_rebind_pressed(action: String) -> void:
 func _input(event: InputEvent) -> void:
 	if not _rebind_popup.visible:
 		return
-	if event is InputEventKey and event.pressed:
-		var ke: InputEventKey = event as InputEventKey
-		if ke.keycode == KEY_ESCAPE:
+	if event is InputEventKey:
+		@warning_ignore("unsafe_property_access")
+		var is_pressed: bool = event.pressed
+		if is_pressed:
+			var ke: InputEventKey = event as InputEventKey
+			if ke.keycode == KEY_ESCAPE:
+				_rebind_popup.hide()
+				_rebind_action = ""
+				return
+			_apply_rebind(ke.keycode)
 			_rebind_popup.hide()
-			_rebind_action = ""
-			return
-		_apply_rebind(ke.keycode)
-		_rebind_popup.hide()
 
 
 func _apply_rebind(keycode: int) -> void:
