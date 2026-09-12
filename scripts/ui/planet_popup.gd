@@ -6,13 +6,13 @@ const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
 const FONT_MONO: Font = preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 var reduced_motion: bool = false
-var _planet_node: Node2D
+var _planet_node: OrbitalBody
 var _camera: Camera2D
 var _popup_labels: Dictionary = {}
 var _planet_color: Color
 
 
-func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
+func show_for_planet(planet_node: OrbitalBody, camera: Camera2D) -> void:
 	_planet_node = planet_node
 	_camera = camera
 	_planet_color = planet_node.planet_color
@@ -65,17 +65,19 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 	sep.color = DU.modulate_alpha(PAL.HULL_LINE, 0.3)
 	vbox.add_child(sep)
 
-	var fields: Variant = [
+	var fields: Array[Dictionary] = [
 		{key = "mass", label = "Mass", fmt = "%s  Msun"},
 		{key = "speed", label = "Speed", fmt = "%.1f  u/s"},
 		{key = "radius", label = "Orbit", fmt = "%.0f  u"},
 		{key = "period", label = "Period", fmt = "%.0f  s"},
 	]
-	for f in fields:
+	for f: Dictionary in fields:
 		var hbox: HBoxContainer = HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", 8)
 		var lbl: Label = Label.new()
-		lbl.text = f.label
+		@warning_ignore("unsafe_property_access")
+		var flabel: String = f.label as String
+		lbl.text = flabel
 		lbl.add_theme_font_size_override("font_size", 11)
 		lbl.add_theme_color_override("font_color", DU.modulate_alpha(PAL.HULL_LINE, 0.7))
 		lbl.custom_minimum_size = Vector2(48, 0)
@@ -85,7 +87,9 @@ func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 		val.add_theme_font_size_override("font_size", 11)
 		val.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 		hbox.add_child(val)
-		_popup_labels[f.key] = val
+		@warning_ignore("unsafe_property_access")
+		var fkey: String = f.key as String
+		_popup_labels[fkey] = val
 		vbox.add_child(hbox)
 
 	size = Vector2(280, 150)
@@ -110,15 +114,23 @@ func _process(_delta: float) -> void:
 		close()
 		return
 
-	var viewport_size: Variant = get_viewport_rect().size
+	var viewport_size: Vector2 = get_viewport_rect().size
 
-	_popup_labels.mass.text = "%s  Msun" % str(_planet_node.mass)
-	_popup_labels.speed.text = "%.1f  u/s" % _planet_node.get_vel().length()
-	_popup_labels.radius.text = "%.0f  u" % _planet_node.orbit_radius
-	_popup_labels.period.text = "%.0f  s" % _planet_node.orbit_period
+	@warning_ignore("unsafe_property_access")
+	var mass_label: Label = _popup_labels.mass as Label
+	mass_label.text = "%s  Msun" % str(_planet_node.mass)
+	@warning_ignore("unsafe_property_access")
+	var speed_label: Label = _popup_labels.speed as Label
+	speed_label.text = "%.1f  u/s" % _planet_node.get_vel().length()
+	@warning_ignore("unsafe_property_access")
+	var radius_label: Label = _popup_labels.radius as Label
+	radius_label.text = "%.0f  u" % _planet_node.orbit_radius
+	@warning_ignore("unsafe_property_access")
+	var period_label: Label = _popup_labels.period as Label
+	period_label.text = "%.0f  s" % _planet_node.orbit_period
 
 	var screen_pos: Vector2 = _camera.get_canvas_transform() * _planet_node.position
-	var ps: Variant = size
+	var ps: Vector2 = size
 
 	var planet_screen_r: float = max(_planet_node.collision_radius * _camera.zoom.x, 12.0)
 	position = screen_pos + Vector2(planet_screen_r + 16, -ps.y - 36)

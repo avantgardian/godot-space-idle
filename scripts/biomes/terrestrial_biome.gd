@@ -1,7 +1,7 @@
 class_name TerrestrialBiomeConfig
 extends BiomeConfig
 
-const TERRESTRIAL_SHADER := preload("res://shaders/bodies/planet_terrestrial.gdshader")
+const TERRESTRIAL_SHADER: Shader = preload("res://shaders/bodies/planet_terrestrial.gdshader")
 
 @export var ocean_deep: Color = Color(0.04, 0.18, 0.42, 1.0)
 @export var ocean_shallow: Color = Color(0.10, 0.45, 0.65, 1.0)

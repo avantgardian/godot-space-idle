@@ -8,7 +8,7 @@ func _ready() -> void:
 	var game_theme: Theme = load("res://resources/game_theme.tres") as Theme
 	self.theme = game_theme
 
-	var title: Variant = $CenterContainer/MenuContainer/Title as Label
+	var title: Label = $CenterContainer/MenuContainer/Title as Label
 	title.add_theme_font_override("font", FONT_BOLD)
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
@@ -32,7 +32,7 @@ func _ready() -> void:
 		$CenterContainer/MenuContainer/QuitBtn as Button,
 	]
 
-	for btn in buttons:
+	for btn: Button in buttons:
 		btn.custom_minimum_size = Vector2(320, 52)
 
 	$CenterContainer/MenuContainer/SandboxBtn.pressed.connect(_on_sandbox_pressed)

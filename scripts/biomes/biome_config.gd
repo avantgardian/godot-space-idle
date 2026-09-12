@@ -1,7 +1,7 @@
 class_name BiomeConfig
 extends Resource
 
-const MAX_FEATURES := 16
+const MAX_FEATURES: int = 16
 
 @export var polar_cap_lat_deg: float = 0.0
 @export var polar_softness: float = 0.1
@@ -49,13 +49,13 @@ func _seed_storms(
 	var count: int = clampi(storm_count, 0, MAX_FEATURES)
 	if count == 0:
 		return
-	var rng := RandomNumberGenerator.new()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = seed_val * 53 + 11
-	for _i in range(count):
-		var lat := rng.randf_range(-1.4, 1.4)
-		var lon := rng.randf_range(-PI, PI)
-		var size := deg_to_rad(rng.randf_range(storm_size_min_deg, storm_size_max_deg))
-		var strength := rng.randf_range(0.4, 0.75)
+	for _i: int in range(count):
+		var lat: float = rng.randf_range(-1.4, 1.4)
+		var lon: float = rng.randf_range(-PI, PI)
+		var size: float = deg_to_rad(rng.randf_range(storm_size_min_deg, storm_size_max_deg))
+		var strength: float = rng.randf_range(0.4, 0.75)
 		var kind: int = rng.randi_range(0, kind_count - 1)
 		_storm_lats.append(lat)
 		_storm_lons.append(lon)
@@ -65,19 +65,19 @@ func _seed_storms(
 
 
 func _sync_storms(mat: ShaderMaterial) -> void:
-	var count := _storm_lats.size()
+	var count: int = _storm_lats.size()
 	mat.set_shader_parameter("u_storm_count", count)
 	if count == 0:
 		return
-	var pos := PackedVector2Array()
-	var sizes := PackedFloat32Array()
-	var strengths := PackedFloat32Array()
-	var kinds := PackedInt32Array()
+	var pos: PackedVector2Array = PackedVector2Array()
+	var sizes: PackedFloat32Array = PackedFloat32Array()
+	var strengths: PackedFloat32Array = PackedFloat32Array()
+	var kinds: PackedInt32Array = PackedInt32Array()
 	pos.resize(MAX_FEATURES)
 	sizes.resize(MAX_FEATURES)
 	strengths.resize(MAX_FEATURES)
 	kinds.resize(MAX_FEATURES)
-	for i in range(MAX_FEATURES):
+	for i: int in range(MAX_FEATURES):
 		if i < count:
 			pos[i] = Vector2(_storm_lats[i], _storm_lons[i])
 			sizes[i] = _storm_sizes[i]

@@ -1,7 +1,7 @@
 class_name GreenhouseBiomeConfig
 extends BiomeConfig
 
-const GREENHOUSE_SHADER := preload("res://shaders/bodies/planet_greenhouse.gdshader")
+const GREENHOUSE_SHADER: Shader = preload("res://shaders/bodies/planet_greenhouse.gdshader")
 
 @export var cloud_hi: Color = Color(0.95, 0.85, 0.55, 1.0)
 @export var cloud_lo: Color = Color(0.65, 0.45, 0.20, 1.0)

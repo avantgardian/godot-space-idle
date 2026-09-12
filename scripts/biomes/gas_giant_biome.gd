@@ -1,7 +1,7 @@
 class_name GasGiantBiomeConfig
 extends BiomeConfig
 
-const GAS_GIANT_SHADER := preload("res://shaders/bodies/planet_gas_giant.gdshader")
+const GAS_GIANT_SHADER: Shader = preload("res://shaders/bodies/planet_gas_giant.gdshader")
 
 const STORM_RUST: int = 0
 const STORM_WHITE: int = 1

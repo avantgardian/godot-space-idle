@@ -106,11 +106,12 @@ func _process(_delta: float) -> void:
 		close()
 		return
 
+	@warning_ignore("unsafe_property_access")
 	_mass_val.text = "%.4f  Msun" % _controller.sun_mass
 
-	var viewport_size: Variant = get_viewport_rect().size
+	var viewport_size: Vector2 = get_viewport_rect().size
 	var screen_pos: Vector2 = _camera.get_canvas_transform() * _sun_node.position
-	var ps: Variant = size
+	var ps: Vector2 = size
 	var sun_screen_r: float = max(60.0 * _camera.zoom.x, 30.0)
 	position = screen_pos + Vector2(sun_screen_r + 16, -ps.y - 36)
 	position.x = clamp(position.x, 10, viewport_size.x - ps.x - 10)

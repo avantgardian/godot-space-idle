@@ -1,7 +1,7 @@
 class_name SettingsManager
 extends RefCounted
 
-const PATH := "user://settings.cfg"
+const PATH: String = "user://settings.cfg"
 
 const REBINDABLE_ACTIONS: Array[String] = [
 	"ui_cancel",
@@ -27,13 +27,13 @@ func _init() -> void:
 
 
 func _load() -> void:
-	var err := _file.load(PATH)
+	var err: int = _file.load(PATH)
 	if err != OK:
 		_save_defaults()
 		return
-	reduced_motion = _file.get_value("accessibility", "reduced_motion", false)
-	screen_shake = _file.get_value("accessibility", "screen_shake", true)
-	colorblind_mode = _file.get_value("accessibility", "colorblind_mode", 0)
+	reduced_motion = _file.get_value("accessibility", "reduced_motion", false) as bool
+	screen_shake = _file.get_value("accessibility", "screen_shake", true) as bool
+	colorblind_mode = _file.get_value("accessibility", "colorblind_mode", 0) as int
 	_load_keybindings()
 
 
@@ -54,49 +54,59 @@ func save() -> void:
 
 
 func _default_keybindings() -> Dictionary:
-	var out := {}
-	for action in REBINDABLE_ACTIONS:
-		var events := InputMap.action_get_events(action) if InputMap.has_action(action) else []
+	var out: Dictionary = {}
+	for action: String in REBINDABLE_ACTIONS:
+		@warning_ignore("unsafe_cast")
+		var events: Array[InputEvent] = (
+			InputMap.action_get_events(action) if InputMap.has_action(action) else []
+			as Array[InputEvent]
+		)
 		var scancodes: Array[int] = []
-		for ev in events:
+		for ev: InputEvent in events:
 			if ev is InputEventKey:
-				scancodes.append(ev.keycode)
+				scancodes.append((ev as InputEventKey).keycode)
 		out[action] = scancodes
 	return out
 
 
 func _current_keybindings() -> Dictionary:
-	var out := {}
-	for action in REBINDABLE_ACTIONS:
+	var out: Dictionary = {}
+	for action: String in REBINDABLE_ACTIONS:
 		var scancodes: Array[int] = []
 		if InputMap.has_action(action):
-			for ev in InputMap.action_get_events(action):
+			@warning_ignore("unsafe_cast")
+			var evs: Array[InputEvent] = InputMap.action_get_events(action) as Array[InputEvent]
+			for ev: InputEvent in evs:
 				if ev is InputEventKey:
-					scancodes.append(ev.keycode)
+					scancodes.append((ev as InputEventKey).keycode)
 		out[action] = scancodes
 	return out
 
 
 func _save_keybindings(bindings: Dictionary) -> void:
-	for action in REBINDABLE_ACTIONS:
-		var scancodes: Array = bindings.get(action, [])
+	for action: String in REBINDABLE_ACTIONS:
+		@warning_ignore("unsafe_cast")
+		var scancodes: Array = bindings.get(action, []) as Array
 		_file.set_value("bindings", action, scancodes)
 
 
 func _load_keybindings() -> void:
-	for action in REBINDABLE_ACTIONS:
+	for action: String in REBINDABLE_ACTIONS:
 		if not _file.has_section_key("bindings", action):
 			continue
-		var stored: Array = _file.get_value("bindings", action, [])
+		@warning_ignore("unsafe_cast")
+		var stored: Array = _file.get_value("bindings", action, []) as Array
 		if stored.is_empty():
 			continue
 		if not InputMap.has_action(action):
 			continue
-		for ev in InputMap.action_get_events(action):
+		@warning_ignore("unsafe_cast")
+		var existing: Array[InputEvent] = InputMap.action_get_events(action) as Array[InputEvent]
+		for ev: InputEvent in existing:
 			if ev is InputEventKey:
 				InputMap.action_erase_event(action, ev)
-		for code in stored:
-			var ke := InputEventKey.new()
+		for code: Variant in stored:
+			var ke: InputEventKey = InputEventKey.new()
 			ke.keycode = code as Key
 			InputMap.action_add_event(action, ke)
 
@@ -106,11 +116,13 @@ func set_keybinding(action: String, scancodes: Array[int]) -> void:
 		return
 	if not InputMap.has_action(action):
 		return
-	for ev in InputMap.action_get_events(action):
+	@warning_ignore("unsafe_cast")
+	var evs: Array[InputEvent] = InputMap.action_get_events(action) as Array[InputEvent]
+	for ev: InputEvent in evs:
 		if ev is InputEventKey:
 			InputMap.action_erase_event(action, ev)
-	for code in scancodes:
-		var ke := InputEventKey.new()
+	for code: int in scancodes:
+		var ke: InputEventKey = InputEventKey.new()
 		ke.keycode = code as Key
 		InputMap.action_add_event(action, ke)
 	save()

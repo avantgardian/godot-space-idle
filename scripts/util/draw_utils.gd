@@ -1,7 +1,7 @@
 class_name DrawUtils
 extends RefCounted
 
-const PAL := preload("res://scripts/util/tron_palette.gd")
+const PAL: GDScript = preload("res://scripts/util/tron_palette.gd")
 
 # ---------------------------------------------------------------------------
 # TRON neon rendering helpers. Pure-draw utilities; callers own state
@@ -11,26 +11,26 @@ const PAL := preload("res://scripts/util/tron_palette.gd")
 
 # Canonical 3-stroke neon widths. The triple-stack IS the TRON look:
 # wide soft glow -> mid stroke -> crisp inner core.
-const NEON_GLOW_WIDTH := 5.0
-const NEON_LINE_WIDTH := 1.5
-const NEON_BRIGHT_WIDTH := 0.5
+const NEON_GLOW_WIDTH: float = 5.0
+const NEON_LINE_WIDTH: float = 1.5
+const NEON_BRIGHT_WIDTH: float = 0.5
 
 # 2-stroke accent widths (filled polygon + glowing outline + crisp edge).
-const ACCENT_GLOW_WIDTH := 2.0
-const ACCENT_LINE_WIDTH := 0.5
+const ACCENT_GLOW_WIDTH: float = 2.0
+const ACCENT_LINE_WIDTH: float = 0.5
 
 # Default per-arc sampling resolution. Higher = smoother curved strokes.
-const ARC_RESOLUTION := 18
+const ARC_RESOLUTION: int = 18
 
 # Orbit trail tint + alpha tuning (issue #85).
 # 2-stop cyan gradient: head = HULL_BRIGHT tinted toward the planet's
 # identity color (gradient stop 1, the newest end of the trail); tail =
 # HULL_LINE tinted toward identity with low alpha (stop 0, oldest end).
 # All trails render with additive blending (configured by TrailComponent).
-const TRAIL_HEAD_TINT := 0.55
-const TRAIL_HEAD_ALPHA := 0.85
-const TRAIL_TAIL_TINT := 0.35
-const TRAIL_TAIL_ALPHA := 0.0
+const TRAIL_HEAD_TINT: float = 0.55
+const TRAIL_HEAD_ALPHA: float = 0.85
+const TRAIL_TAIL_TINT: float = 0.35
+const TRAIL_TAIL_ALPHA: float = 0.0
 
 
 # 3-stroke neon passage. Pass any closed or open polyline; if you want a
@@ -64,8 +64,8 @@ static func neon_arc_into(
 	bright: Color,
 	antialias: bool = true
 ) -> void:
-	for j in range(segments + 1):
-		var a := lerpf(a0, a1, float(j) / float(segments))
+	for j: int in range(segments + 1):
+		var a: float = lerpf(a0, a1, float(j) / float(segments))
 		buf[j] = center + Vector2(cos(a) * r, sin(a) * r)
 	neon_polyline(canvas, buf, glow, line, bright, antialias)
 
@@ -85,7 +85,7 @@ static func neon_arc(
 	bright: Color,
 	antialias: bool = true
 ) -> void:
-	var pts := PackedVector2Array()
+	var pts: PackedVector2Array = PackedVector2Array()
 	pts.resize(segments + 1)
 	neon_arc_into(pts, canvas, center, r, a0, a1, segments, glow, line, bright, antialias)
 
@@ -106,13 +106,13 @@ static func neon_segmented_ring(
 	bright: Color,
 	antialias: bool = true
 ) -> void:
-	var arc_len := (TAU - segment_count * gap) / segment_count
-	var start := -PI * 0.5 + gap * 0.5
-	var buf := PackedVector2Array()
+	var arc_len: float = (TAU - segment_count * gap) / segment_count
+	var start: float = -PI * 0.5 + gap * 0.5
+	var buf: PackedVector2Array = PackedVector2Array()
 	buf.resize(ARC_RESOLUTION + 1)
-	for i in range(segment_count):
-		var a0 := start + (arc_len + gap) * i
-		var a1 := a0 + arc_len
+	for i: int in range(segment_count):
+		var a0: float = start + (arc_len + gap) * i
+		var a1: float = a0 + arc_len
 		neon_arc_into(buf, canvas, center, r, a0, a1, ARC_RESOLUTION, glow, line, bright, antialias)
 
 

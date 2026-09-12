@@ -16,13 +16,13 @@ func seed_features(seed_val: int) -> void:
 	_storm_sizes.append(deg_to_rad(10.0))
 	_storm_strengths.append(0.60)
 	_storm_kinds.append(STORM_RUST)
-	var rng := RandomNumberGenerator.new()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = seed_val * 53 + 11
-	for i in range(1, count):
-		var lat := rng.randf_range(-1.4, 1.4)
-		var lon := rng.randf_range(-PI, PI)
-		var size := deg_to_rad(rng.randf_range(storm_size_min_deg, storm_size_max_deg))
-		var strength := rng.randf_range(0.35, 0.60)
+	for i: int in range(1, count):
+		var lat: float = rng.randf_range(-1.4, 1.4)
+		var lon: float = rng.randf_range(-PI, PI)
+		var size: float = deg_to_rad(rng.randf_range(storm_size_min_deg, storm_size_max_deg))
+		var strength: float = rng.randf_range(0.35, 0.60)
 		_storm_lats.append(lat)
 		_storm_lons.append(lon)
 		_storm_sizes.append(size)
