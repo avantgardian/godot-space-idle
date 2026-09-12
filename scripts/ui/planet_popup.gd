@@ -6,16 +6,17 @@ const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
 const FONT_MONO: Font = preload("res://resources/fonts/ShareTechMono-Regular.ttf")
 
 var reduced_motion: bool = false
-var _planet_node: OrbitalBody
+var _planet_node: Node2D
 var _camera: Camera2D
 var _popup_labels: Dictionary = {}
 var _planet_color: Color
 
 
-func show_for_planet(planet_node: OrbitalBody, camera: Camera2D) -> void:
+func show_for_planet(planet_node: Node2D, camera: Camera2D) -> void:
 	_planet_node = planet_node
 	_camera = camera
-	_planet_color = planet_node.planet_color
+	@warning_ignore("unsafe_property_access")
+	_planet_color = planet_node.planet_color as Color
 
 	mouse_filter = MOUSE_FILTER_IGNORE
 
@@ -54,7 +55,8 @@ func show_for_planet(planet_node: OrbitalBody, camera: Camera2D) -> void:
 	margin.add_child(vbox)
 
 	var name_label: Label = Label.new()
-	name_label.text = planet_node.planet_name
+	@warning_ignore("unsafe_property_access")
+	name_label.text = planet_node.planet_name as String
 	name_label.add_theme_font_size_override("font_size", 18)
 	name_label.add_theme_color_override("font_color", PAL.HULL_BRIGHT)
 	vbox.add_child(name_label)
@@ -116,23 +118,30 @@ func _process(_delta: float) -> void:
 
 	var viewport_size: Vector2 = get_viewport_rect().size
 
-	@warning_ignore("unsafe_property_access")
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	var mass_label: Label = _popup_labels.mass as Label
-	mass_label.text = "%s  Msun" % str(_planet_node.mass)
 	@warning_ignore("unsafe_property_access")
+	mass_label.text = "%s  Msun" % str(_planet_node.mass as float)
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
 	var speed_label: Label = _popup_labels.speed as Label
-	speed_label.text = "%.1f  u/s" % _planet_node.get_vel().length()
+	@warning_ignore("unsafe_property_access", "unsafe_method_access")
+	speed_label.text = "%.1f  u/s" % (_planet_node.get_vel() as Vector2).length()
 	@warning_ignore("unsafe_property_access")
 	var radius_label: Label = _popup_labels.radius as Label
-	radius_label.text = "%.0f  u" % _planet_node.orbit_radius
+	@warning_ignore("unsafe_property_access")
+	radius_label.text = "%.0f  u" % (_planet_node.orbit_radius as float)
 	@warning_ignore("unsafe_property_access")
 	var period_label: Label = _popup_labels.period as Label
-	period_label.text = "%.0f  s" % _planet_node.orbit_period
+	@warning_ignore("unsafe_property_access")
+	period_label.text = "%.0f  s" % (_planet_node.orbit_period as float)
 
 	var screen_pos: Vector2 = _camera.get_canvas_transform() * _planet_node.position
 	var ps: Vector2 = size
 
-	var planet_screen_r: float = max(_planet_node.collision_radius * _camera.zoom.x, 12.0)
+	@warning_ignore("unsafe_property_access")
+	var planet_screen_r: float = max(
+		(_planet_node.collision_radius as float) * _camera.zoom.x, 12.0
+	)
 	position = screen_pos + Vector2(planet_screen_r + 16, -ps.y - 36)
 	position.x = clamp(position.x, 10, viewport_size.x - ps.x - 10)
 	position.y = clamp(position.y, 10, viewport_size.y - ps.y - 10)
