@@ -2,8 +2,6 @@
 
 A gravity sandbox built in Godot 4.7 with idle/clicker elements. Planets orbit under Newtonian mechanics, asteroids drift through the system, and bodies can collide and merge.
 
-![screenshot](screenshot.png)
-
 ## Running
 
 Open the project in the Godot editor:
