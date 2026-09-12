@@ -1,9 +1,9 @@
 class_name RingSystemComponent
 extends Node2D
 
-const RING_SHADER := preload("res://shaders/bodies/ring_system.gdshader")
-const PAL := preload("res://scripts/util/planet_palette.gd")
-const TEX := preload("res://scripts/util/texture_utils.gd")
+const RING_SHADER: Shader = preload("res://shaders/bodies/ring_system.gdshader")
+const PAL: GDScript = preload("res://scripts/util/planet_palette.gd")
+const TEX: GDScript = preload("res://scripts/util/texture_utils.gd")
 
 @export var ring_inner: float = 0.40
 @export var ring_outer: float = 0.68
@@ -25,26 +25,31 @@ var _ring_mat_front: ShaderMaterial
 var _ring_rotation: float = 0.0
 var _cos_ring_rot: float = 1.0
 var _sin_ring_rot: float = 0.0
-var _last_light_dir := Vector3(1.0, 0.0, 0.0)
+var _last_light_dir: Vector3 = Vector3(1.0, 0.0, 0.0)
 
 
-func _ready():
-	var parent := get_parent()
+func _ready() -> void:
+	var parent: Node = get_parent()
+	if parent == null:
+		return
 
-	var seed_val := ring_seed
+	var seed_val: int = ring_seed
 	if seed_val < 0:
-		seed_val = parent.planet_seed
+		@warning_ignore("unsafe_property_access")
+		seed_val = (parent as OrbitalBody).planet_seed if parent is OrbitalBody else -1
 	if seed_val == 0:
 		push_error("%s: ring_seed is 0 — set an explicit seed" % name)
 	seed_val = abs(seed_val) % 1023
 
-	var tilt_deg: float = parent.axial_tilt_deg
+	@warning_ignore("unsafe_property_access")
+	var tilt_deg: float = (parent as OrbitalBody).axial_tilt_deg if parent is OrbitalBody else 0.0
 	_ring_rotation = deg_to_rad(tilt_deg)
 	_cos_ring_rot = cos(-_ring_rotation)
 	_sin_ring_rot = sin(-_ring_rotation)
 
-	var tex := TEX.make_white_square()
-	var ring_scale := Vector2(ring_size, ring_size * ring_aspect)
+	@warning_ignore("unsafe_method_access")
+	var tex: Texture2D = TEX.make_white_square() as Texture2D
+	var ring_scale: Vector2 = Vector2(ring_size, ring_size * ring_aspect)
 
 	_ring_sprite_back = Sprite2D.new()
 	_ring_sprite_back.texture = tex
@@ -68,7 +73,7 @@ func _ready():
 
 
 func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
-	var mat := ShaderMaterial.new()
+	var mat: ShaderMaterial = ShaderMaterial.new()
 	mat.shader = RING_SHADER
 	mat.set_shader_parameter("u_light_dir", Vector3(-1.0, 0.0, 0.0))
 	mat.set_shader_parameter("u_ring_inner", ring_inner)
@@ -85,14 +90,17 @@ func _make_ring_material(half_mask: int, seed_val: int) -> ShaderMaterial:
 	return mat
 
 
-func _physics_process(_delta):
-	var parent := get_parent()
+func _physics_process(_delta: float) -> void:
+	var parent: Node = get_parent()
 	if not parent:
 		return
-	var dir: Vector2 = -parent.position.normalized()
-	var lx := dir.x * _cos_ring_rot - dir.y * _sin_ring_rot
-	var ly := dir.x * _sin_ring_rot + dir.y * _cos_ring_rot
-	var ring_light := Vector3(lx, ly, 0.0)
+	@warning_ignore("unsafe_property_access")
+	var dir: Vector2 = (
+		-(parent as Node2D).position.normalized() if parent is Node2D else Vector2.ZERO
+	)
+	var lx: float = dir.x * _cos_ring_rot - dir.y * _sin_ring_rot
+	var ly: float = dir.x * _sin_ring_rot + dir.y * _cos_ring_rot
+	var ring_light: Vector3 = Vector3(lx, ly, 0.0)
 	if ring_light.distance_squared_to(_last_light_dir) > 1e-6:
 		_last_light_dir = ring_light
 		if _ring_mat_back:

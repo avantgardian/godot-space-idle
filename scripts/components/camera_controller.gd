@@ -18,14 +18,14 @@ var _follow_target: Node2D = null
 var _star_field: Node2D
 
 
-func _ready():
+func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	zoom = Vector2(1, 1)
 	position = Vector2.ZERO
 	_star_field = get_node_or_null("../StarField") as Node2D
 
 
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	var cur_zoom: float = zoom.x
 	if abs(cur_zoom - target_zoom) > 0.0001:
 		var new_zoom: float = lerp(cur_zoom, target_zoom, zoom_lerp_speed * delta)
@@ -36,13 +36,20 @@ func _physics_process(delta):
 		zoom = Vector2(target_zoom, target_zoom)
 
 	if _follow_target:
-		if is_instance_valid(_follow_target) and not _follow_target.is_dead():
-			position = position.lerp(_follow_target.position, 3.0 * delta)
+		if is_instance_valid(_follow_target):
+			@warning_ignore("unsafe_method_access")
+			var alive: bool = (
+				not _follow_target.is_dead() if _follow_target.has_method("is_dead") else true
+			)
+			if alive:
+				position = position.lerp(_follow_target.position, 3.0 * delta)
+			else:
+				_follow_target = null
 		else:
 			_follow_target = null
 
 	if not _follow_target:
-		var move := Vector2.ZERO
+		var move: Vector2 = Vector2.ZERO
 		if Input.is_action_pressed("ui_right"):
 			move.x += 1
 		if Input.is_action_pressed("ui_left"):
@@ -66,12 +73,14 @@ func _physics_process(delta):
 
 	if get_tree().paused and _star_field:
 		if _star_field.has_method("update_parallax"):
+			@warning_ignore("unsafe_method_access")
 			_star_field.update_parallax(position, zoom.x)
 			if _star_field.has_method("set_blur"):
+				@warning_ignore("unsafe_method_access")
 				_star_field.set_blur(get_blur_amount())
 
 
-func _input(event):
+func _input(event: InputEvent) -> void:
 	if get_tree().paused:
 		if event is InputEventMouseButton:
 			if event.pressed and event.is_action_pressed("drag"):
@@ -100,58 +109,57 @@ func _input(event):
 			_scroll_accum += 0.3
 
 
-func follow_node(node: Node2D):
+func follow_node(node: Node2D) -> void:
 	_follow_target = node
 	target_zoom = max_zoom
 
 
-func unfollow():
+func unfollow() -> void:
 	_follow_target = null
 
 
 func is_following() -> bool:
-	return (
-		_follow_target != null
-		and is_instance_valid(_follow_target)
-		and not _follow_target.is_dead()
-	)
+	if _follow_target == null or not is_instance_valid(_follow_target):
+		return false
+	@warning_ignore("unsafe_method_access")
+	return not _follow_target.is_dead() if _follow_target.has_method("is_dead") else true
 
 
 func get_follow_target() -> Node2D:
 	return _follow_target
 
 
-func zoom_in():
-	var prev_zoom := zoom.x
+func zoom_in() -> void:
+	var prev_zoom: float = zoom.x
 	target_zoom = clamp(target_zoom + zoom_step, min_zoom, max_zoom)
 	if prev_zoom == target_zoom:
 		return
-	var cursor_world := get_global_mouse_position()
+	var cursor_world: Vector2 = get_global_mouse_position()
 	zoom = Vector2(target_zoom, target_zoom)
 	position = cursor_world + (position - cursor_world) * prev_zoom / target_zoom
 
 
-func zoom_out():
-	var prev_zoom := zoom.x
+func zoom_out() -> void:
+	var prev_zoom: float = zoom.x
 	target_zoom = clamp(target_zoom - zoom_step, min_zoom, max_zoom)
 	if prev_zoom == target_zoom:
 		return
-	var cursor_world := get_global_mouse_position()
+	var cursor_world: Vector2 = get_global_mouse_position()
 	zoom = Vector2(target_zoom, target_zoom)
 	position = cursor_world + (position - cursor_world) * prev_zoom / target_zoom
 
 
-func start_drag(screen_pos: Vector2):
+func start_drag(screen_pos: Vector2) -> void:
 	_follow_target = null
 	_dragging = true
 	_drag_prev = screen_pos
 
 
-func end_drag():
+func end_drag() -> void:
 	_dragging = false
 
 
-func update_drag(screen_pos: Vector2):
+func update_drag(screen_pos: Vector2) -> void:
 	if not _dragging:
 		return
 	var delta_vec: Vector2 = screen_pos - _drag_prev
@@ -159,7 +167,7 @@ func update_drag(screen_pos: Vector2):
 	_drag_prev = screen_pos
 
 
-func trigger_shake(intensity: float):
+func trigger_shake(intensity: float) -> void:
 	shake_intensity = min(shake_intensity + intensity, 40.0)
 
 
@@ -168,5 +176,5 @@ func set_screen_shake_enabled(on: bool) -> void:
 
 
 func get_blur_amount() -> float:
-	var t := (zoom.x - min_zoom) / (max_zoom - min_zoom)
+	var t: float = (zoom.x - min_zoom) / (max_zoom - min_zoom)
 	return t * t * 5.0

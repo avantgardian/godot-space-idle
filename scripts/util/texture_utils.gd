@@ -83,7 +83,9 @@ static func make_noisy_blob(size: int, rng_seed: int, color_fn: Callable) -> Ima
 	return ImageTexture.create_from_image(image)
 
 
-static func draw_disk_on_image(image: Image, cx: float, cy: float, radius: float, color: Color):
+static func draw_disk_on_image(
+	image: Image, cx: float, cy: float, radius: float, color: Color
+) -> void:
 	var r := ceili(radius)
 	for dx in range(-r, r + 1):
 		for dy in range(-r, r + 1):

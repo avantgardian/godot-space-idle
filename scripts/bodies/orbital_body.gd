@@ -3,12 +3,12 @@ extends Node2D
 
 signal collided_with_sun(body: Node2D)
 
-const _TEX := preload("res://scripts/util/texture_utils.gd")
-const _TRAIL := preload("res://scripts/components/trail_component.gd")
-const DU := preload("res://scripts/util/draw_utils.gd")
-const _ATM_SHADER := preload("res://shaders/bodies/atmosphere_rim.gdshader")
-const PAL := preload("res://scripts/util/planet_palette.gd")
-const _COLLISION := preload("res://scripts/util/collision_profile.gd")
+const _TEX: GDScript = preload("res://scripts/util/texture_utils.gd")
+const _TRAIL: GDScript = preload("res://scripts/components/trail_component.gd")
+const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
+const _ATM_SHADER: Shader = preload("res://shaders/bodies/atmosphere_rim.gdshader")
+const PAL: GDScript = preload("res://scripts/util/planet_palette.gd")
+const _COLLISION: GDScript = preload("res://scripts/util/collision_profile.gd")
 
 @export var orbit_radius: float = 500.0
 @export var orbit_period: float = 48.0
@@ -34,20 +34,20 @@ var _pos: Vector2
 var _vel: Vector2
 var _dead: bool = false
 var _gm: float = 0.0
-var _trail_component: Node
+var _trail_component: TrailComponent
 var _sprite: Sprite2D
 var _atm_sprite: Sprite2D
 var _atm_mat: ShaderMaterial
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
-var _last_light_dir := Vector2.ZERO
+var _last_light_dir: Vector2 = Vector2.ZERO
 
 
 func is_dead() -> bool:
 	return _dead
 
 
-func disable():
+func disable() -> void:
 	if _trail_component:
 		_trail_component.fade_out()
 	_dead = true
@@ -58,30 +58,33 @@ func get_vel() -> Vector2:
 	return _vel
 
 
-func set_vel(v: Vector2):
+func set_vel(v: Vector2) -> void:
 	_vel = v
 
 
-func _ready():
+func _ready() -> void:
 	_gm = _initial_gm()
 	_generate_texture()
 	_reset()
 
 
-func setup_trail(color: Color):
-	_trail_component = _TRAIL.new()
-	var head := DU.trail_head(color)
-	var tail := DU.trail_tail(color)
+func setup_trail(color: Color) -> void:
+	@warning_ignore("unsafe_cast")
+	_trail_component = _TRAIL.new() as TrailComponent
+	var head: Color = DU.trail_head(color)
+	var tail: Color = DU.trail_tail(color)
 	_trail_component.setup(tail, head, 1.5, trail_max)
 	add_child(_trail_component)
 
 
-func _generate_texture():
-	var tex_size := _get_planet_texture_size()
+func _generate_texture() -> void:
+	var tex_size: int = _get_planet_texture_size()
 	_sprite = Sprite2D.new()
 	if use_shader:
+		@warning_ignore("unsafe_method_access")
 		_sprite.texture = _TEX.make_disk_mask(tex_size)
 	else:
+		@warning_ignore("unsafe_method_access")
 		_sprite.texture = _TEX.make_circle_texture(tex_size, _get_planet_color)
 	_sprite.centered = true
 	add_child(_sprite)
@@ -90,13 +93,13 @@ func _generate_texture():
 		_apply_atmosphere_shader(tex_size)
 
 
-func _apply_planet_shader():
+func _apply_planet_shader() -> void:
 	if planet_seed == 0:
 		push_error(
 			"%s: planet_seed is 0 — set an explicit seed for stable procedural generation" % name
 		)
 	var seed_val: int = abs(planet_seed) % 1023
-	var shader := biome.get_shader()
+	var shader: Shader = biome.get_shader()
 	if not shader:
 		return
 	_shader_mat = ShaderMaterial.new()
@@ -113,13 +116,14 @@ func _apply_planet_shader():
 	_sprite.material = _shader_mat
 
 
-func _apply_atmosphere_shader(tex_size: int):
+func _apply_atmosphere_shader(tex_size: int) -> void:
 	if atm_color.a <= 0.0:
 		return
 	var atm_tex_size: int = int(tex_size * atm_thickness_mult)
 	if atm_tex_size < 4:
 		return
 	_atm_sprite = Sprite2D.new()
+	@warning_ignore("unsafe_method_access")
 	_atm_sprite.texture = _TEX.make_white_square()
 	_atm_sprite.centered = true
 	_atm_sprite.z_index = 1
@@ -146,9 +150,9 @@ func _get_planet_color(_t: float, _x: int, _y: int) -> Color:
 	return Color.WHITE
 
 
-func _reset():
+func _reset() -> void:
 	_pos = Vector2(orbit_radius * cos(start_angle), orbit_radius * sin(start_angle))
-	var tangent := Vector2(-_pos.y, _pos.x).normalized()
+	var tangent: Vector2 = Vector2(-_pos.y, _pos.x).normalized()
 	_vel = tangent * sqrt(_gm / orbit_radius)
 	position = _pos
 	_dead = false
@@ -173,16 +177,16 @@ func get_gm() -> float:
 	return _gm
 
 
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	if _dead:
 		return
 
-	var gm := _gm * sun_mass
-	var r2 := _pos.length_squared()
+	var gm: float = _gm * sun_mass
+	var r2: float = _pos.length_squared()
 	if r2 < 1.0:
 		r2 = 1.0
-	var r := sqrt(r2)
-	var acc := -gm / r2 * _pos / r
+	var r: float = sqrt(r2)
+	var acc: Vector2 = -gm / r2 * _pos / r
 	_vel += acc * delta
 	_pos += _vel * delta
 	position = _pos
@@ -190,15 +194,15 @@ func _physics_process(delta):
 	if _shader_mat:
 		_planet_time += delta
 		_shader_mat.set_shader_parameter("u_time", _planet_time)
-		var dir := -position.normalized()
+		var dir: Vector2 = -position.normalized()
 		if dir.distance_squared_to(_last_light_dir) > 1e-6:
 			_last_light_dir = dir
-			var light_vec := Vector3(dir.x, dir.y, 0.0)
+			var light_vec: Vector3 = Vector3(dir.x, dir.y, 0.0)
 			_shader_mat.set_shader_parameter("u_light_dir", light_vec)
 			if _atm_mat:
 				_atm_mat.set_shader_parameter("u_light_dir", light_vec)
 
-	var sun_r := sun_collision_r(sun_mass) + collision_radius
+	var sun_r: float = sun_collision_r(sun_mass) + collision_radius
 	if r < sun_r:
 		if _trail_component:
 			_trail_component.fade_out()
