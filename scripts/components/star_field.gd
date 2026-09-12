@@ -22,7 +22,7 @@ func generate(seed_val: int, min_zoom: float):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_val
 
-	var tile_scale = 2.0 / min_zoom
+	var tile_scale := 2.0 / min_zoom
 	var screen_size := get_viewport_rect().size
 
 	for cfg in LAYERS:
@@ -57,12 +57,12 @@ func generate(seed_val: int, min_zoom: float):
 
 func update_parallax(camera_position: Vector2, camera_zoom: float):
 	var screen_size := get_viewport_rect().size
-	var world_half = screen_size * 0.5 / camera_zoom
+	var world_half := screen_size * 0.5 / camera_zoom
 
 	for i in _sprites.size():
 		var sprite := _sprites[i]
 		var ms := _motion_scales[i]
-		var origin = -camera_position * ms
+		var origin := -camera_position * ms
 		sprite.position = Vector2(
 			origin.x + _align_floor(camera_position.x - world_half.x - origin.x, screen_size.x),
 			origin.y + _align_floor(camera_position.y - world_half.y - origin.y, screen_size.y)
