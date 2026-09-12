@@ -1,8 +1,8 @@
 extends Node
 
-var Optparse: res = load('res://addons/gut/cli/optparse.gd')
-var Gut: GutMain = load('res://addons/gut/gut.gd')
-var GutRunner: PackedScene = load('res://addons/gut/gui/GutRunner.tscn')
+var Optparse = load('res://addons/gut/cli/optparse.gd')
+var Gut = load('res://addons/gut/gut.gd')
+var GutRunner = load('res://addons/gut/gui/GutRunner.tscn')
 
 # ------------------------------------------------------------------------------
 # Helper class to resolve the various different places where an option can
@@ -16,9 +16,9 @@ var GutRunner: PackedScene = load('res://addons/gut/gui/GutRunner.tscn')
 # will punch through null values of higher precedented hashes.
 # ------------------------------------------------------------------------------
 class GutCliOptionResolver:
-	var base_opts: Dictionary[Variant, Variant] = {}
-	var cmd_opts: Dictionary[Variant, Variant] = {}
-	var config_opts: Dictionary[Variant, Variant] = {}
+	var base_opts = {}
+	var cmd_opts = {}
+	var config_opts = {}
 
 
 	func get_value(key):
@@ -31,7 +31,7 @@ class GutCliOptionResolver:
 
 	# creates a copy of a hash with all values null.
 	func _null_copy(h):
-		var new_hash: Dictionary[Variant, Variant] = {}
+		var new_hash = {}
 		for key in h:
 			new_hash[key] = null
 		return new_hash
@@ -43,7 +43,7 @@ class GutCliOptionResolver:
 			return a
 
 	func _string_it(h):
-		var to_return: String = ''
+		var to_return = ''
 		for key in h:
 			to_return += str('(',key, ':', _nvl(h[key], 'NULL'), ')')
 		return to_return
@@ -55,13 +55,13 @@ class GutCliOptionResolver:
 				"resolved:\n", _string_it(get_resolved_values()))
 
 	func get_resolved_values():
-		var to_return: Dictionary[Variant, Variant] = {}
+		var to_return = {}
 		for key in base_opts:
 			to_return[key] = get_value(key)
 		return to_return
 
 	func to_s_verbose():
-		var to_return: String = ''
+		var to_return = ''
 		var resolved = get_resolved_values()
 		for key in base_opts:
 			to_return += str(key, "\n")
@@ -76,14 +76,14 @@ class GutCliOptionResolver:
 # Here starts the actual script that uses the Options class to kick off Gut
 # and run your tests.
 # ------------------------------------------------------------------------------
-var _gut_config: res = load('res://addons/gut/gut_config.gd').new()
+var _gut_config = load('res://addons/gut/gut_config.gd').new()
 
 # array of command line options specified
-var _final_opts: Array[Variant] = []
+var _final_opts = []
 
 
 func setup_options(options, font_names):
-	var opts: res = Optparse.new()
+	var opts = Optparse.new()
 	opts.banner =\
 """
 The GUT CLI
@@ -97,8 +97,8 @@ To generate a .gutconfig.json file you can use -gprint_gutconfig_sample
 To see the effective values of a CLI command and a gutconfig use -gpo
 
 Values for options can be supplied using:
-	option=value    # no space around "="
-	option value    # a space between option and value w/o =
+    option=value    # no space around "="
+    option value    # a space between option and value w/o =
 
 Options whose values are lists/arrays can be specified multiple times:
 	-gdir=a,b
@@ -106,7 +106,7 @@ Options whose values are lists/arrays can be specified multiple times:
 	-gdir e
 	# results in -gdir equaling [a, b, c, d, e]
 
-To not use an empty value instead of a default value, specify the option with
+To not use an empty value instead of a default value, specifiy the option with
 an immediate "=":
 	-gconfig=
 """
@@ -205,7 +205,7 @@ func extract_command_line_options(from, to):
 
 
 func _print_gutconfigs(values):
-	var header: String = """Here is a sample of a full .gutconfig.json file.
+	var header = """Here is a sample of a full .gutconfig.json file.
 You do not need to specify all values in your own file.  The values supplied in
 this sample are what would be used if you ran gut w/o the -gprint_gutconfig_sample
 option.   Option priority is:  command-line, .gutconfig, default)."""
@@ -229,7 +229,7 @@ func _run_tests(opt_resolver):
 	_final_opts = opt_resolver.get_resolved_values();
 	_gut_config.options = _final_opts
 
-	var runner: Node = GutRunner.instantiate()
+	var runner = GutRunner.instantiate()
 	runner.set_gut_config(_gut_config)
 	get_tree().root.add_child(runner)
 

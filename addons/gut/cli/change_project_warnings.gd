@@ -1,46 +1,46 @@
 extends SceneTree
 
-var Optparse: res = load('res://addons/gut/cli/optparse.gd')
-var WarningsManager: res = load("res://addons/gut/warnings_manager.gd")
-const WARN_VALUE_PRINT_POSITION: int = 36
+var Optparse = load('res://addons/gut/cli/optparse.gd')
+var WarningsManager = load("res://addons/gut/warnings_manager.gd")
+const WARN_VALUE_PRINT_POSITION = 36
 
-var godot_default_warnings: Dictionary[Variant, Variant] = {
-"assert_always_false": 1,             "assert_always_true": 1,  			"confusable_identifier": 1,
-"confusable_local_declaration": 1,    "confusable_local_usage": 1,  		"constant_used_as_function": 1,
-"deprecated_keyword": 1,              "empty_file": 1,  					"enable": true,
-"exclude_addons": true, 				"function_used_as_property": 1,  	"get_node_default_without_onready": 2,
-"incompatible_ternary": 1,  			"inference_on_variant": 2,  		"inferred_declaration": 0,
-"int_as_enum_without_cast": 1,  		"int_as_enum_without_match": 1,  	"integer_division": 1,
-"narrowing_conversion": 1,  			"native_method_override": 2,  		"onready_with_export": 2,
-"property_used_as_function": 1,  		"redundant_await": 1,  				"redundant_static_unload": 1,
-"renamed_in_godot_4_hint": 1,  		"return_value_discarded": 0,  		"shadowed_global_identifier": 1,
-"shadowed_variable": 1,  				"shadowed_variable_base_class": 1,  "standalone_expression": 1,
-"standalone_ternary": 1,  			"static_called_on_instance": 1,  	"unassigned_variable": 1,
-"unassigned_variable_op_assign": 1,  	"unreachable_code": 1,  			"unreachable_pattern": 1,
-"unsafe_call_argument": 0,  			"unsafe_cast": 0,  					"unsafe_method_access": 0,
-"unsafe_property_access": 0,  		"unsafe_void_return": 1,  			"untyped_declaration": 0,
-"unused_local_constant": 1,  			"unused_parameter": 1,  			"unused_private_class_variable": 1,
-"unused_signal": 1,  					"unused_variable": 1
+var godot_default_warnings = {
+  "assert_always_false": 1,             "assert_always_true": 1,  			"confusable_identifier": 1,
+  "confusable_local_declaration": 1,    "confusable_local_usage": 1,  		"constant_used_as_function": 1,
+  "deprecated_keyword": 1,              "empty_file": 1,  					"enable": true,
+  "exclude_addons": true, 				"function_used_as_property": 1,  	"get_node_default_without_onready": 2,
+  "incompatible_ternary": 1,  			"inference_on_variant": 2,  		"inferred_declaration": 0,
+  "int_as_enum_without_cast": 1,  		"int_as_enum_without_match": 1,  	"integer_division": 1,
+  "narrowing_conversion": 1,  			"native_method_override": 2,  		"onready_with_export": 2,
+  "property_used_as_function": 1,  		"redundant_await": 1,  				"redundant_static_unload": 1,
+  "renamed_in_godot_4_hint": 1,  		"return_value_discarded": 0,  		"shadowed_global_identifier": 1,
+  "shadowed_variable": 1,  				"shadowed_variable_base_class": 1,  "standalone_expression": 1,
+  "standalone_ternary": 1,  			"static_called_on_instance": 1,  	"unassigned_variable": 1,
+  "unassigned_variable_op_assign": 1,  	"unreachable_code": 1,  			"unreachable_pattern": 1,
+  "unsafe_call_argument": 0,  			"unsafe_cast": 0,  					"unsafe_method_access": 0,
+  "unsafe_property_access": 0,  		"unsafe_void_return": 1,  			"untyped_declaration": 0,
+  "unused_local_constant": 1,  			"unused_parameter": 1,  			"unused_private_class_variable": 1,
+  "unused_signal": 1,  					"unused_variable": 1
 }
 
-var gut_default_changes: Dictionary[Variant, Variant] = {
-"exclude_addons": false, 				"redundant_await": 0,
+var gut_default_changes = {
+  "exclude_addons": false, 				"redundant_await": 0,
 }
 
-var warning_settings: Dictionary[Variant, Variant] = {}
+var warning_settings = {}
 
 func _setup_warning_settings():
 	warning_settings["godot_default"] = godot_default_warnings
 	warning_settings["current"] = WarningsManager.create_warnings_dictionary_from_project_settings()
 	warning_settings["all_warn"] = WarningsManager.create_warn_all_warnings_dictionary()
 
-	var gut_default: Dictionary = godot_default_warnings.duplicate()
+	var gut_default = godot_default_warnings.duplicate()
 	gut_default.merge(gut_default_changes, true)
 	warning_settings["gut_default"] = gut_default
 
 
 func _warn_value_to_s(value):
-	var readable: String = str(value).capitalize()
+	var readable = str(value).capitalize()
 	if(typeof(value) == TYPE_INT):
 		readable = WarningsManager.WARNING_LOOKUP.get(value, str(readable, ' ???'))
 		readable = readable.capitalize()
@@ -48,7 +48,7 @@ func _warn_value_to_s(value):
 
 
 func _human_readable(warnings):
-	var to_return: String = ""
+	var to_return = ""
 	for key in warnings:
 		var readable = _warn_value_to_s(warnings[key])
 		to_return += str(key.capitalize().rpad(35, ' '), readable, "\n")
@@ -88,15 +88,15 @@ func _apply_settings(which):
 
 
 func _diff_text(w1, w2, diff_col_pad=10):
-	var to_return: String = ""
+	var to_return = ""
 	for key in w1:
 		var v1_text = _warn_value_to_s(w1[key])
 		var v2_text = _warn_value_to_s(w2[key])
 		var diff_text = v1_text
-		var prefix: String = "  "
+		var prefix = "  "
 
 		if(v1_text != v2_text):
-			var diff_prefix: String = " "
+			var diff_prefix = " "
 			if(w1[key] > w2[key]):
 				diff_prefix = "-"
 			else:
@@ -131,7 +131,7 @@ func _diff_changes_text(pre_settings):
 func _diff(name_1, name_2):
 	if(warning_settings.has(name_1) and warning_settings.has(name_2)):
 		var c2_pad = name_1.length() + 2
-		var heading: String = str(" ".repeat(WARN_VALUE_PRINT_POSITION), name_1.rpad(c2_pad, ' '), name_2, "\n")
+		var heading = str(" ".repeat(WARN_VALUE_PRINT_POSITION), name_1.rpad(c2_pad, ' '), name_2, "\n")
 		heading += str(
 			" ".repeat(WARN_VALUE_PRINT_POSITION),
 			"-".repeat(name_1.length()).rpad(c2_pad, " "),
@@ -143,7 +143,7 @@ func _diff(name_1, name_2):
 		print(heading)
 		print(text)
 
-		var diff_count: int = 0
+		var diff_count = 0
 		for line in text.split("\n"):
 			if(!line.begins_with("  ")):
 				diff_count += 1
@@ -162,7 +162,7 @@ func _set_settings(nvps):
 		var s_name = nvps[i * 2]
 		var s_value = nvps[i * 2 + 1]
 		if(godot_default_warnings.has(s_name)):
-			var t: int = typeof(godot_default_warnings[s_name])
+			var t = typeof(godot_default_warnings[s_name])
 			if(t == TYPE_INT):
 				s_value = s_value.to_int()
 			elif(t == TYPE_BOOL):
@@ -175,25 +175,25 @@ func _set_settings(nvps):
 
 
 func _setup_options():
-	var opts: res = Optparse.new()
+	var opts = Optparse.new()
 	opts.banner = """
 	This script prints info about or sets the warning settings for the project.
 	Each action requires one or more Warning Level Names.
 
 	Warning Level Names:
-		* current        The current settings for the project.
-		* godot_default  The default settings for Godot.
-		* gut_default    The warning settings that is used when developing GUT.
-		* all_warn       Everything set to warn.
+	    * current        The current settings for the project.
+	    * godot_default  The default settings for Godot.
+	    * gut_default    The warning settings that is used when developing GUT.
+	    * all_warn       Everything set to warn.
 	""".dedent()
 
 	opts.add('-h', false, 'Print this help')
 	opts.add('-set', [], "Sets a single setting in the project settings and saves.\n" +
-						"Use -dump to see a list of setting names and values.\n" +
-						"Example: -set enabled,true -set unsafe_cast,2 -set unreachable_code,0")
+						 "Use -dump to see a list of setting names and values.\n" +
+						 "Example: -set enabled,true -set unsafe_cast,2 -set unreachable_code,0")
 	opts.add_heading(" Actions (require Warning Level Name)")
 	opts.add('-diff', [], "Shows the difference between two Warning Level Names.\n" +
-						"Example:  -diff current,all_warn")
+						  "Example:  -diff current,all_warn")
 	opts.add('-dump', 'none', "Prints a dictionary of the warning values.")
 	opts.add('-print', 'none', "Print human readable warning values.")
 	opts.add('-apply', 'none', "Applys one of the Warning Level Names to the project settings.  You should restart after using this")
