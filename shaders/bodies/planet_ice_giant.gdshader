@@ -76,7 +76,6 @@ void fragment() {
 		}
 
 		vec3 col = base * lighting * limb + base * night_rim;
-		float aa = mix(1.0, edge_aa, 1.0 - diff);
-		COLOR = vec4(col, tex.a * aa);
+		COLOR = vec4(col, tex.a * edge_aa);
 	}
 }
