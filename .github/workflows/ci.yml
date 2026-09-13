@@ -44,21 +44,21 @@ jobs:
       - name: Check strict typing (warnings as errors)
         run: |
           ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit 2>&1 | tee godot.log
-          if grep -q "SCRIPT ERROR" godot.log; then
-            echo "::error::Strict typing errors found (warnings treated as errors)"
-            grep "SCRIPT ERROR" godot.log
+          if grep -qE "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log; then
+            echo "::error::Strict typing / shader errors found (warnings treated as errors)"
+            grep -E "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log
             exit 1
           fi
           # Also check each GDScript file individually (catches unreferenced new files)
           for f in $(find scripts -name "*.gd"); do
             ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --check-only --script "res://$f" 2>&1 | tee -a godot.log
           done
-          if grep -q "SCRIPT ERROR" godot.log; then
-            echo "::error::Strict typing errors found in per-file check"
-            grep "SCRIPT ERROR" godot.log
+          if grep -qE "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log; then
+            echo "::error::Strict typing / shader errors found in per-file check"
+            grep -E "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log
             exit 1
           fi
-          echo "Strict typing check passed"
+          echo "Strict typing + shader check passed"
 
   test:
     runs-on: ubuntu-latest

@@ -88,8 +88,12 @@ func _physics_process(_delta: float) -> void:
 		_collision_mgr.check_collisions(_spawner._asteroids)
 	@warning_ignore("unsafe_method_access")
 	_star_field.update_parallax(_camera.position, _camera.zoom.x)
-	@warning_ignore("unsafe_method_access")
-	_star_field.set_blur(_camera.get_blur_amount())
+	if _star_field.has_method("set_focus"):
+		@warning_ignore("unsafe_method_access")
+		_star_field.set_focus(_camera.get_focus_t())
+	else:
+		@warning_ignore("unsafe_method_access")
+		_star_field.set_blur(_camera.get_blur_amount())
 
 
 func _load_settings() -> void:
@@ -99,6 +103,9 @@ func _load_settings() -> void:
 	_camera.set_screen_shake_enabled(_settings.screen_shake)
 	@warning_ignore("unsafe_method_access")
 	_sun.set_animations_enabled(not _settings.reduced_motion)
+	if _star_field and _star_field.has_method("set_reduced_motion"):
+		@warning_ignore("unsafe_method_access")
+		_star_field.set_reduced_motion(_settings.reduced_motion)
 
 
 func _unhandled_input(event: InputEvent) -> void:
