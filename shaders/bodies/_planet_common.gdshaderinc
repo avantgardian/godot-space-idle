@@ -10,7 +10,7 @@ uniform int   u_seed = 1;
 void sphere_projection(vec2 uv_ndc, float axial_tilt, float time_val, float spin_rate, int seed, out float mu, out float lat, out float lon, out vec3 n, out vec2 seed_off, out float edge_aa) {
 	float r2 = min(dot(uv_ndc, uv_ndc), 1.0);
 	mu = sqrt(1.0 - r2);
-	edge_aa = 1.0 - smoothstep(0.97, 1.0, dot(uv_ndc, uv_ndc));
+	edge_aa = 1.0 - smoothstep(0.985, 1.0, dot(uv_ndc, uv_ndc));
 	vec3 n_view = vec3(uv_ndc, mu);
 	float ct = cos(axial_tilt);
 	float st = sin(axial_tilt);
@@ -27,9 +27,12 @@ void compute_lighting(vec2 uv, vec3 light_dir, float ambient, float limb_strengt
 	diff = dot(n_view, vec3(L2, 0.0));
 	diff = max(diff, 0.0);
 	lighting = mix(ambient, 1.0, diff);
-	limb = (1.0 + 1.5 * mu) / 2.5;
-	limb = mix(1.0, limb, limb_strength);
+	float limb_base = (1.0 + 1.5 * mu) / 2.5;
 	float dark_side = 1.0 - diff;
+	// Limb darkening is view-dependent but must not darken the sun-facing limb.
+	// Modulate by dark_side so the subsolar rim (diff≈1) stays at full brightness
+	// while the terminator / night rim retains the Eddington darkening.
+	limb = mix(1.0, limb_base, limb_strength * dark_side);
 	float rim = pow(1.0 - mu, 3.0);
 	night_rim = rim * dark_side * night_rim_strength;
 }
