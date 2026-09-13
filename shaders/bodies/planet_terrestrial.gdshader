@@ -109,6 +109,7 @@ void fragment() {
 			col += vec3(1.0, 0.85, 0.55) * city_field * u_city_lights * dark_mask;
 		}
 
-		COLOR = vec4(col, tex.a * edge_aa);
+		float aa = mix(1.0, edge_aa, 1.0 - diff);
+		COLOR = vec4(col, tex.a * aa);
 	}
 }
