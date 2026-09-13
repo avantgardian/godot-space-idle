@@ -3,12 +3,23 @@ extends Node2D
 
 signal collided_with_sun(body: Node2D)
 
+enum PlanetGravityMode {
+	REALISTIC,
+	EXAGGERATED,
+}
+
 const _TEX: GDScript = preload("res://scripts/util/texture_utils.gd")
 const _TRAIL: GDScript = preload("res://scripts/components/trail_component.gd")
 const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
 const _ATM_SHADER: Shader = preload("res://shaders/bodies/atmosphere_rim.gdshader")
 const PAL: GDScript = preload("res://scripts/util/planet_palette.gd")
 const _COLLISION: GDScript = preload("res://scripts/util/collision_profile.gd")
+const PLANET_GRAVITY_SCALE: float = 5.0
+const PLANET_MASS_EXPONENT: float = 0.3
+const PLANET_SOFTENING: float = 150.0
+
+static var _bench_total_us: int = 0
+static var _bench_samples: int = 0
 
 @export var orbit_radius: float = 500.0
 @export var orbit_period: float = 48.0
@@ -41,6 +52,12 @@ var _atm_mat: ShaderMaterial
 var _planet_time: float = 0.0
 var _shader_mat: ShaderMaterial
 var _last_light_dir: Vector2 = Vector2.ZERO
+var _peer_data: Array[Dictionary] = []
+var _planet_gravity_enabled: bool = false
+var _planet_gravity_mode: PlanetGravityMode = PlanetGravityMode.REALISTIC
+var _planet_gravity_scale: float = 1.0
+var _planet_softening: float = PLANET_SOFTENING
+var _reference_gm: float = 0.0
 
 
 func is_dead() -> bool:
@@ -52,6 +69,39 @@ func disable() -> void:
 		_trail_component.fade_out()
 	_dead = true
 	visible = false
+
+
+func set_peer_data(data: Array[Dictionary]) -> void:
+	_peer_data = data
+
+
+func configure_planet_gravity(
+	enabled: bool,
+	mode: PlanetGravityMode,
+	gravity_scale: float,
+	softening: float,
+	reference_gm: float
+) -> void:
+	_planet_gravity_enabled = enabled
+	_planet_gravity_mode = mode
+	_planet_gravity_scale = gravity_scale
+	_planet_softening = softening
+	_reference_gm = reference_gm
+
+
+static func get_planet_gravity_bench_avg_us() -> float:
+	if _bench_samples == 0:
+		return 0.0
+	return float(_bench_total_us) / float(_bench_samples)
+
+
+static func reset_planet_gravity_bench() -> void:
+	_bench_total_us = 0
+	_bench_samples = 0
+
+
+static func reference_gm_default() -> float:
+	return kepler_gm(350.0, 25.0)
 
 
 func get_vel() -> Vector2:
@@ -189,6 +239,38 @@ func _physics_process(delta: float) -> void:
 		r2 = 1.0
 	var r: float = sqrt(r2)
 	var acc: Vector2 = -gm / r2 * _pos / r
+	if _planet_gravity_enabled and not _peer_data.is_empty() and _reference_gm > 0.0:
+		var bench_start: int = Time.get_ticks_usec()
+		for peer: Dictionary in _peer_data:
+			@warning_ignore("unsafe_property_access", "unsafe_cast")
+			var peer_pos: Vector2 = peer.pos as Vector2
+			@warning_ignore("unsafe_property_access", "unsafe_cast")
+			var peer_mass: float = peer.mass as float
+			if peer_mass <= 0.0:
+				continue
+			var offset: Vector2 = peer_pos - _pos
+			var dist_sq: float = offset.length_squared()
+			if dist_sq < 1e-6:
+				continue
+			var dist: float = sqrt(dist_sq)
+			var softened_r2: float = dist_sq + _planet_softening * _planet_softening
+			if _planet_gravity_mode == PlanetGravityMode.REALISTIC:
+				acc += (
+					_reference_gm * peer_mass * _planet_gravity_scale / softened_r2 * offset / dist
+				)
+			else:
+				acc += (
+					_reference_gm
+					* pow(peer_mass, PLANET_MASS_EXPONENT)
+					/ softened_r2
+					* offset
+					/ dist
+					* PLANET_GRAVITY_SCALE
+					* _planet_gravity_scale
+				)
+		var bench_end: int = Time.get_ticks_usec()
+		_bench_total_us += bench_end - bench_start
+		_bench_samples += 1
 	_vel += acc * delta
 	_pos += _vel * delta
 	position = _pos
