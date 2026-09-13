@@ -24,34 +24,46 @@ void fragment() {
 	if (col.a < 0.001) {
 		COLOR = col;
 	} else {
-		// Depth-of-field: circular bokeh disc instead of diagonal streaks.
+		// Depth-of-field: circular bokeh disc. Reduced radius + alpha-weighted
+		// sampling so high blur doesn't mix distant stars into a grey wash or
+		// spawn 8-point ghosts. Per-pixel rotation breaks the uniform pattern.
 		if (blur_amount >= 0.01) {
 			vec2 ps = TEXTURE_PIXEL_SIZE;
-			// Two rings: inner cardinals at 0.55*R, outer diagonals at 0.95*R
-			// gives a filled disc with softer edge than a single ring.
-			float r = blur_amount * 0.55;
+			float r = blur_amount * 0.42;
+			// Per-pixel rotation from hash — breaks the 8-point ghost pattern
+			// without adding samples.
+			float ang = hash12(floor(uv * 512.0)) * 6.28318;
+			float ca = cos(ang);
+			float sa = sin(ang);
+			// Alpha-weighted accumulation preserves star hue: transparent
+			// neighbours contribute zero weight instead of pulling toward black.
 			vec4 acc = col;
 			float wsum = 1.0;
 			for (int i = 0; i < 8; i++) {
 				float ring = (i < 4) ? 0.55 : 0.95;
-				vec2 off = DISC[i] * r * ring * ps * 18.0;
-				// Gaussian weight falls with ring radius so outer ring contributes less
-				float w = exp(-ring * ring * 1.8) * 0.42;
-				acc += texture(TEXTURE, uv + off) * w;
+				vec2 d = DISC[i];
+				vec2 rd = vec2(d.x * ca - d.y * sa, d.x * sa + d.y * ca);
+				vec2 off = rd * r * ring * ps * 10.0;
+				vec4 s = texture(TEXTURE, uv + off);
+				float w = exp(-ring * ring * 1.6) * 0.38 * s.a;
+				acc += s * w;
 				wsum += w;
 			}
 			// Second tighter ring for a creamier bokeh (for larger blur values)
-			if (blur_amount > 2.5) {
+			if (blur_amount > 1.8) {
 				float r2 = r * 0.35;
 				for (int i = 0; i < 4; i++) {
-					vec2 off = DISC[i] * r2 * ps * 18.0;
-					float w = 0.18;
-					acc += texture(TEXTURE, uv + off) * w;
+					vec2 d = DISC[i];
+					vec2 rd = vec2(d.x * ca - d.y * sa, d.x * sa + d.y * ca);
+					vec2 off = rd * r2 * ps * 10.0;
+					vec4 s = texture(TEXTURE, uv + off);
+					float w = 0.18 * s.a;
+					acc += s * w;
 					wsum += w;
 				}
 			}
 			col = acc / wsum;
-			col.a *= clamp(1.0 - blur_amount * 0.04, 0.55, 1.0);
+			col.a *= clamp(1.0 - blur_amount * 0.06, 0.65, 1.0);
 		}
 
 		// Twinkle: gentle breathing on bright stars only — faint sheet stays
