@@ -85,6 +85,10 @@ func _resolve(a: Node2D, b: Node2D) -> void:
 		a.set_vel((a.get_vel() * a.mass + b.get_vel() * b.mass) / total)
 		@warning_ignore("unsafe_property_access")
 		a.mass = total
+		@warning_ignore("unsafe_method_access")
+		if a.has_method("recompute_osculating_elements"):
+			@warning_ignore("unsafe_method_access")
+			a.recompute_osculating_elements()
 		_disable(b)
 		@warning_ignore(
 			"unsafe_property_access", "unsafe_method_access", "unsafe_call_argument", "unsafe_cast"
@@ -100,6 +104,10 @@ func _resolve(a: Node2D, b: Node2D) -> void:
 		b.set_vel((b.get_vel() * b.mass + a.get_vel() * a.mass) / total)
 		@warning_ignore("unsafe_property_access")
 		b.mass = total
+		@warning_ignore("unsafe_method_access")
+		if b.has_method("recompute_osculating_elements"):
+			@warning_ignore("unsafe_method_access")
+			b.recompute_osculating_elements()
 		_disable(a)
 		@warning_ignore(
 			"unsafe_property_access", "unsafe_method_access", "unsafe_call_argument", "unsafe_cast"

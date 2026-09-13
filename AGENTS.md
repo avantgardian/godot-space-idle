@@ -6,7 +6,7 @@ Single-scene Godot 4.7 (Forward Plus, 1920×1080) gravity sandbox with idle/clic
 
 - Entry point: `scenes/main_menu.tscn` (run/main_scene) — the main menu is the launch screen; `scenes/main.tscn` is the sandbox scene and `scenes/progression.tscn` is the progression scene, both reached from the menu
 - All scripts in `scripts/` — GDScript only, no C# or GDExtension
-- Sun clickable (left-click) to increase mass (+0.1/click); `+`/`-` or scroll to zoom; left/middle drag to pan
+- Sun clickable (left-click) shows sun info popup; `+`/`-` or scroll to zoom; left/middle drag to pan
 - `L` key spawns an asteroid manually; `Esc` toggles pause menu
 
 ## Dev commands
