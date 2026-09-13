@@ -27,9 +27,12 @@ void compute_lighting(vec2 uv, vec3 light_dir, float ambient, float limb_strengt
 	diff = dot(n_view, vec3(L2, 0.0));
 	diff = max(diff, 0.0);
 	lighting = mix(ambient, 1.0, diff);
-	limb = (1.0 + 1.5 * mu) / 2.5;
-	limb = mix(1.0, limb, limb_strength);
+	float limb_base = (1.0 + 1.5 * mu) / 2.5;
 	float dark_side = 1.0 - diff;
+	// Limb darkening is view-dependent but must not darken the sun-facing limb.
+	// Modulate by dark_side so the subsolar rim (diff≈1) stays at full brightness
+	// while the terminator / night rim retains the Eddington darkening.
+	limb = mix(1.0, limb_base, limb_strength * dark_side);
 	float rim = pow(1.0 - mu, 3.0);
 	night_rim = rim * dark_side * night_rim_strength;
 }
