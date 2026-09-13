@@ -134,7 +134,7 @@ func _generate_texture() -> void:
 	_sprite = Sprite2D.new()
 	if use_shader:
 		@warning_ignore("unsafe_method_access")
-		_sprite.texture = _TEX.make_disk_mask(tex_size, 1.0)
+		_sprite.texture = _TEX.make_disk_mask(tex_size)
 	else:
 		@warning_ignore("unsafe_method_access")
 		_sprite.texture = _TEX.make_circle_texture(tex_size, _get_planet_color)
