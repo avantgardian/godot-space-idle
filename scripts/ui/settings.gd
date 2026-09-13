@@ -176,15 +176,6 @@ func _build_ui() -> void:
 	# ---- Accessibility ----
 	sections.add_child(_section_header("Accessibility"))
 
-	var motion_cb: CheckBox = _checkbox("Reduced Motion", _settings.reduced_motion)
-	@warning_ignore("unsafe_method_access")
-	motion_cb.toggled.connect(
-		func(on: bool) -> void:
-			_settings.reduced_motion = on
-			_settings.save()
-	)
-	sections.add_child(_margin_child(motion_cb))
-
 	var shake_cb: CheckBox = _checkbox("Screen Shake", _settings.screen_shake)
 	@warning_ignore("unsafe_method_access")
 	shake_cb.toggled.connect(

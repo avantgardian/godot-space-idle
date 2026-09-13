@@ -15,7 +15,6 @@ const REBINDABLE_ACTIONS: Array[String] = [
 	"toggle_ship_follow",
 ]
 
-var reduced_motion: bool = false
 var screen_shake: bool = true
 var colorblind_mode: int = 0
 var _file: ConfigFile
@@ -32,8 +31,6 @@ func _load() -> void:
 		_save_defaults()
 		return
 	@warning_ignore("unsafe_cast")
-	reduced_motion = _file.get_value("accessibility", "reduced_motion", false) as bool
-	@warning_ignore("unsafe_cast")
 	screen_shake = _file.get_value("accessibility", "screen_shake", true) as bool
 	@warning_ignore("unsafe_cast")
 	colorblind_mode = _file.get_value("accessibility", "colorblind_mode", 0) as int
@@ -41,7 +38,6 @@ func _load() -> void:
 
 
 func _save_defaults() -> void:
-	_file.set_value("accessibility", "reduced_motion", false)
 	_file.set_value("accessibility", "screen_shake", true)
 	_file.set_value("accessibility", "colorblind_mode", 0)
 	_save_keybindings(_default_keybindings())
@@ -49,7 +45,6 @@ func _save_defaults() -> void:
 
 
 func save() -> void:
-	_file.set_value("accessibility", "reduced_motion", reduced_motion)
 	_file.set_value("accessibility", "screen_shake", screen_shake)
 	_file.set_value("accessibility", "colorblind_mode", colorblind_mode)
 	_save_keybindings(_current_keybindings())

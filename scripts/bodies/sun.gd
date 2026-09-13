@@ -2,21 +2,15 @@ extends Sprite2D
 
 const TEX: GDScript = preload("res://scripts/util/texture_utils.gd")
 const _SUN_SHADER: Shader = preload("res://shaders/world/sun_surface.gdshader")
-const _SCALE_BASE: Vector2 = Vector2.ONE
-const _COLOR_WHITE: Color = Color.WHITE
-const _COLOR_GLOW_OUTER: Color = Color(1, 1, 1, 0.4)
-const _COLOR_GLOW_INNER: Color = Color(1, 1, 1, 0.6)
 
 @export var texture_size: int = 256
 
 var sun_time: float = 0.0
 var mass: float = 1.0
-var _animations_enabled: bool = true
 var _collision_flash: float = 0.0
 var _glow_outer: Sprite2D
 var _glow_inner: Sprite2D
 var _shader_mat: ShaderMaterial
-var _anim_dirty: bool = true
 
 var _star_core_0: Color = Color(1.0, 0.95, 0.8)
 var _star_core_1: Color = Color(1.0, 0.7, 0.2)
@@ -159,36 +153,11 @@ func _generate_sun_glows() -> void:
 
 func flash(intensity: float) -> void:
 	_collision_flash = max(_collision_flash, intensity)
-	_anim_dirty = true
-
-
-func set_animations_enabled(enabled: bool) -> void:
-	_animations_enabled = enabled
-	_anim_dirty = true
 
 
 func _process(delta: float) -> void:
 	sun_time += delta
 	_shader_mat.set_shader_parameter("u_time", sun_time)
-
-	if not _animations_enabled:
-		if _anim_dirty:
-			_anim_dirty = false
-			scale = _SCALE_BASE
-			modulate = _COLOR_WHITE
-			if _glow_outer:
-				_glow_outer.scale = _SCALE_BASE
-				_glow_outer.modulate = _COLOR_GLOW_OUTER
-			if _glow_inner:
-				_glow_inner.scale = _SCALE_BASE
-				_glow_inner.modulate = _COLOR_GLOW_INNER
-		if _collision_flash > 0.0:
-			var t: float = _collision_flash / 0.6
-			var flash_t: float = t * t
-			modulate = _COLOR_WHITE.lerp(_star_hot_modulate, flash_t * 0.7)
-			scale = _SCALE_BASE * (1.0 + flash_t * 0.15)
-			_collision_flash -= delta
-		return
 
 	var breathe: float = sin(sun_time * 0.5) * 0.04 + 1.0
 	scale = Vector2(breathe, breathe)

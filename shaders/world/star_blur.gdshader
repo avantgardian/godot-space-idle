@@ -70,7 +70,7 @@ void fragment() {
 		// stable. Scintillation is atmospheric; in space stars don't twinkle.
 		// Depth/speed are deliberately shallow & slow, masked by luma so only
 		// photogenic bright stars (halo/spike population) breathe at all.
-		// Respects reduced_motion (twinkle_strength == 0 → disabled).
+		// Twinkle disabled for dust (twinkle_strength == 0).
 		if (twinkle_strength > 0.01) {
 			// Quantize UV to approx star cell so each star breathes coherently
 			// rather than per-pixel shimmer.

@@ -178,7 +178,6 @@ func _ready() -> void:
 	add_child(ship)
 	ship.owner = self
 	ship.unique_name_in_owner = true
-	ship.set_reduced_motion(_settings.reduced_motion)
 	@warning_ignore("unsafe_cast")
 	_spaceship = %Spaceship as Spaceship
 

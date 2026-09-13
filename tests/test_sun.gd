@@ -75,30 +75,10 @@ func test_flash_accumulates_intensity():
 	assert_almost_eq(s._collision_flash, 0.8, 0.001, "smaller flash doesn't reduce")
 
 
-func test_set_animations_enabled():
-	var s: Sprite2D = autofree(SUN.new())
-	add_child(s)
-	s.set_animations_enabled(false)
-	assert_false(s._animations_enabled, "animations disabled")
-	s.set_animations_enabled(true)
-	assert_true(s._animations_enabled, "animations re-enabled")
-
-
-func test_process_animations_disabled_resets_scale():
-	var s: Sprite2D = autofree(SUN.new())
-	add_child(s)
-	s.generate({texture_size = 128})
-	s.set_animations_enabled(false)
-	s._process(0.1)
-	assert_eq(s.scale, Vector2.ONE, "scale reset to base when animations disabled")
-	assert_eq(s.modulate, Color.WHITE, "modulate reset to white")
-
-
 func test_process_collision_flash_decays():
 	var s: Sprite2D = autofree(SUN.new())
 	add_child(s)
 	s.generate({texture_size = 128})
-	s.set_animations_enabled(false)
 	s.flash(0.6)
 	var before: float = s._collision_flash
 	s._process(0.1)
