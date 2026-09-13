@@ -75,7 +75,10 @@ func _physics_process(delta: float) -> void:
 		if _star_field.has_method("update_parallax"):
 			@warning_ignore("unsafe_method_access")
 			_star_field.update_parallax(position, zoom.x)
-			if _star_field.has_method("set_blur"):
+			if _star_field.has_method("set_focus"):
+				@warning_ignore("unsafe_method_access")
+				_star_field.set_focus(get_focus_t())
+			elif _star_field.has_method("set_blur"):
 				@warning_ignore("unsafe_method_access")
 				_star_field.set_blur(get_blur_amount())
 
@@ -187,6 +190,10 @@ func set_screen_shake_enabled(on: bool) -> void:
 	_screen_shake_enabled = on
 
 
-func get_blur_amount() -> float:
+func get_focus_t() -> float:
 	var t: float = (zoom.x - min_zoom) / (max_zoom - min_zoom)
-	return t * t * 5.0
+	return clamp(t, 0.0, 1.0)
+
+
+func get_blur_amount() -> float:
+	return get_focus_t() * 5.0
