@@ -76,11 +76,15 @@ func set_peer_data(data: Array[Dictionary]) -> void:
 
 
 func configure_planet_gravity(
-	enabled: bool, mode: PlanetGravityMode, scale: float, softening: float, reference_gm: float
+	enabled: bool,
+	mode: PlanetGravityMode,
+	gravity_scale: float,
+	softening: float,
+	reference_gm: float
 ) -> void:
 	_planet_gravity_enabled = enabled
 	_planet_gravity_mode = mode
-	_planet_gravity_scale = scale
+	_planet_gravity_scale = gravity_scale
 	_planet_softening = softening
 	_reference_gm = reference_gm
 
