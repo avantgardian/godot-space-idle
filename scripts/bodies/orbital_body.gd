@@ -17,6 +17,7 @@ const _COLLISION: GDScript = preload("res://scripts/util/collision_profile.gd")
 const PLANET_GRAVITY_SCALE: float = 5.0
 const PLANET_MASS_EXPONENT: float = 0.3
 const PLANET_SOFTENING: float = 150.0
+const OSCULATING_UPDATE_INTERVAL: float = 0.5
 
 static var _bench_total_us: int = 0
 static var _bench_samples: int = 0
@@ -58,6 +59,10 @@ var _planet_gravity_mode: PlanetGravityMode = PlanetGravityMode.REALISTIC
 var _planet_gravity_scale: float = 1.0
 var _planet_softening: float = PLANET_SOFTENING
 var _reference_gm: float = 0.0
+var _initial_orbit_radius: float = 0.0
+var _initial_orbit_period: float = 0.0
+var _osculating_timer: float = 0.0
+var _last_sun_mass_for_osculating: float = 1.0
 
 
 func is_dead() -> bool:
@@ -114,6 +119,9 @@ func set_vel(v: Vector2) -> void:
 
 func _ready() -> void:
 	_gm = _initial_gm()
+	_initial_orbit_radius = orbit_radius
+	_initial_orbit_period = orbit_period
+	_last_sun_mass_for_osculating = sun_mass
 	_generate_texture()
 	_reset()
 
@@ -232,6 +240,35 @@ func get_gm() -> float:
 	return _gm
 
 
+func get_initial_orbit_radius() -> float:
+	return _initial_orbit_radius
+
+
+func get_initial_orbit_period() -> float:
+	return _initial_orbit_period
+
+
+func recompute_osculating_elements() -> void:
+	if _dead:
+		return
+	var r: float = _pos.length()
+	if r < 1.0:
+		return
+	var v2: float = _vel.length_squared()
+	var mu: float = _gm * sun_mass
+	if mu <= 0.0:
+		return
+	var energy: float = v2 * 0.5 - mu / r
+	if energy < 0.0:
+		var a: float = -mu / (2.0 * energy)
+		if a > 0.0 and is_finite(a):
+			orbit_radius = a
+			orbit_period = 2.0 * PI * sqrt(a * a * a / mu)
+	else:
+		orbit_radius = r
+		orbit_period = INF
+
+
 func _physics_process(delta: float) -> void:
 	if _dead:
 		return
@@ -299,3 +336,16 @@ func _physics_process(delta: float) -> void:
 
 	if _trail_component:
 		_trail_component.record(position)
+
+	# Keep osculating orbit values in sync with dynamical state.
+	# Immediate on sun mass change (affects mu), throttled for N-body drift.
+	var sun_changed: bool = not is_equal_approx(sun_mass, _last_sun_mass_for_osculating)
+	if sun_changed:
+		recompute_osculating_elements()
+		_last_sun_mass_for_osculating = sun_mass
+		_osculating_timer = 0.0
+	else:
+		_osculating_timer += delta
+		if _osculating_timer >= OSCULATING_UPDATE_INTERVAL:
+			_osculating_timer = 0.0
+			recompute_osculating_elements()
