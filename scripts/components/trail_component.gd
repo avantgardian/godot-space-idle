@@ -23,7 +23,7 @@ func setup(color0: Color, color1: Color, width: float, max_points: int) -> void:
 	_line.top_level = true
 	_line.width = width
 	_line.antialiased = true
-	_line.z_index = -1
+	_line.z_index = -30
 	_line.joint_mode = Line2D.LINE_JOINT_ROUND
 	_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	_line.end_cap_mode = Line2D.LINE_CAP_ROUND
