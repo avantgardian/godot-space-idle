@@ -3,11 +3,11 @@ extends "res://scripts/controllers/game_controller.gd"
 const _PLANET_POPUP: GDScript = preload("res://scripts/ui/planet_popup.gd")
 const _RING_SYSTEM: GDScript = preload("res://scripts/components/ring_system.gd")
 
-@export var enable_planet_mutual_gravity: bool = false
+@export var enable_planet_mutual_gravity: bool = true
 @export
 var planet_gravity_mode: OrbitalBody.PlanetGravityMode = OrbitalBody.PlanetGravityMode.REALISTIC
-@export var planet_gravity_scale: float = 1.0
-@export var planet_softening: float = 150.0
+@export var planet_gravity_scale: float = 10.0
+@export var planet_softening: float = 80.0
 
 var _planet_data: Array[Node2D]
 var _planet_popup: PlanetPopup
