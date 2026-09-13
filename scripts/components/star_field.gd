@@ -1,6 +1,7 @@
 extends Node2D
 
 const TEX: GDScript = preload("res://scripts/util/texture_utils.gd")
+const SPAL: GDScript = preload("res://scripts/util/stellar_palette.gd")
 
 # ── Depth model ──────────────────────────────────────────────────────────
 # Three sparse background layers (far → near-bg) sit behind the solar
@@ -20,8 +21,8 @@ const BG_LAYERS: Array[Dictionary] = [
 		"count": 180,
 		"min_r": 0.3,
 		"max_r": 0.9,
-		"min_b": 0.10,
-		"max_b": 0.42,
+		"min_b": 0.22,
+		"max_b": 0.68,
 		"motion_scale": 0.010,
 		"depth": 0.02,
 		"max_blur": 7.0,
@@ -30,8 +31,8 @@ const BG_LAYERS: Array[Dictionary] = [
 		"count": 140,
 		"min_r": 0.45,
 		"max_r": 1.20,
-		"min_b": 0.16,
-		"max_b": 0.55,
+		"min_b": 0.30,
+		"max_b": 0.82,
 		"motion_scale": 0.028,
 		"depth": 0.18,
 		"max_blur": 6.5,
@@ -40,8 +41,8 @@ const BG_LAYERS: Array[Dictionary] = [
 		"count": 90,
 		"min_r": 0.60,
 		"max_r": 1.60,
-		"min_b": 0.25,
-		"max_b": 0.70,
+		"min_b": 0.38,
+		"max_b": 0.95,
 		"motion_scale": 0.058,
 		"depth": 0.35,
 		"max_blur": 5.5,
@@ -73,10 +74,8 @@ const DUST_LAYERS: Array[Dictionary] = [
 
 const _STAR_SHADER: Shader = preload("res://shaders/world/star_blur.gdshader")
 
-# Color temperature tints for stars (cool / neutral / warm).
-const _COOL: Color = Color(0.68, 0.78, 1.0, 1.0)
-const _NEUTRAL: Color = Color(0.95, 0.94, 0.92, 1.0)
-const _WARM: Color = Color(1.0, 0.82, 0.55, 1.0)
+# Stellar colours come from StellarPalette (OBAFGKM black-body sRGB).
+# Dust motes keep their own warm-gray tint (interplanetary, not stellar).
 
 var _sprites: Array[Sprite2D] = []
 var _motion_scales: Array[float] = []
@@ -274,11 +273,30 @@ func _generate_star_layer(
 	for _j: int in range(count):
 		var x: float = rng.randf_range(0.0, screen_size.x)
 		var y: float = rng.randf_range(0.0, screen_size.y)
-		var radius: float = rng.randf_range(min_r, max_r)
-		# Power-law brightness: many dim, few bright.
+		# Faint galactic band: ~32% of background stars cluster toward a
+		# central horizontal band (simulated Milky Way plane). Cheap,
+		# readable, still sparse — not a dense plane texture.
+		if not is_dust and rng.randf() < 0.32:
+			var band_center: float = screen_size.y * 0.52
+			var band_half: float = screen_size.y * 0.18
+			y = rng.randf_range(band_center - band_half, band_center + band_half)
+			y += rng.randf_range(-screen_size.y * 0.06, screen_size.y * 0.06)
+			y = clamp(y, 0.0, screen_size.y)
+		# Power-law apparent magnitude: many dim, few bright (mirrors
+		# dN/dm ∝ 10^{0.6m} / galactic density; Tycho-2/Gaia bright-star
+		# counts double every ~1 mag). pow(raw,1.8) gives long faint tail
+		# but lifts the median so the field doesn't read as faint.
 		var raw: float = rng.randf()
-		var shaped: float = pow(raw, 2.2)
+		var shaped: float = pow(raw, 1.8)
 		var brightness: float = lerp(min_b, max_b, shaped)
+		# Size–brightness coupling: brighter stars drive larger diffraction
+		# discs (Airy-like). Keep layer radii but scale by magnitude.
+		var base_radius: float = rng.randf_range(min_r, max_r)
+		var radius: float = base_radius * (0.78 + 0.62 * shaped)
+		# Long-tail outliers: ~5% of stars at 1.55–2.25× radius with soft
+		# outer glow — the "photogenic" bright giants.
+		if not is_dust and rng.randf() < 0.05:
+			radius *= rng.randf_range(1.55, 2.25)
 		var col: Color
 		if is_dust:
 			# Dust: warm gray, low saturation, very soft alpha.
@@ -288,22 +306,18 @@ func _generate_star_layer(
 			col = Color(base.r * 0.9, base.g * 0.9, base.b * 0.9, alpha)
 			_draw_dust_mote(image, x, y, radius, col)
 		else:
-			var temp_pick: float = rng.randf()
-			var tint: Color
-			if temp_pick < 0.30:
-				tint = _COOL
-			elif temp_pick < 0.70:
-				tint = _NEUTRAL
-			else:
-				tint = _WARM
+			@warning_ignore("unsafe_method_access", "unsafe_cast")
+			var tint: Color = SPAL.sample_spectral_color(rng) as Color
 			col = Color(tint.r * brightness, tint.g * brightness, tint.b * brightness, 1.0)
 			_draw_star_wrapped(image, x, y, radius, col)
 			# Subtle halo for the brightest stars (diffraction-like bokeh).
-			if brightness > 0.55 and radius > 1.1:
+			# Radius coupling already makes bright stars larger; halo makes
+			# the top ~15% bloom softly.
+			if brightness > 0.52 and radius > 1.05:
 				var halo_col: Color = Color(col.r, col.g, col.b, 0.22)
-				_draw_halo(image, x, y, radius * 2.2, halo_col)
-			# Tiny diffraction spike for the very brightest handful.
-			if brightness > 0.68 and radius > 1.3 and rng.randf() < 0.35:
+				_draw_halo(image, x, y, radius * 2.35, halo_col)
+			# Tiny diffraction spike for the very brightest handful (~2%).
+			if brightness > 0.66 and radius > 1.25 and rng.randf() < 0.38:
 				_draw_spike(image, x, y, radius, Color(col.r, col.g, col.b, 0.18))
 
 	var texture: ImageTexture = ImageTexture.create_from_image(image)

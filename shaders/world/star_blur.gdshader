@@ -54,22 +54,26 @@ void fragment() {
 			col.a *= clamp(1.0 - blur_amount * 0.04, 0.55, 1.0);
 		}
 
-		// Twinkle: very subtle brightness warble driven by per-star hash,
-		// only when twinkle_strength > 0 (disabled for dust + reduced motion).
+		// Twinkle: gentle breathing on bright stars only — faint sheet stays
+		// stable. Scintillation is atmospheric; in space stars don't twinkle.
+		// Depth/speed are deliberately shallow & slow, masked by luma so only
+		// photogenic bright stars (halo/spike population) breathe at all.
+		// Respects reduced_motion (twinkle_strength == 0 → disabled).
 		if (twinkle_strength > 0.01) {
-			// Quantize UV to approx star cell so each star twinkles coherently
+			// Quantize UV to approx star cell so each star breathes coherently
 			// rather than per-pixel shimmer.
 			vec2 cell = floor(uv / TEXTURE_PIXEL_SIZE / 3.0);
 			float h = hash12(cell);
 			float phase = h * 6.28318;
-			float speed = 0.7 + h * 1.1;
-			float depth = 0.08 + h * 0.10;
+			float speed = 0.45 + h * 0.65;
+			float depth = 0.04 + h * 0.07;
 			float tw = sin(time * speed + phase) * depth * twinkle_strength;
-			// Only stars above a luma threshold twinkle visibly — dim sheet stays steady.
+			// Luma mask: only stars above ~0.28 luma breathe visibly;
+			// dim background sheet stays steady.
 			float luma = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
-			float mask = smoothstep(0.15, 0.45, luma);
+			float mask = smoothstep(0.28, 0.58, luma);
 			col.rgb *= 1.0 + tw * mask;
-			col.a *= 1.0 + tw * mask * 0.6;
+			col.a *= 1.0 + tw * mask * 0.55;
 		}
 
 		COLOR = col;
