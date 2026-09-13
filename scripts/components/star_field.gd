@@ -84,7 +84,6 @@ var _max_blurs: Array[float] = []
 var _materials: Array[ShaderMaterial] = []
 var _focus_t: float = 0.0
 var _time: float = 0.0
-var _reduced_motion: bool = false
 var _bg_container: Node2D
 var _fg_container: Node2D
 var _void_sprite: Sprite2D
@@ -95,8 +94,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _reduced_motion:
-		return
 	_time += delta
 	for mat: ShaderMaterial in _materials:
 		mat.set_shader_parameter("time", _time)
@@ -128,17 +125,6 @@ func generate(seed_val: int, min_zoom: float) -> void:
 
 	# Apply initial focus state.
 	_apply_focus(_focus_t)
-
-
-func set_reduced_motion(on: bool) -> void:
-	_reduced_motion = on
-	var tw: float = 0.0 if on else 1.0
-	for mat: ShaderMaterial in _materials:
-		mat.set_shader_parameter("twinkle_strength", tw)
-		if on:
-			mat.set_shader_parameter("time", 0.0)
-	if on:
-		_time = 0.0
 
 
 func update_parallax(camera_position: Vector2, camera_zoom: float) -> void:
@@ -332,7 +318,7 @@ func _generate_star_layer(
 	mat.set_shader_parameter("tiles", tile_scale)
 	mat.set_shader_parameter("blur_amount", 0.0)
 	mat.set_shader_parameter("time", 0.0)
-	mat.set_shader_parameter("twinkle_strength", 0.0 if _reduced_motion or is_dust else 1.0)
+	mat.set_shader_parameter("twinkle_strength", 0.0 if is_dust else 1.0)
 	sprite.material = mat
 
 	parent.add_child(sprite)

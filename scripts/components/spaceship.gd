@@ -219,11 +219,6 @@ func disable() -> void:
 	visible = false
 
 
-func set_reduced_motion(enabled: bool) -> void:
-	_ring_node.reduced_motion = enabled
-	_ring_node.queue_redraw()
-
-
 # ---------------------------------------------------------------------------
 # Vector hull rendering (TRON-style neon wireframe)
 # ---------------------------------------------------------------------------
@@ -308,7 +303,6 @@ class _RingLayer:
 	const DU: GDScript = preload("res://scripts/util/draw_utils.gd")
 	var pulsate: bool = true
 	var pulse_phase: float = 0.0
-	var reduced_motion: bool = false
 
 	func _init() -> void:
 		var mat: CanvasItemMaterial = CanvasItemMaterial.new()
@@ -325,7 +319,7 @@ class _RingLayer:
 		# Pulsation: when not selected the ring's alpha swings between
 		# RING_PULSE_MIN and 1.0 of the (already capped) base values.
 		var alpha_mult: float = 1.0
-		if pulsate and not reduced_motion:
+		if pulsate:
 			@warning_ignore("unsafe_method_access", "unsafe_property_access")
 			alpha_mult = DU.pulsate_factor(pulse_phase, PAL.RING_PULSE_MIN)
 

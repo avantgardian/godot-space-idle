@@ -101,11 +101,6 @@ func _load_settings() -> void:
 	_post_fx.set_screen_shake_enabled(_settings.screen_shake)
 	_post_fx.set_colorblind_mode(_settings.colorblind_mode)
 	_camera.set_screen_shake_enabled(_settings.screen_shake)
-	@warning_ignore("unsafe_method_access")
-	_sun.set_animations_enabled(not _settings.reduced_motion)
-	if _star_field and _star_field.has_method("set_reduced_motion"):
-		@warning_ignore("unsafe_method_access")
-		_star_field.set_reduced_motion(_settings.reduced_motion)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -182,7 +177,6 @@ func _show_sun_popup() -> void:
 	_close_sun_popup()
 	var popup: SunPopup = _SUN_POPUP.new()
 	popup.show_for_sun(self, _camera, _sun, _get_star_type())
-	popup.reduced_motion = _settings.reduced_motion
 	_ui.add_child(popup)
 	_sun_popup = popup
 

@@ -120,7 +120,6 @@ func _show_planet_popup(planet_node: Node2D) -> void:
 		return
 	var popup: PlanetPopup = _PLANET_POPUP.new()
 	popup.show_for_planet(planet_node, _camera)
-	popup.reduced_motion = _settings.reduced_motion
 	_ui.add_child(popup)
 	_planet_popup = popup
 

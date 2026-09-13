@@ -33,7 +33,7 @@ extends RefCounted
 # stars drive slightly larger diffraction discs + bokeh halo; ~5% outliers
 # at 1.5–2.2× radius with soft glow. Scintillation is atmospheric — in
 # space stars are stable; twinkle is reduced to gentle breathing on bright
-# stars only (shader masks by luma, respects reduced_motion).
+# stars only (shader masks by luma).
 #
 # Token sources:
 # - O #9bb0ff, B #aabfff, A #cad7ff, F #f8f7ff, G #fff4ea, K #ffd2a1,
