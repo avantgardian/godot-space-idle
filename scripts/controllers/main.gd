@@ -3,9 +3,17 @@ extends "res://scripts/controllers/game_controller.gd"
 const _PLANET_POPUP: GDScript = preload("res://scripts/ui/planet_popup.gd")
 const _RING_SYSTEM: GDScript = preload("res://scripts/components/ring_system.gd")
 
+@export var enable_planet_mutual_gravity: bool = false
+@export
+var planet_gravity_mode: OrbitalBody.PlanetGravityMode = OrbitalBody.PlanetGravityMode.REALISTIC
+@export var planet_gravity_scale: float = 1.0
+@export var planet_softening: float = 150.0
+
 var _planet_data: Array[Node2D]
 var _planet_popup: PlanetPopup
 var _planet_data_cache: Array[Dictionary] = []
+var _reference_gm: float = 0.0
+var _bench_log_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -42,6 +50,10 @@ func _ready() -> void:
 	_collision_mgr = _COLLISION_MGR.new(
 		_planet_data, _ASTEROID_SCRIPT, _impact_fx, _event_log, _find_planet_idx, _post_fx.trigger
 	)
+	_reference_gm = _get_asteroid_gm()
+	if _reference_gm <= 0.0:
+		_reference_gm = OrbitalBody.reference_gm_default()
+	_configure_planet_gravity()
 
 
 func _physics_process(delta: float) -> void:
@@ -57,8 +69,76 @@ func _physics_process(delta: float) -> void:
 		@warning_ignore("unsafe_property_access", "unsafe_method_access")
 		cache.mass = planet.mass if not planet.is_dead() else 0.0
 	_spawner.set_planet_data(_planet_data_cache)
+	_configure_planet_gravity()
+	if enable_planet_mutual_gravity:
+		for planet: Node2D in _planet_data:
+			@warning_ignore("unsafe_method_access", "unsafe_cast")
+			(planet as OrbitalBody).set_peer_data(_planet_data_cache)
+	else:
+		var empty: Array[Dictionary] = []
+		for planet: Node2D in _planet_data:
+			@warning_ignore("unsafe_method_access", "unsafe_cast")
+			(planet as OrbitalBody).set_peer_data(empty)
 	if _planet_popup and not _camera.is_following():
 		_close_planet_popup()
+	_bench_log_timer += delta
+	if _bench_log_timer >= 2.0:
+		_bench_log_timer = 0.0
+		if enable_planet_mutual_gravity:
+			var avg: float = OrbitalBody.get_planet_gravity_bench_avg_us()
+			if avg > 0.0:
+				print(
+					(
+						"[N-body] enabled mode=%s scale=%.2f soft=%.1f avg_mutual_us=%.2f"
+						% [str(planet_gravity_mode), planet_gravity_scale, planet_softening, avg]
+					)
+				)
+			OrbitalBody.reset_planet_gravity_bench()
+
+
+func _configure_planet_gravity() -> void:
+	if _reference_gm <= 0.0:
+		_reference_gm = OrbitalBody.reference_gm_default()
+	for planet: Node2D in _planet_data:
+		@warning_ignore("unsafe_method_access", "unsafe_cast")
+		(planet as OrbitalBody).configure_planet_gravity(
+			enable_planet_mutual_gravity,
+			planet_gravity_mode,
+			planet_gravity_scale,
+			planet_softening,
+			_reference_gm
+		)
+
+
+func _on_key_pressed(event: InputEvent) -> void:
+	@warning_ignore("unsafe_property_access")
+	var is_key: bool = event is InputEventKey
+	if not is_key:
+		return
+	@warning_ignore("unsafe_cast")
+	var key_event: InputEventKey = event as InputEventKey
+	@warning_ignore("unsafe_property_access")
+	var kc: int = key_event.keycode
+	if kc == KEY_G:
+		enable_planet_mutual_gravity = not enable_planet_mutual_gravity
+		_configure_planet_gravity()
+		OrbitalBody.reset_planet_gravity_bench()
+		print("[N-body] toggle enable=%s" % str(enable_planet_mutual_gravity))
+		return
+	if kc == KEY_H:
+		if planet_gravity_mode == OrbitalBody.PlanetGravityMode.REALISTIC:
+			planet_gravity_mode = OrbitalBody.PlanetGravityMode.EXAGGERATED
+		else:
+			planet_gravity_mode = OrbitalBody.PlanetGravityMode.REALISTIC
+		_configure_planet_gravity()
+		OrbitalBody.reset_planet_gravity_bench()
+		print(
+			(
+				"[N-body] mode -> %s scale=%.2f soft=%.1f"
+				% [str(planet_gravity_mode), planet_gravity_scale, planet_softening]
+			)
+		)
+		return
 
 
 func _get_asteroid_gm() -> float:
