@@ -10,7 +10,7 @@ uniform int   u_seed = 1;
 void sphere_projection(vec2 uv_ndc, float axial_tilt, float time_val, float spin_rate, int seed, out float mu, out float lat, out float lon, out vec3 n, out vec2 seed_off, out float edge_aa) {
 	float r2 = min(dot(uv_ndc, uv_ndc), 1.0);
 	mu = sqrt(1.0 - r2);
-	edge_aa = 1.0 - smoothstep(0.985, 1.0, dot(uv_ndc, uv_ndc));
+	edge_aa = 1.0 - smoothstep(0.97, 1.0, dot(uv_ndc, uv_ndc));
 	vec3 n_view = vec3(uv_ndc, mu);
 	float ct = cos(axial_tilt);
 	float st = sin(axial_tilt);
