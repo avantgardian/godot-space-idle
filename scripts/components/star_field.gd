@@ -25,7 +25,7 @@ const BG_LAYERS: Array[Dictionary] = [
 		"max_b": 0.68,
 		"motion_scale": 0.010,
 		"depth": 0.02,
-		"max_blur": 7.0,
+		"max_blur": 3.2,
 	},
 	{
 		"count": 140,
@@ -35,7 +35,7 @@ const BG_LAYERS: Array[Dictionary] = [
 		"max_b": 0.82,
 		"motion_scale": 0.028,
 		"depth": 0.18,
-		"max_blur": 6.5,
+		"max_blur": 2.8,
 	},
 	{
 		"count": 90,
@@ -45,7 +45,7 @@ const BG_LAYERS: Array[Dictionary] = [
 		"max_b": 0.95,
 		"motion_scale": 0.058,
 		"depth": 0.35,
-		"max_blur": 5.5,
+		"max_blur": 2.2,
 	},
 ]
 
@@ -58,7 +58,7 @@ const DUST_LAYERS: Array[Dictionary] = [
 		"max_b": 0.26,
 		"motion_scale": 1.18,
 		"depth": 0.88,
-		"max_blur": 5.0,
+		"max_blur": 2.0,
 	},
 	{
 		"count": 32,
@@ -68,7 +68,7 @@ const DUST_LAYERS: Array[Dictionary] = [
 		"max_b": 0.22,
 		"motion_scale": 1.38,
 		"depth": 0.97,
-		"max_blur": 6.0,
+		"max_blur": 2.4,
 	},
 ]
 
