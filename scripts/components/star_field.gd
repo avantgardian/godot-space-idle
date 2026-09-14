@@ -143,12 +143,13 @@ func update_parallax(camera_position: Vector2, camera_zoom: float) -> void:
 			origin.y + _align_floor(camera_position.y - world_half.y - origin.y, screen_size.y)
 		)
 	if _void_sprite and is_instance_valid(_void_sprite):
-		# Void gradient tiles with the viewport (motion 0) — keep centered
-		# on the camera so it never scrolls out.
-		_void_sprite.position = Vector2(
-			_align_floor(camera_position.x - world_half.x, screen_size.x),
-			_align_floor(camera_position.y - world_half.y, screen_size.y)
-		)
+		# Void gradient is the deepest backdrop (motion 0). Keep its top-left
+		# aligned with the viewport top-left so it stays fixed on screen
+		# without the quantized snap that caused a periodic opposite-direction
+		# jump (#301). The texture is 6.6× the viewport (low-res + scale) so
+		# it always covers the view; blobs are huge (radius ~0.55× texture) and
+		# remain at a constant screen offset = -world_half + blob_pos*scale.
+		_void_sprite.position = camera_position - world_half
 
 
 func set_focus(focus_t: float) -> void:
@@ -296,7 +297,7 @@ func _generate_star_layer(
 			var base: Color = Color(0.88 + drift, 0.86 + drift * 0.6, 0.82 + drift * 0.3, 1.0)
 			var alpha: float = clamp(brightness * 0.95, 0.10, 0.30)
 			col = Color(base.r * 0.9, base.g * 0.9, base.b * 0.9, alpha)
-			_draw_dust_mote(image, x, y, radius, col)
+			_draw_dust_mote_wrapped(image, x, y, radius, col)
 		else:
 			@warning_ignore("unsafe_method_access", "unsafe_cast")
 			var tint: Color = SPAL.sample_spectral_color(rng) as Color
@@ -304,13 +305,14 @@ func _generate_star_layer(
 			_draw_star_wrapped(image, x, y, radius, col)
 			# Subtle halo for the brightest stars (diffraction-like bokeh).
 			# Radius coupling already makes bright stars larger; halo makes
-			# the top ~15% bloom softly.
+			# the top ~15% bloom softly. Wrapped so the halo does not get
+			# truncated at the tile edge and flash a seam every wrap (#301).
 			if brightness > 0.52 and radius > 1.05:
 				var halo_col: Color = Color(col.r, col.g, col.b, 0.22)
-				_draw_halo(image, x, y, radius * 2.35, halo_col)
+				_draw_halo_wrapped(image, x, y, radius * 2.35, halo_col)
 			# Tiny diffraction spike for the very brightest handful (~2%).
 			if brightness > 0.66 and radius > 1.25 and rng.randf() < 0.38:
-				_draw_spike(image, x, y, radius, Color(col.r, col.g, col.b, 0.18))
+				_draw_spike_wrapped(image, x, y, radius, Color(col.r, col.g, col.b, 0.18))
 
 	var texture: ImageTexture = ImageTexture.create_from_image(image)
 
@@ -437,6 +439,28 @@ func _draw_halo(image: Image, cx: float, cy: float, radius: float, color: Color)
 			image.set_pixel(px, py, src.blend(existing))
 
 
+func _draw_halo_wrapped(image: Image, x: float, y: float, radius: float, color: Color) -> void:
+	var w: int = image.get_width()
+	var h: int = image.get_height()
+	_draw_halo(image, x, y, radius, color)
+	if x - radius < 0:
+		_draw_halo(image, x + w, y, radius, color)
+		if y - radius < 0:
+			_draw_halo(image, x + w, y + h, radius, color)
+		if y + radius >= h:
+			_draw_halo(image, x + w, y - h, radius, color)
+	if x + radius >= w:
+		_draw_halo(image, x - w, y, radius, color)
+		if y - radius < 0:
+			_draw_halo(image, x - w, y + h, radius, color)
+		if y + radius >= h:
+			_draw_halo(image, x - w, y - h, radius, color)
+	if y - radius < 0:
+		_draw_halo(image, x, y + h, radius, color)
+	if y + radius >= h:
+		_draw_halo(image, x, y - h, radius, color)
+
+
 func _draw_spike(image: Image, cx: float, cy: float, radius: float, color: Color) -> void:
 	var len_h: int = ceili(radius * 3.2)
 	var len_v: int = ceili(radius * 3.2)
@@ -478,6 +502,29 @@ func _draw_spike(image: Image, cx: float, cy: float, radius: float, color: Color
 			image.set_pixel(px, py, Color(color.r, color.g, color.b, a).blend(existing))
 
 
+func _draw_spike_wrapped(image: Image, x: float, y: float, radius: float, color: Color) -> void:
+	var w: int = image.get_width()
+	var h: int = image.get_height()
+	var ext: float = radius * 3.2 + 1.5
+	_draw_spike(image, x, y, radius, color)
+	if x - ext < 0:
+		_draw_spike(image, x + w, y, radius, color)
+		if y - ext < 0:
+			_draw_spike(image, x + w, y + h, radius, color)
+		if y + ext >= h:
+			_draw_spike(image, x + w, y - h, radius, color)
+	if x + ext >= w:
+		_draw_spike(image, x - w, y, radius, color)
+		if y - ext < 0:
+			_draw_spike(image, x - w, y + h, radius, color)
+		if y + ext >= h:
+			_draw_spike(image, x - w, y - h, radius, color)
+	if y - ext < 0:
+		_draw_spike(image, x, y + h, radius, color)
+	if y + ext >= h:
+		_draw_spike(image, x, y - h, radius, color)
+
+
 func _draw_dust_mote(image: Image, cx: float, cy: float, radius: float, color: Color) -> void:
 	# Soft bokeh disc: Gaussian alpha falloff, no hard edge.
 	var r: int = ceili(radius * 1.6)
@@ -512,3 +559,26 @@ func _draw_dust_mote(image: Image, cx: float, cy: float, radius: float, color: C
 			var out_g: float = (src.g * a + existing.g * existing.a * (1.0 - a)) / out_a
 			var out_b: float = (src.b * a + existing.b * existing.a * (1.0 - a)) / out_a
 			image.set_pixel(px, py, Color(out_r, out_g, out_b, out_a))
+
+
+func _draw_dust_mote_wrapped(image: Image, x: float, y: float, radius: float, color: Color) -> void:
+	var w: int = image.get_width()
+	var h: int = image.get_height()
+	var eff: float = radius * 1.6
+	_draw_dust_mote(image, x, y, radius, color)
+	if x - eff < 0:
+		_draw_dust_mote(image, x + w, y, radius, color)
+		if y - eff < 0:
+			_draw_dust_mote(image, x + w, y + h, radius, color)
+		if y + eff >= h:
+			_draw_dust_mote(image, x + w, y - h, radius, color)
+	if x + eff >= w:
+		_draw_dust_mote(image, x - w, y, radius, color)
+		if y - eff < 0:
+			_draw_dust_mote(image, x - w, y + h, radius, color)
+		if y + eff >= h:
+			_draw_dust_mote(image, x - w, y - h, radius, color)
+	if y - eff < 0:
+		_draw_dust_mote(image, x, y + h, radius, color)
+	if y + eff >= h:
+		_draw_dust_mote(image, x, y - h, radius, color)
