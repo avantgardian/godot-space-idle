@@ -11,6 +11,11 @@
 Thumbs.db
 desktop.ini
 
+# Perf bench (generated)
+bench/current.json
+bench_current.log
+perf_report.log
+
 # IDE
 *.code-workspace
 .vscode/
