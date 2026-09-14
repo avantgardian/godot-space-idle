@@ -2,6 +2,7 @@ class_name TrailComponent
 extends Node2D
 
 const DOWNSAMPLE_THRESHOLD: int = 8000
+const RECORD_INTERVAL: int = 6
 
 var _line: Line2D
 var _ring: PackedVector2Array
@@ -11,6 +12,8 @@ var _max_points: int = 1200
 var _tick: int = 0
 var _fading: bool = false
 var _stride: int = 1
+var _vis_buffer: PackedVector2Array = PackedVector2Array()
+var _vis_dirty: bool = false
 
 
 func setup(color0: Color, color1: Color, width: float, max_points: int) -> void:
@@ -19,6 +22,10 @@ func setup(color0: Color, color1: Color, width: float, max_points: int) -> void:
 	_ring.fill(Vector2.ZERO)
 	if _max_points > DOWNSAMPLE_THRESHOLD:
 		_stride = ceili(float(_max_points) / DOWNSAMPLE_THRESHOLD)
+	else:
+		_stride = 1
+	_vis_buffer = PackedVector2Array()
+	_vis_dirty = false
 	_line = Line2D.new()
 	_line.top_level = true
 	_line.width = width
@@ -41,12 +48,28 @@ func record(pos: Vector2) -> void:
 	if _fading:
 		return
 	_tick += 1
-	if _tick % 2 == 0:
-		_ring[_head] = pos
-		_head = (_head + 1) % _max_points
-		_filled = mini(_filled + 1, _max_points)
+	if _tick % RECORD_INTERVAL != 0:
+		return
+	_ring[_head] = pos
+	_head = (_head + 1) % _max_points
+	_filled = mini(_filled + 1, _max_points)
+	_vis_dirty = true
 	if _line and _filled >= 2:
-		_line.points = _visible_slice()
+		_update_line()
+
+
+func _update_line() -> void:
+	if not _vis_dirty:
+		return
+	_vis_dirty = false
+	var count: int = _filled
+	var start: int = (_head - count + _max_points) % _max_points
+	var vis_count: int = ceili(float(count) / _stride)
+	if _vis_buffer.size() != vis_count:
+		_vis_buffer.resize(vis_count)
+	for i: int in range(vis_count):
+		_vis_buffer[i] = _ring[(start + i * _stride) % _max_points]
+	_line.points = _vis_buffer
 
 
 func _visible_slice() -> PackedVector2Array:
@@ -65,6 +88,8 @@ func clear() -> void:
 	_head = 0
 	_filled = 0
 	_tick = 0
+	_vis_dirty = false
+	_vis_buffer = PackedVector2Array()
 	if _line:
 		_line.points = PackedVector2Array()
 

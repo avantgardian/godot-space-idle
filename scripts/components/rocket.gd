@@ -72,7 +72,7 @@ func _ready() -> void:
 	@warning_ignore("unsafe_property_access")
 	var accent: Color = PAL.ACCENT
 	_trail_component.setup(
-		Color(accent.r, accent.g, accent.b, 0.0), Color(accent.r, accent.g, accent.b, 0.7), 1.5, 200
+		Color(accent.r, accent.g, accent.b, 0.0), Color(accent.r, accent.g, accent.b, 0.7), 1.5, 100
 	)
 	add_child(_trail_component)
 

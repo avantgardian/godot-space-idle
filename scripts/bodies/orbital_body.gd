@@ -30,7 +30,7 @@ static var _bench_samples: int = 0
 @export var planet_name: String = ""
 @export var planet_color: Color = Color.WHITE
 @export var collision_profile: CollisionProfile
-@export var trail_max: int = 1200
+@export var trail_max: int = 600
 @export var use_shader: bool = false
 @export var planet_seed: int = 0
 @export var axial_tilt_deg: float = 0.0
