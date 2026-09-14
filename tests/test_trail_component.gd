@@ -45,10 +45,9 @@ func test_record_fills_ring():
 	var t: Node2D = autofree(TRAIL.new())
 	add_child(t)
 	t.setup(Color.RED, Color.BLUE, 1.0, 10)
-	t.record(Vector2(1, 0))
-	t.record(Vector2(2, 0))
-	t.record(Vector2(3, 0))
-	assert_eq(t._filled, 1, "one fill after 3 records (tick skip)")
+	for i in range(TRAIL.RECORD_INTERVAL):
+		t.record(Vector2(float(i + 1), 0))
+	assert_eq(t._filled, 1, "one fill after RECORD_INTERVAL records (tick skip)")
 	assert_eq(t._head, 1, "head at 1")
 
 
@@ -56,10 +55,8 @@ func test_record_sets_line_points():
 	var t: Node2D = autofree(TRAIL.new())
 	add_child(t)
 	t.setup(Color.RED, Color.BLUE, 1.0, 10)
-	t.record(Vector2(1, 0))
-	t.record(Vector2(2, 0))
-	t.record(Vector2(3, 0))
-	t.record(Vector2(4, 0))
+	for i in range(TRAIL.RECORD_INTERVAL * 2):
+		t.record(Vector2(float(i + 1), 0))
 	assert_gt(t._line.points.size(), 0, "line has points after records")
 
 
@@ -96,8 +93,8 @@ func test_visible_slice_returns_subset():
 	add_child(t)
 	t.setup(Color.RED, Color.BLUE, 1.0, 100)
 	for _i in range(5):
-		t.record(Vector2(1, 0))
-		t.record(Vector2(1, 0))
+		for _j in range(TRAIL.RECORD_INTERVAL):
+			t.record(Vector2(1, 0))
 	var slice: PackedVector2Array = t._visible_slice()
 	assert_eq(slice.size(), 5, "5 visible points from 5 stored records (stride=1)")
 	assert_eq(slice[0], Vector2(1, 0), "first visible point correct")
@@ -117,8 +114,8 @@ func test_visible_slice_wrap_around():
 	add_child(t)
 	t.setup(Color.RED, Color.BLUE, 1.0, 5)
 	for i in range(10):
-		t.record(Vector2(float(i), 0))
-		t.record(Vector2(float(i), 0))
+		for _j in range(TRAIL.RECORD_INTERVAL):
+			t.record(Vector2(float(i), 0))
 	assert_eq(t._filled, 5, "ring buffer capped at max_points")
 	var slice: PackedVector2Array = t._visible_slice()
 	assert_eq(slice.size(), 5, "visible slice has 5 points")
