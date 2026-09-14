@@ -84,3 +84,41 @@ jobs:
           ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize; EXIT=$?
           mv project.godot.bak project.godot
           exit $EXIT
+
+  perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    env:
+      GODOT_VERSION: 4.7
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download Godot
+        run: |
+          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
+          unzip godot.zip
+          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
+
+      - name: Import project
+        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
+
+      - name: Run benches (relax warnings for bench, advisory)
+        run: |
+          cp project.godot project.godot.bak
+          sed -i 's/=2/=1/g' project.godot
+          echo "--- bench: full suite ---"
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://bench/bench.gd > bench_current.log 2>&1; echo "bench exit: $?"
+          cat bench_current.log
+          # Extract JSON line for checker
+          grep "^{" bench_current.log > bench/current.json || (echo "::warning::bench produced no JSON"; cat bench_current.log; exit 0)
+          cat bench/current.json
+          mv project.godot.bak project.godot
+
+      - name: Check perf gate vs baseline (advisory, 30% regression or absolute thresholds)
+        run: |
+          echo "--- baseline ---"
+          cat bench/baseline.json
+          echo "--- current ---"
+          cat bench/current.json
+          python3 bench/check_perf.py --current bench/current.json --baseline bench/baseline.json
