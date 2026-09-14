@@ -57,7 +57,7 @@ orbit_radius = 350.0
 orbit_period = 25.0
 mass = 1.65e-07
 collision_radius = 18.0
-trail_max = 750
+trail_max = 375
 
 [node name="Venus" type="Node2D" parent="." unique_id=20539749]
 unique_name_in_owner = true
@@ -74,7 +74,7 @@ orbit_period = 47.0
 start_angle = 2.5
 mass = 2.45e-06
 collision_radius = 22.0
-trail_max = 1410
+trail_max = 705
 
 [node name="Earth" type="Node2D" parent="." unique_id=807002999]
 unique_name_in_owner = true
@@ -92,7 +92,7 @@ orbit_period = 78.0
 start_angle = 1.0
 mass = 3e-06
 collision_radius = 24.0
-trail_max = 2340
+trail_max = 1170
 
 [node name="Mars" type="Node2D" parent="." unique_id=1958058809]
 unique_name_in_owner = true
@@ -109,7 +109,7 @@ orbit_period = 131.0
 start_angle = 4.0
 mass = 3.21e-07
 collision_radius = 13.0
-trail_max = 3930
+trail_max = 1965
 
 [node name="Jupiter" type="Node2D" parent="." unique_id=1239311480]
 unique_name_in_owner = true
@@ -126,7 +126,7 @@ orbit_period = 355.0
 start_angle = 0.5
 mass = 0.000954
 collision_radius = 50.0
-trail_max = 10650
+trail_max = 5325
 
 [node name="Saturn" type="Node2D" parent="." unique_id=1967820671]
 unique_name_in_owner = true
@@ -143,7 +143,7 @@ orbit_period = 616.0
 start_angle = 3.0
 mass = 0.000286
 collision_radius = 44.0
-trail_max = 18480
+trail_max = 9240
 
 [node name="Uranus" type="Node2D" parent="." unique_id=262236446]
 unique_name_in_owner = true
@@ -162,7 +162,7 @@ orbit_period = 1074.0
 start_angle = 1.5
 mass = 4.35e-05
 collision_radius = 28.0
-trail_max = 32220
+trail_max = 16110
 
 [node name="Neptune" type="Node2D" parent="." unique_id=483098561]
 unique_name_in_owner = true
@@ -181,7 +181,7 @@ orbit_period = 1599.0
 start_angle = 4.5
 mass = 5.14e-05
 collision_radius = 27.0
-trail_max = 47970
+trail_max = 23985
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=78578215]
 unique_name_in_owner = true

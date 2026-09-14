@@ -68,7 +68,7 @@ func _ensure_init() -> void:
 	_trail_component = _TRAIL.new() as TrailComponent
 	var head: Color = PAL_T.ASTEROID_TRAIL
 	var tail: Color = Color(PAL_T.ASTEROID_TRAIL, 0.0)
-	_trail_component.setup(tail, head, 1.0, 600)
+	_trail_component.setup(tail, head, 1.0, 300)
 	add_child(_trail_component)
 
 
