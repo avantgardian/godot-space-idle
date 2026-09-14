@@ -5,10 +5,10 @@ uniform float tiles : hint_range(1.0, 10.0) = 4.0;
 uniform float time : hint_range(0.0, 1000.0) = 0.0;
 uniform float twinkle_strength : hint_range(0.0, 1.0) = 1.0;
 
-// 8 points on a disc + cardinals — Poisson-ish circular bokeh.
-const vec2 DISC[8] = vec2[8](
-	vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0),
-	vec2(0.707, 0.707), vec2(-0.707, 0.707), vec2(0.707, -0.707), vec2(-0.707, -0.707)
+// 4 points on a disc — Poisson-ish circular bokeh, halved from 8 taps
+// to save ~50% fetches; per-pixel hash rotation keeps it smooth (#296).
+const vec2 DISC[4] = vec2[4](
+	vec2(1.0, 0.0), vec2(0.0, 1.0), vec2(-1.0, 0.0), vec2(0.0, -1.0)
 );
 
 float hash12(vec2 p) {
@@ -39,8 +39,8 @@ void fragment() {
 			// neighbours contribute zero weight instead of pulling toward black.
 			vec4 acc = col;
 			float wsum = 1.0;
-			for (int i = 0; i < 8; i++) {
-				float ring = (i < 4) ? 0.55 : 0.95;
+			for (int i = 0; i < 4; i++) {
+				float ring = (i < 2) ? 0.55 : 0.95;
 				vec2 d = DISC[i];
 				vec2 rd = vec2(d.x * ca - d.y * sa, d.x * sa + d.y * ca);
 				vec2 off = rd * r * ring * ps * 10.0;
@@ -52,7 +52,7 @@ void fragment() {
 			// Second tighter ring for a creamier bokeh (for larger blur values)
 			if (blur_amount > 1.8) {
 				float r2 = r * 0.35;
-				for (int i = 0; i < 4; i++) {
+				for (int i = 0; i < 2; i++) {
 					vec2 d = DISC[i];
 					vec2 rd = vec2(d.x * ca - d.y * sa, d.x * sa + d.y * ca);
 					vec2 off = rd * r2 * ps * 10.0;

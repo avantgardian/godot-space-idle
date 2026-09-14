@@ -1,12 +1,12 @@
 {
-  "trail_per_frame_ms_8x": 0.029,
-  "trail_per_frame_us_8x": 29.0,
-  "starfield_generate_ms": 1358.0,
-  "nbody_avg_us_per_frame": 1.48,
-  "nbody_inner_avg_us": 2.0,
-  "collision_avg_us": 1.22,
+  "trail_per_frame_ms_8x": 0.019,
+  "trail_per_frame_us_8x": 19.0,
+  "starfield_generate_ms": 70.0,
+  "nbody_avg_us_per_frame": 1.1,
+  "nbody_inner_avg_us": 1.4,
+  "collision_avg_us": 0.98,
   "generated_at": "2026-09-14",
-  "commit": "bench-harness",
-  "runner": "ubuntu-latest (CI)",
-  "notes": "Calibrated to CI runner (was MacBook Air M2 0.019/995). starfield_generate_ms is pre-#296 fix (~995 ms locally, ~1358 ms on CI). Thresholds: trail 0.08 ms, starfield 150 ms."
+  "commit": "starfield-perf-#296",
+  "runner": "local + CI (void 1/4 res, shader 8→4 taps)",
+  "notes": "Post-#296 fix: void at 1/4 res (975→~60 ms) + shader halved (8→4 taps, ~50% fill). Previously 0.029/1358 on CI. Thresholds: trail 0.08 ms, starfield 150 ms."
 }

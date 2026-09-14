@@ -82,6 +82,7 @@ var _motion_scales: Array[float] = []
 var _depths: Array[float] = []
 var _max_blurs: Array[float] = []
 var _materials: Array[ShaderMaterial] = []
+var _last_blurs: Array[float] = []
 var _focus_t: float = 0.0
 var _time: float = 0.0
 var _bg_container: Node2D
@@ -188,30 +189,34 @@ func _clear_previous() -> void:
 	_depths.clear()
 	_max_blurs.clear()
 	_materials.clear()
+	_last_blurs.clear()
 	_void_sprite = null
 
 
 func _generate_void_gradient(screen_size: Vector2, tile_scale: float) -> void:
 	# A very low-frequency nebula tint behind the stars: two large,
 	# ultra-soft blobs in dusty indigo / teal to break up flat black.
-	var image: Image = Image.create(
-		int(screen_size.x), int(screen_size.y), false, Image.FORMAT_RGBA8
-	)
+	# Generate at 1/4 resolution and upscale — void is ultra-soft, so no
+	# visual loss, but 16× fewer pixels (975 ms → ~60 ms).
+	const VOID_SCALE: float = 4.0
+	var low_w: int = maxi(int(screen_size.x / VOID_SCALE), 16)
+	var low_h: int = maxi(int(screen_size.y / VOID_SCALE), 16)
+	var image: Image = Image.create(low_w, low_h, false, Image.FORMAT_RGBA8)
 	image.fill(Color.TRANSPARENT)
 	# Blob 1: indigo upper-left
-	var blob1_pos: Vector2 = Vector2(screen_size.x * 0.28, screen_size.y * 0.32)
-	var blob1_r: float = min(screen_size.x, screen_size.y) * 0.55
+	var blob1_pos: Vector2 = Vector2(low_w * 0.28, low_h * 0.32)
+	var blob1_r: float = min(low_w, low_h) * 0.55
 	var blob1_col: Color = Color(0.16, 0.14, 0.32, 0.06)
 	_draw_soft_blob(image, blob1_pos, blob1_r, blob1_col)
 	# Blob 2: muted teal lower-right
-	var blob2_pos: Vector2 = Vector2(screen_size.x * 0.72, screen_size.y * 0.68)
-	var blob2_r: float = min(screen_size.x, screen_size.y) * 0.48
+	var blob2_pos: Vector2 = Vector2(low_w * 0.72, low_h * 0.68)
+	var blob2_r: float = min(low_w, low_h) * 0.48
 	var blob2_col: Color = Color(0.12, 0.28, 0.32, 0.05)
 	_draw_soft_blob(image, blob2_pos, blob2_r, blob2_col)
 	# Subtle vignette toward center (darker edges already handled by post)
 	# Add a central soft lift so the system plane doesn't sit on pure black.
-	var center: Vector2 = screen_size * 0.5
-	var c_r: float = min(screen_size.x, screen_size.y) * 0.62
+	var center: Vector2 = Vector2(low_w * 0.5, low_h * 0.5)
+	var c_r: float = min(low_w, low_h) * 0.62
 	var c_col: Color = Color(0.10, 0.10, 0.22, 0.035)
 	_draw_soft_blob(image, center, c_r, c_col)
 
@@ -219,7 +224,8 @@ func _generate_void_gradient(screen_size: Vector2, tile_scale: float) -> void:
 	var sprite: Sprite2D = Sprite2D.new()
 	sprite.texture = texture
 	sprite.centered = false
-	sprite.scale = Vector2(tile_scale, tile_scale)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	sprite.scale = Vector2(tile_scale * VOID_SCALE, tile_scale * VOID_SCALE)
 	sprite.z_index = -100
 	sprite.z_as_relative = false
 	# No material — void doesn't blur/twinkle.
@@ -328,6 +334,7 @@ func _generate_star_layer(
 	_depths.append(depth)
 	_max_blurs.append(max_blur)
 	_materials.append(mat)
+	_last_blurs.append(-1.0)
 
 
 func _apply_focus(focus_t: float) -> void:
@@ -341,6 +348,9 @@ func _apply_focus(focus_t: float) -> void:
 		# so it stays soft and never competes with planets.
 		if _motion_scales[i] > 1.0:
 			blur = max(blur, 1.2)
+		if abs(blur - _last_blurs[i]) < 0.01:
+			continue
+		_last_blurs[i] = blur
 		var mat: ShaderMaterial = _materials[i]
 		mat.set_shader_parameter("blur_amount", blur)
 
@@ -353,15 +363,19 @@ func _draw_soft_blob(image: Image, center: Vector2, radius: float, color: Color)
 	var r: int = ceili(radius)
 	var cx: int = int(center.x)
 	var cy: int = int(center.y)
+	var r2: float = radius * radius
+	var w: int = image.get_width()
+	var h: int = image.get_height()
 	for dx: int in range(-r, r + 1):
 		for dy: int in range(-r, r + 1):
-			var dist: float = Vector2(dx, dy).length()
-			if dist > radius:
+			var d2: int = dx * dx + dy * dy
+			if float(d2) > r2:
 				continue
 			var px: int = cx + dx
 			var py: int = cy + dy
-			if px < 0 or px >= image.get_width() or py < 0 or py >= image.get_height():
+			if px < 0 or px >= w or py < 0 or py >= h:
 				continue
+			var dist: float = sqrt(float(d2))
 			var t: float = dist / radius
 			# Gaussian falloff.
 			var falloff: float = exp(-t * t * 3.2)
