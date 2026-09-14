@@ -121,4 +121,35 @@ jobs:
           cat bench/baseline.json
           echo "--- current ---"
           cat bench/current.json
-          python3 bench/check_perf.py --current bench/current.json --baseline bench/baseline.json
+          set +e
+          python3 bench/check_perf.py --current bench/current.json --baseline bench/baseline.json 2>&1 | tee perf_report.log
+          EXIT=${PIPESTATUS[0]}
+          echo "perf gate exit: $EXIT" | tee -a perf_report.log
+          exit $EXIT
+
+      - name: Write perf summary to Job Summary
+        if: always()
+        run: |
+          echo "## Perf bench gate (advisory)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Thresholds: \`trail 8× <0.08 ms\` (#295) · \`starfield <150 ms\` (#296) · \`>30% regression\` vs \`bench/baseline.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat perf_report.log >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "(no perf_report.log)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts: \`bench/current.json\` + \`bench/baseline.json\` + \`bench_current.log\`" >> $GITHUB_STEP_SUMMARY
+          cat perf_report.log 2>/dev/null || true
+
+      - name: Upload perf artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-bench-results
+          path: |
+            bench/current.json
+            bench/baseline.json
+            perf_report.log
+            bench_current.log
+          if-no-files-found: warn
+          retention-days: 14
