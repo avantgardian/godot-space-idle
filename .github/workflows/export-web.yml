@@ -4,6 +4,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  GODOT_VERSION: 4.7
+
 jobs:
   export-web:
     runs-on: ubuntu-latest
@@ -14,23 +17,14 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    env:
-      GODOT_VERSION: 4.7
     steps:
       - uses: actions/checkout@v7
 
-      - name: Download Godot
-        run: |
-          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
-          unzip godot.zip
-          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
-
-      - name: Install export templates
-        run: |
-          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -o templates.tpz
-          unzip -q templates.tpz -d /tmp/templates
-          cp /tmp/templates/templates/web_nothreads_*.zip ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+      - name: Setup Godot + export templates
+        uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          include-templates: "true"
 
       - name: Export Web
         run: |

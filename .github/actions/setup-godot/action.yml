@@ -1,0 +1,134 @@
+name: Setup Godot
+description: Download, verify (SHA512), cache, and import Godot binary (plus optional export templates).
+
+inputs:
+  version:
+    description: "Godot version without suffix (e.g. 4.7)"
+    required: false
+    default: "4.7"
+  include-templates:
+    description: "Install export templates when true"
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Godot binary
+      id: cache-godot
+      uses: actions/cache@v4
+      # Latest is v6.1.0 as of 2026-09-15 — kept at v4 per #308 spec;
+      # Dependabot tracks github-actions and will propose v6 (Node24).
+      # Safe to bump to v6 once runner v2.327.1+ is baseline.
+      with:
+        path: |
+          Godot_v${{ inputs.version }}-stable_linux.x86_64
+          godot.zip
+          SHA512-SUMS.txt
+        key: godot-${{ inputs.version }}-linux.x86_64-v1
+
+    - name: Download Godot (cache miss)
+      if: steps.cache-godot.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION="${{ inputs.version }}"
+        ZIP="Godot_v${VERSION}-stable_linux.x86_64.zip"
+        BIN="Godot_v${VERSION}-stable_linux.x86_64"
+        BASE_URL="https://github.com/godotengine/godot-builds/releases/download/${VERSION}-stable"
+
+        echo "Downloading ${ZIP} from ${BASE_URL} ..."
+        curl -fSL "${BASE_URL}/${ZIP}" -o godot.zip
+
+        echo "Fetching SHA512-SUMS.txt for verification ..."
+        curl -fSL "${BASE_URL}/SHA512-SUMS.txt" -o SHA512-SUMS.txt
+
+        echo "Verifying ${ZIP} ..."
+        EXPECTED="$(grep -F " ${ZIP}" SHA512-SUMS.txt | awk '{print $1}')"
+        if [ -z "${EXPECTED}" ]; then
+          echo "::error::SHA512 not found for ${ZIP} in SHA512-SUMS.txt"
+          cat SHA512-SUMS.txt
+          exit 1
+        fi
+        echo "${EXPECTED}  godot.zip" | sha512sum -c -
+
+        echo "Extracting ${ZIP} ..."
+        unzip -o godot.zip
+        chmod +x "${BIN}"
+        echo "Godot ${VERSION} ready: ./${BIN} --version"
+        "./${BIN}" --version
+
+    - name: Ensure Godot binary executable (cache hit)
+      if: steps.cache-godot.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION="${{ inputs.version }}"
+        BIN="Godot_v${VERSION}-stable_linux.x86_64"
+        if [ ! -f "${BIN}" ]; then
+          echo "::error::Cache hit but ${BIN} not found — cache path mismatch"
+          ls -la
+          exit 1
+        fi
+        chmod +x "${BIN}"
+        echo "Restored Godot ${VERSION} from cache: ./${BIN} --version"
+        "./${BIN}" --version
+
+    - name: Import project
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION="${{ inputs.version }}"
+        BIN="Godot_v${VERSION}-stable_linux.x86_64"
+        "./${BIN}" --headless --import
+
+    - name: Cache export templates
+      if: inputs.include-templates == 'true'
+      id: cache-templates
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/share/godot/export_templates/${{ inputs.version }}.stable
+        key: godot-templates-${{ inputs.version }}-v1
+
+    - name: Install export templates (cache miss)
+      if: inputs.include-templates == 'true' && steps.cache-templates.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        VERSION="${{ inputs.version }}"
+        TPZ="Godot_v${VERSION}-stable_export_templates.tpz"
+        BASE_URL="https://github.com/godotengine/godot-builds/releases/download/${VERSION}-stable"
+        DEST="$HOME/.local/share/godot/export_templates/${VERSION}.stable"
+
+        echo "Downloading ${TPZ} ..."
+        curl -fSL "${BASE_URL}/${TPZ}" -o templates.tpz
+
+        # Reuse SHA512-SUMS.txt if present, otherwise fetch
+        if [ ! -f SHA512-SUMS.txt ]; then
+          curl -fSL "${BASE_URL}/SHA512-SUMS.txt" -o SHA512-SUMS.txt
+        fi
+        echo "Verifying ${TPZ} ..."
+        EXPECTED_TMPL="$(grep -F " ${TPZ}" SHA512-SUMS.txt | awk '{print $1}')"
+        if [ -z "${EXPECTED_TMPL}" ]; then
+          echo "::error::SHA512 not found for ${TPZ}"
+          cat SHA512-SUMS.txt
+          exit 1
+        fi
+        echo "${EXPECTED_TMPL}  templates.tpz" | sha512sum -c -
+
+        echo "Installing templates to ${DEST} ..."
+        mkdir -p "${DEST}"
+        unzip -q templates.tpz -d /tmp/templates
+        # Godot 4.x templates.tpz contains templates/ dir with per-platform zips
+        # Export needs web_nothreads_* at least for this project
+        cp /tmp/templates/templates/web_nothreads_*.zip "${DEST}/" 2>/dev/null || cp -r /tmp/templates/* "${DEST}/" 2>/dev/null || true
+        ls -lh "${DEST}/"
+
+    - name: Verify templates (cache hit)
+      if: inputs.include-templates == 'true' && steps.cache-templates.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        VERSION="${{ inputs.version }}"
+        DEST="$HOME/.local/share/godot/export_templates/${VERSION}.stable"
+        echo "Restored export templates from cache: ${DEST}"
+        ls -lh "${DEST}/" || echo "(no templates dir — cache may be empty on first hit)"
