@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GODOT_VERSION: 4.7
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -27,19 +30,13 @@ jobs:
   typing:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      GODOT_VERSION: 4.7
     steps:
       - uses: actions/checkout@v7
 
-      - name: Download Godot
-        run: |
-          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
-          unzip godot.zip
-          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
-
-      - name: Import project
-        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
+      - name: Setup Godot
+        uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
 
       - name: Check strict typing (warnings as errors)
         run: |
@@ -63,19 +60,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      GODOT_VERSION: 4.7
     steps:
       - uses: actions/checkout@v7
 
-      - name: Download Godot
-        run: |
-          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
-          unzip godot.zip
-          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
-
-      - name: Import project
-        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
+      - name: Setup Godot
+        uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
 
       - name: Run GUT tests (relax warnings for tests)
         run: |
@@ -89,19 +80,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
-    env:
-      GODOT_VERSION: 4.7
     steps:
       - uses: actions/checkout@v7
 
-      - name: Download Godot
-        run: |
-          curl -fSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o godot.zip
-          unzip godot.zip
-          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
-
-      - name: Import project
-        run: ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --import
+      - name: Setup Godot
+        uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
 
       - name: Run benches (relax warnings for bench, advisory)
         run: |
