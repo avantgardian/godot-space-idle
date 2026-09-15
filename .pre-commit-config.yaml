@@ -12,20 +12,24 @@ repos:
 
   - repo: local
     hooks:
+      # Lint all project GDScript — scripts/ (game) + tests/ + bench/ share the same style (#312).
+      # CI runs full-repo `scripts/ tests/ bench/`; pre-commit is incremental (changed files only) via
+      # `types: [gdscript]` + `files:` so typical single-file commits are ~3× faster. Vendor `addons/` is excluded.
       - id: gdformat
         name: gdformat
         entry: gdformat --check
         language: python
         additional_dependencies: [gdtoolkit==4.5.0]
         types: [gdscript]
-        files: \.gd$
+        files: ^(scripts|tests|bench)/.*\.gd$
 
       - id: gdlint
         name: gdlint
-        entry: gdlint scripts/
+        entry: gdlint
         language: python
         additional_dependencies: [gdtoolkit==4.5.0]
-        pass_filenames: false
+        types: [gdscript]
+        files: ^(scripts|tests|bench)/.*\.gd$
 
       - id: godot-typing
         name: godot-typing (strict)

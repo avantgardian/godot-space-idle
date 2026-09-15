@@ -40,8 +40,9 @@ jobs:
         with:
           python-version: "3.x"
       - run: pip install -r requirements.txt
-      - run: gdformat --check scripts/
-      - run: gdlint scripts/
+      # Lint all GDScript — scripts/ (game), tests/ and bench/ share the same style (#312)
+      - run: gdformat --check scripts/ tests/ bench/
+      - run: gdlint scripts/ tests/ bench/
 
   typing:
     runs-on: ubuntu-latest
