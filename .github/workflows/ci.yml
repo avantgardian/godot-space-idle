@@ -1,7 +1,22 @@
 name: CI
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "shaders/**"
+      - "scenes/**"
+      - "project.godot"
+      - "bench/**"
+      - ".github/**"
+      - "requirements.txt"
+      - "addons/**"
+      - "resources/**"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
 
 permissions:
