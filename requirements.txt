@@ -1,0 +1,9 @@
+# Pinned dependencies for CI reproducibility (issue #307)
+# gdtoolkit 4.5.0 is latest as of 2026-09-15 (https://pypi.org/project/gdtoolkit/).
+# Hashes are included for auditability; CI installs via `pip install -r requirements.txt`
+# without --require-hashes to avoid platform-specific pyyaml wheel brittleness.
+# To enforce hash checking, run: pip install --require-hashes -r requirements.txt
+# and ensure all transitive deps have hashes (use pip-compile --generate-hashes).
+gdtoolkit==4.5.0 \
+    --hash=sha256:f25c5bf7f7fe861e1127164c5d73e0a7fb204ec74cf05d375b76a5dcf8610cdb \
+    --hash=sha256:1ab17fb5400d86e4ae66d9c94992f4e3a9b6c27d618d4094782e66101efb3e9a
