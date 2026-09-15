@@ -2,7 +2,25 @@ name: Export Web
 on:
   push:
     branches: [main]
+    paths:
+      - "scripts/**"
+      - "shaders/**"
+      - "scenes/**"
+      - "project.godot"
+      - "bench/**"
+      - ".github/**"
+      - "requirements.txt"
+      - "addons/**"
+      - "resources/**"
+      - "export_presets.cfg"
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   GODOT_VERSION: 4.7
@@ -10,6 +28,7 @@ env:
 jobs:
   export-web:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       pages: write

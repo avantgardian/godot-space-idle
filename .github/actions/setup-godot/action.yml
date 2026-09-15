@@ -16,10 +16,9 @@ runs:
   steps:
     - name: Cache Godot binary
       id: cache-godot
-      uses: actions/cache@v4
-      # Latest is v6.1.0 as of 2026-09-15 — kept at v4 per #308 spec;
-      # Dependabot tracks github-actions and will propose v6 (Node24).
-      # Safe to bump to v6 once runner v2.327.1+ is baseline.
+      uses: actions/cache@v6
+      # Bumped v4→v6 (Node24, runner≥2.327.1) per #309 modernization;
+      # v6.1.0 is latest as of 2026-09-15.
       with:
         path: |
           Godot_v${{ inputs.version }}-stable_linux.x86_64
@@ -85,7 +84,7 @@ runs:
     - name: Cache export templates
       if: inputs.include-templates == 'true'
       id: cache-templates
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.local/share/godot/export_templates/${{ inputs.version }}.stable
         key: godot-templates-${{ inputs.version }}-v1
