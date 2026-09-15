@@ -1,0 +1,7 @@
+# Pinned dependencies for CI reproducibility (issue #307)
+# gdtoolkit 4.5.0 is latest as of 2026-09-15 (https://pypi.org/project/gdtoolkit/).
+# No --hash pins here: pip auto-enables --require-hashes when any hash is present,
+# which would require hashes for all transitive deps (lark, pyyaml, radon, etc.)
+# and break on platform-specific wheels. Plain pin keeps CI simple and Dependabot-friendly.
+# For supply-chain hardening, generate full hashes via `pip-compile --generate-hashes`.
+gdtoolkit==4.5.0
