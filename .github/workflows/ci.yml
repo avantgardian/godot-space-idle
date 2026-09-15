@@ -183,8 +183,28 @@ jobs:
           BENCH_EXIT=$?
           echo "bench exit: $BENCH_EXIT"
           cat bench_current.log
-          # Extract JSON line for checker (bench may exit 1 on budget breach — still produces JSON)
-          grep "^{" bench_current.log > bench/current.json || (echo "::error::bench produced no JSON"; cat bench_current.log; mv project.godot.bak project.godot; exit 1)
+          # Extract JSON — whitespace-tolerant (survives leading spaces/tabs from Godot log prefix).
+          # Mirrors bench/check_perf.py:load_json() reversed-line search; replaces fragile `grep \"^{\"`.
+          python3 << 'PY' || { echo "::error::bench JSON extraction failed"; cat bench_current.log; mv project.godot.bak project.godot; exit 1; }
+          import json
+          import pathlib
+          import sys
+          log = pathlib.Path("bench_current.log").read_text(encoding="utf-8", errors="ignore")
+          found = None
+          for line in reversed(log.splitlines()):
+              s = line.strip()
+              if s.startswith("{") and s.endswith("}"):
+                  try:
+                      found = json.loads(s)
+                      break
+                  except json.JSONDecodeError:
+                      continue
+          if found is None:
+              print("::error::bench produced no JSON (even after whitespace-tolerant search)")
+              sys.exit(1)
+          pathlib.Path("bench/current.json").write_text(json.dumps(found))
+          print(f"extracted: {json.dumps(found)[:300]}")
+          PY
           cat bench/current.json
           mv project.godot.bak project.godot
           # Bench exit 1 means absolute thresholds breached — required gate (#310)
@@ -195,6 +215,7 @@ jobs:
           exit 0
 
       - name: Check absolute thresholds (required — blocks PR)
+        if: always()
         run: |
           echo "--- baseline ---"
           cat bench/baseline.json
