@@ -9,11 +9,11 @@ const PARALLAX_ITERS: int = 2000
 
 
 func _init() -> void:
-	var root: Window = get_root()
+	var tree_root: Window = get_root()
 
 	@warning_ignore("unsafe_cast")
 	var field: Node2D = STAR_FIELD.new() as Node2D
-	root.add_child(field)
+	tree_root.add_child(field)
 
 	# Stub viewport size so headless without window still hits 1920×1080 path.
 	# StarField.generate() already falls back to 1920×1080 when viewport < 64.

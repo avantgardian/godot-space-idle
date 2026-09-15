@@ -10,9 +10,9 @@ const GENERATE_BUDGET_MS: float = 150.0
 
 
 func _init() -> void:
-	var root: Window = get_root()
+	var tree_root: Window = get_root()
 	var holder: Node2D = Node2D.new()
-	root.add_child(holder)
+	tree_root.add_child(holder)
 
 	var results: Dictionary = {}
 

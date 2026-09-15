@@ -8,9 +8,9 @@ const COLLISION_ITERS: int = 2000
 
 
 func _init() -> void:
-	var root: Window = get_root()
+	var tree_root: Window = get_root()
 	var holder: Node2D = Node2D.new()
-	root.add_child(holder)
+	tree_root.add_child(holder)
 
 	# ── N-body (planet mutual gravity) micro-bench ─────────────────
 	# Mirrors orbital_body.gd:283 bench block — measures inner loop cost.
