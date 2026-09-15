@@ -94,7 +94,6 @@ jobs:
   perf:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
 
@@ -103,7 +102,7 @@ jobs:
         with:
           version: ${{ env.GODOT_VERSION }}
 
-      - name: Run benches (relax warnings for bench, advisory)
+      - name: Run benches (relax warnings) — absolute budget breach blocks PR
         run: |
           set +e
           cp project.godot project.godot.bak
@@ -114,30 +113,55 @@ jobs:
           echo "bench exit: $BENCH_EXIT"
           cat bench_current.log
           # Extract JSON line for checker (bench may exit 1 on budget breach — still produces JSON)
-          grep "^{" bench_current.log > bench/current.json || (echo "::warning::bench produced no JSON"; cat bench_current.log; mv project.godot.bak project.godot; exit 0)
+          grep "^{" bench_current.log > bench/current.json || (echo "::error::bench produced no JSON"; cat bench_current.log; mv project.godot.bak project.godot; exit 1)
           cat bench/current.json
           mv project.godot.bak project.godot
-          # Don't fail step on bench budget breach — gate is in next step (advisory)
+          # Bench exit 1 means absolute thresholds breached — required gate (#310)
+          if [ $BENCH_EXIT -ne 0 ]; then
+            echo "::error::Bench absolute thresholds breached (trail 0.08 ms / starfield 150 ms) — blocks PR"
+            exit $BENCH_EXIT
+          fi
           exit 0
 
-      - name: Check perf gate vs baseline (advisory, 30% regression or absolute thresholds)
+      - name: Check absolute thresholds (required — blocks PR)
         run: |
           echo "--- baseline ---"
           cat bench/baseline.json
           echo "--- current ---"
           cat bench/current.json
           set +e
-          python3 bench/check_perf.py --current bench/current.json --baseline bench/baseline.json 2>&1 | tee perf_report.log
+          python3 bench/check_perf.py --current bench/current.json --baseline bench/baseline.json --mode absolute 2>&1 | tee perf_report_abs.log
           EXIT=${PIPESTATUS[0]}
-          echo "perf gate exit: $EXIT" | tee -a perf_report.log
+          echo "absolute gate exit: $EXIT" | tee -a perf_report_abs.log
+          cp perf_report_abs.log perf_report.log
+          exit $EXIT
+
+      - name: Check regression vs baseline (advisory — warns only, does not block)
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "--- regression check (advisory, >30% vs baseline) ---"
+          # Ensure perf_report.log exists even if absolute gate failed
+          touch perf_report.log
+          set +e
+          python3 bench/check_perf.py --current bench/current.json --baseline bench/baseline.json --mode regression 2>&1 | tee perf_report_regr.log
+          EXIT=${PIPESTATUS[0]}
+          echo "regression gate exit: $EXIT" | tee -a perf_report_regr.log
+          echo "" >> perf_report.log
+          echo "--- regression (advisory) ---" >> perf_report.log
+          cat perf_report_regr.log >> perf_report.log
+          if [ $EXIT -ne 0 ]; then
+            echo "::warning::Perf regression >30% detected (advisory, not blocking — see perf_report.log)"
+          fi
           exit $EXIT
 
       - name: Write perf summary to Job Summary
         if: always()
         run: |
-          echo "## Perf bench gate (advisory)" >> $GITHUB_STEP_SUMMARY
+          echo "## Perf bench gate" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Thresholds: \`trail 8× <0.08 ms\` (#295) · \`starfield <150 ms\` (#296) · \`>30% regression\` vs \`bench/baseline.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Required:** \`trail 8× <0.08 ms\` (#295) · \`starfield <150 ms\` (#296) — breach blocks PR." >> $GITHUB_STEP_SUMMARY
+          echo "**Advisory:** \`>30% regression\` vs \`bench/baseline.json\` — warning only until runner variance tightened (local 70 ms vs CI 124 ms)." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat perf_report.log >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "(no perf_report.log)" >> $GITHUB_STEP_SUMMARY
@@ -155,6 +179,8 @@ jobs:
             bench/current.json
             bench/baseline.json
             perf_report.log
+            perf_report_abs.log
+            perf_report_regr.log
             bench_current.log
           if-no-files-found: warn
           retention-days: 14
