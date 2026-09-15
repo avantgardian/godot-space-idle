@@ -57,22 +57,53 @@ jobs:
 
       - name: Check strict typing (warnings as errors)
         run: |
-          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit 2>&1 | tee godot.log
-          if grep -qE "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log; then
-            echo "::error::Strict typing / shader errors found (warnings treated as errors)"
-            grep -E "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log
+          set -o pipefail
+          ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
+          echo "=== editor --quit ==="
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --editor --quit 2>&1 | tee godot.log; EC=${PIPESTATUS[0]}
+          if [ $EC -ne 0 ]; then
+            echo "::error::Godot --editor --quit exited $EC"
+            exit $EC
+          fi
+          if grep -qE "$ERR_PAT" godot.log; then
+            echo "::error::Strict typing / shader / resource errors found (warnings treated as errors)"
+            grep -E "$ERR_PAT" godot.log
             exit 1
           fi
-          # Also check each GDScript file individually (catches unreferenced new files)
+          echo "=== per-file script check (catches unreferenced new files) ==="
           for f in $(find scripts -name "*.gd"); do
-            ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --check-only --script "res://$f" 2>&1 | tee -a godot.log
+            ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --check-only --script "res://$f" 2>&1 | tee -a godot.log; EC=${PIPESTATUS[0]}
+            if [ $EC -ne 0 ]; then
+              echo "::warning::check-only $f exited $EC"
+            fi
           done
-          if grep -qE "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log; then
-            echo "::error::Strict typing / shader errors found in per-file check"
-            grep -E "SCRIPT ERROR|SHADER ERROR|Shader compilation failed" godot.log
+          if grep -qE "$ERR_PAT" godot.log; then
+            echo "::error::Strict typing / resource errors found in per-file check"
+            grep -E "$ERR_PAT" godot.log
             exit 1
           fi
-          echo "Strict typing + shader check passed"
+          echo "=== resource smoke (scenes + .tres) ==="
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://bench/resource_smoke.gd 2>&1 | tee -a godot.log; EC=${PIPESTATUS[0]}
+          if [ $EC -ne 0 ]; then
+            echo "::error::Resource smoke failed (exit $EC) — broken .tscn/.tres reference"
+            grep -E "$ERR_PAT" godot.log || true
+            exit $EC
+          fi
+          if grep -qE "$ERR_PAT" godot.log; then
+            echo "::error::Resource load errors found after smoke"
+            grep -E "$ERR_PAT" godot.log
+            exit 1
+          fi
+          echo "Strict typing + shader + resource check passed"
+
+      - name: Upload Godot log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: godot-typing-log
+          path: godot.log
+          if-no-files-found: warn
+          retention-days: 14
 
   test:
     runs-on: ubuntu-latest
