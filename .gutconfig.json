@@ -1,6 +1,6 @@
 {
   "dirs": ["res://tests"],
-  "include_subdirs": false,
+  "include_subdirs": true,
   "should_exit": true,
   "should_maximize": true,
   "log_level": 1,
