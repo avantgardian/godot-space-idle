@@ -247,6 +247,7 @@ func _generate_wear() -> void:
 	# Paint chips on leading edges (nose, chamfers, radiator tips).
 	var chip_count: int = 16
 	for i: int in range(chip_count):
+		@warning_ignore("unused_variable")
 		var edge_t: float = rng.randf()
 		var px: float = 0.0
 		var py: float = 0.0
@@ -291,6 +292,7 @@ func _lit_color(base: Color, n2: Vector2, tilt_sin: float) -> Color:
 	# Diffuse = max(dot(N, L), 0) = max(sin * dot(n2, sun), 0). Night side falls to ambient.
 	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var ambient: float = SHIP.SHIP_AMBIENT as float
+	@warning_ignore("unused_variable")
 	var cos_t_unused: float = sqrt(maxf(1.0 - tilt_sin * tilt_sin, 0.0))
 	var ndotl: float = 0.0
 	if tilt_sin > 0.001:
@@ -342,9 +344,7 @@ func _draw() -> void:
 	var rad_star_c: Color = _lit_color(alu, rad_n_star, 0.55)
 	# Ding the starboard radiator corner ever so slightly: pull one vertex inward 0.6px
 	# (subtle asymmetry, still symmetric at a glance per spec).
-	var rad_star_dinged: PackedVector2Array = PackedVector2Array(
-		[Vector2(6.2, -1.5), Vector2(9.5, -1.5), Vector2(9.2, 6.5), Vector2(6.0, 6.5)]
-	)
+	var rad_star_dinged: PackedVector2Array = _radiator_starboard.duplicate()
 	rad_star_dinged[1] = Vector2(8.9, -0.9)
 	draw_colored_polygon(_radiator_port, rad_port_c)
 	draw_colored_polygon(rad_star_dinged, rad_star_c)
