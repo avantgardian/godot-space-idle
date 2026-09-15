@@ -9,9 +9,9 @@ const TRAIL_MAX: int = 600
 
 
 func _init() -> void:
-	var root: Window = get_root()
+	var tree_root: Window = get_root()
 	var holder: Node2D = Node2D.new()
-	root.add_child(holder)
+	tree_root.add_child(holder)
 
 	var trails: Array[TrailComponent] = []
 	for _i: int in range(8):
