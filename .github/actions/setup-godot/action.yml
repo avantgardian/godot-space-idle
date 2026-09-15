@@ -3,9 +3,9 @@ description: Download, verify (SHA512), cache, and import Godot binary (plus opt
 
 inputs:
   version:
-    description: "Godot version without suffix (e.g. 4.7)"
+    description: "Godot version without suffix (e.g. 4.7.2)"
     required: false
-    default: "4.7"
+    default: "4.7.2"
   include-templates:
     description: "Install export templates when true"
     required: false

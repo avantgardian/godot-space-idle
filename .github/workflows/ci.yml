@@ -12,6 +12,7 @@ on:
       - "requirements.txt"
       - "addons/**"
       - "resources/**"
+      - "export_presets.cfg"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -27,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GODOT_VERSION: 4.7
+  GODOT_VERSION: 4.7.2
 
 jobs:
   lint:
@@ -184,3 +185,22 @@ jobs:
             bench_current.log
           if-no-files-found: warn
           retention-days: 14
+
+  export-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Godot + export templates
+        uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          include-templates: "true"
+
+      - name: Validate Web export
+        run: |
+          mkdir -p /tmp/web
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --export-release "Web" /tmp/web/index.html
+          echo "Web export validation passed"
+          ls -lh /tmp/web/
