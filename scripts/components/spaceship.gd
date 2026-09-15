@@ -247,7 +247,8 @@ func _generate_wear() -> void:
 	# Paint chips on leading edges (nose, chamfers, radiator tips).
 	var chip_count: int = 16
 	for i: int in range(chip_count):
-		var _edge_t: float = rng.randf()
+		@warning_ignore("unused_variable")
+		var edge_t: float = rng.randf()
 		var px: float = 0.0
 		var py: float = 0.0
 		if i < 5:
@@ -291,7 +292,8 @@ func _lit_color(base: Color, n2: Vector2, tilt_sin: float) -> Color:
 	# Diffuse = max(dot(N, L), 0) = max(sin * dot(n2, sun), 0). Night side falls to ambient.
 	@warning_ignore("unsafe_property_access", "unsafe_cast")
 	var ambient: float = SHIP.SHIP_AMBIENT as float
-	var _cos_t_unused: float = sqrt(maxf(1.0 - tilt_sin * tilt_sin, 0.0))
+	@warning_ignore("unused_variable")
+	var cos_t_unused: float = sqrt(maxf(1.0 - tilt_sin * tilt_sin, 0.0))
 	var ndotl: float = 0.0
 	if tilt_sin > 0.001:
 		ndotl = maxf(n2.dot(_sun_local), 0.0) * tilt_sin
