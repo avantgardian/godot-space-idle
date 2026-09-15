@@ -108,6 +108,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
 
@@ -120,9 +124,43 @@ jobs:
         run: |
           cp project.godot project.godot.bak
           sed -i 's/=2/=1/g' project.godot
-          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize; EXIT=$?
+          set -o pipefail
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize -glog=2 -gjunit_xml_file=gut-junit.xml 2>&1 | tee godot.log; EXIT=${PIPESTATUS[0]}
           mv project.godot.bak project.godot
+          echo "GUT exit: $EXIT — junit: $(ls -lh gut-junit.xml 2>&1 | head -n 1)"
+          if [ -f gut-junit.xml ]; then
+            TESTS=$(grep -o 'tests="[0-9]*"' gut-junit.xml | head -1 | grep -o '[0-9]*' || echo 0)
+            echo "JUnit tests: $TESTS"
+            if [ "$TESTS" -lt 229 ]; then
+              echo "::error::Test count $TESTS below expected 229 — possible suite deletion"
+              exit 1
+            fi
+          else
+            echo "::error::gut-junit.xml not produced"
+            exit 1
+          fi
           exit $EXIT
+
+      - name: Publish Test Report
+        if: success() || failure()
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: 'gut-junit.xml'
+          check_name: 'GUT Test Report'
+          detailed_summary: true
+          include_passed: true
+          fail_on_failure: true
+
+      - name: Upload GUT artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gut-test-results
+          path: |
+            gut-junit.xml
+            godot.log
+          if-no-files-found: warn
+          retention-days: 14
 
   perf:
     runs-on: ubuntu-latest

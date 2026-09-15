@@ -16,6 +16,11 @@ bench/current.json
 bench_current.log
 perf_report.log
 
+# GUT JUnit + Godot logs (CI artifacts, issue #315)
+gut-junit.xml
+godot.log
+gut.log
+
 # IDE
 *.code-workspace
 .vscode/
