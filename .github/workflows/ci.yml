@@ -328,6 +328,39 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Run gameplay soak (3000 frames) — advisory leak/drift check
+        if: always()
+        continue-on-error: true
+        run: |
+          cp project.godot project.godot.bak
+          sed -i 's/=2/=1/g' project.godot
+          set -o pipefail
+          ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|Invalid get index|Condition.*failed|orphan leak|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
+          echo "=== gameplay soak 3000 frames (advisory) ==="
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://bench/gameplay_smoke.gd -- --frames 3000 --seed 42 2>&1 | tee qa-soak.log; EC=${PIPESTATUS[0]}
+          mv project.godot.bak project.godot
+          echo "qa-soak exit: $EC"
+          cat qa-soak.log
+          if [ $EC -ne 0 ]; then
+            echo "::warning::qa-soak exited $EC (advisory, not blocking)"
+            exit $EC
+          fi
+          if grep -qE "$ERR_PAT" qa-soak.log; then
+            echo "::warning::qa-soak found leak or debugger errors (advisory)"
+            grep -E "$ERR_PAT" qa-soak.log
+            exit 1
+          fi
+          echo "qa-soak passed"
+
+      - name: Upload qa-soak log (always)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-soak-log
+          path: qa-soak.log
+          if-no-files-found: warn
+          retention-days: 14
+
   export-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10

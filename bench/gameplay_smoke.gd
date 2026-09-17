@@ -13,8 +13,18 @@ const PROGRESSION_SCENE_PATH: String = "res://scenes/progression.tscn"
 const DEFAULT_FRAMES: int = 600
 const DEFAULT_SEED: int = 42
 const DELTA: float = 0.016
+const ORPHAN_LEAK_THRESHOLD: int = 10
+const OBJECT_LEAK_THRESHOLD: int = 200
 
 var _rocket_hit_seen: bool = false
+
+
+func _get_orphan_count() -> int:
+	return int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
+
+
+func _get_object_count() -> int:
+	return int(Performance.get_monitor(Performance.OBJECT_COUNT))
 
 
 func _init() -> void:
@@ -60,6 +70,9 @@ func _init() -> void:
 
 func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input: bool) -> void:
 	var smoke_start: int = Time.get_ticks_usec()
+	var baseline_orphans: int = _get_orphan_count()
+	var baseline_objects: int = _get_object_count()
+	print("[gameplay_smoke] baseline orphans=%d objects=%d" % [baseline_orphans, baseline_objects])
 	var targets: Array[String] = []
 	if scene_filter == "main":
 		targets.append(MAIN_SCENE_PATH)
@@ -92,9 +105,43 @@ func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input:
 	var elapsed_us: int = Time.get_ticks_usec() - smoke_start
 	var elapsed_ms: float = float(elapsed_us) / 1000.0
 	results["elapsed_ms"] = elapsed_ms
+	var final_orphans: int = _get_orphan_count()
+	var final_objects: int = _get_object_count()
+	var orphan_delta: int = final_orphans - baseline_orphans
+	var object_delta: int = final_objects - baseline_objects
+	results["orphan_delta"] = orphan_delta
+	results["object_delta"] = object_delta
 	results["passed"] = all_passed
 	print(JSON.stringify(results))
 	print("[gameplay_smoke] elapsed %.2f ms" % elapsed_ms)
+	print(
+		(
+			"[gameplay_smoke] orphans baseline=%d final=%d delta=%d (threshold %d)"
+			% [baseline_orphans, final_orphans, orphan_delta, ORPHAN_LEAK_THRESHOLD]
+		)
+	)
+	print(
+		(
+			"[gameplay_smoke] objects baseline=%d final=%d delta=%d (threshold %d)"
+			% [baseline_objects, final_objects, object_delta, OBJECT_LEAK_THRESHOLD]
+		)
+	)
+	if orphan_delta > ORPHAN_LEAK_THRESHOLD:
+		printerr(
+			(
+				"[gameplay_smoke] FAIL orphan leak delta %d > %d"
+				% [orphan_delta, ORPHAN_LEAK_THRESHOLD]
+			)
+		)
+		all_passed = false
+	if object_delta > OBJECT_LEAK_THRESHOLD:
+		printerr(
+			(
+				"[gameplay_smoke] FAIL object leak delta %d > %d"
+				% [object_delta, OBJECT_LEAK_THRESHOLD]
+			)
+		)
+		all_passed = false
 	# Budget is advisory WARN — not gating PR (informational, matches perf
 	# advisory regression). If budget should gate PRs, set all_passed=false here.
 	var budget_ms: float = 5000.0 * float(targets.size())
@@ -106,9 +153,7 @@ func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input:
 		print("[gameplay_smoke] PASS — both scenes ran %d frames without fatal load" % frames)
 		quit(0)
 	else:
-		printerr(
-			"[gameplay_smoke] FAIL — scenes failed (grep SCRIPT ERROR|push_error|WARNING|Invalid|Condition)"
-		)
+		printerr("[gameplay_smoke] FAIL — grep SCRIPT ERROR|push_error|WARNING|orphan leak")
 		quit(1)
 
 
