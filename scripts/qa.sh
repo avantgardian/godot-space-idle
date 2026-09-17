@@ -16,7 +16,7 @@ HAS_GODOT=0
 if [ -x "$GODOT_BIN" ]; then HAS_GODOT=1; fi
 
 ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
-ERR_PAT_QA="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
+ERR_PAT_QA="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|Invalid get index|Condition.*failed|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
 
 STEP_FILTER="${1:-}"
 
