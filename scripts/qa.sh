@@ -106,6 +106,29 @@ run_qa_smoke() {
 	echo "qa-smoke passed"
 }
 
+run_qa_fuzz() {
+	echo "=== qa: gameplay fuzz 200 random (advisory, seed 42) ==="
+	if [ "$HAS_GODOT" -eq 0 ]; then
+		echo "::warning::Godot binary not found - skipping qa-fuzz"
+		if [ "${CI:-}" = "true" ]; then return 1; fi
+		return 0
+	fi
+	cp project.godot /tmp/project.godot.qa.bak
+	sed 's/=2/=1/g' /tmp/project.godot.qa.bak > project.godot
+	trap 'mv /tmp/project.godot.qa.bak project.godot 2>/dev/null || true' RETURN
+	set +e
+	set -o pipefail
+	"$GODOT_BIN" --headless -s res://bench/gameplay_smoke.gd -- --fuzz --seed 42 2>&1 | tee /tmp/qa_fuzz.log; EC=${PIPESTATUS[0]}
+	set -e
+	mv /tmp/project.godot.qa.bak project.godot
+	trap - RETURN
+	echo "qa-fuzz exit: $EC"
+	cat /tmp/qa_fuzz.log
+	if [ "$EC" -ne 0 ]; then echo "::warning::qa-fuzz exited $EC (advisory)"; return 0; fi
+	if grep -qE "$ERR_PAT_QA" /tmp/qa_fuzz.log; then echo "::warning::qa-fuzz debugger errors (advisory)"; grep -E "$ERR_PAT_QA" /tmp/qa_fuzz.log; return 0; fi
+	echo "qa-fuzz passed (advisory)"
+}
+
 run_qa_visual() {
 	echo "=== qa: visual regression (relax warnings) ==="
 	if [ "$HAS_GODOT" -eq 0 ]; then
@@ -173,8 +196,9 @@ case "$STEP_FILTER" in
 	--typing-only) run_typing ;;
 	--test-only) run_test ;;
 	--qa-smoke-only) run_qa_smoke ;;
+	--qa-fuzz-only) run_qa_fuzz ;;
 	--qa-visual-only) run_qa_visual ;;
 	--perf-only) run_perf ;;
-	"") run_lint; run_typing; run_test; run_qa_smoke; run_qa_visual; run_perf; echo "=== qa: ALL GATES PASSED ===" ;;
-	*) echo "Unknown arg: $STEP_FILTER (expected --lint-only|--typing-only|--test-only|--qa-smoke-only|--qa-visual-only|--perf-only)"; exit 1 ;;
+	"") run_lint; run_typing; run_test; run_qa_smoke; run_qa_fuzz; run_qa_visual; run_perf; echo "=== qa: ALL GATES PASSED ===" ;;
+	*) echo "Unknown arg: $STEP_FILTER (expected --lint-only|--typing-only|--test-only|--qa-smoke-only|--qa-fuzz-only|--qa-visual-only|--perf-only)"; exit 1 ;;
 esac
