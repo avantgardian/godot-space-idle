@@ -277,6 +277,57 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  qa-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Godot
+        uses: ./.github/actions/setup-godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+
+      - name: Run gameplay smoke (relax warnings) — required gate
+        run: |
+          cp project.godot project.godot.bak
+          sed -i 's/=2/=1/g' project.godot
+          set -o pipefail
+          ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
+          echo "=== gameplay smoke (headless) ==="
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://bench/gameplay_smoke.gd 2>&1 | tee qa-smoke.log; EC=${PIPESTATUS[0]}
+          mv project.godot.bak project.godot
+          echo "qa-smoke exit: $EC"
+          cat qa-smoke.log
+          if [ $EC -ne 0 ]; then
+            echo "::error::qa-smoke exited $EC"
+            exit $EC
+          fi
+          if grep -qE "$ERR_PAT" qa-smoke.log; then
+            echo "::error::qa-smoke found debugger errors (SCRIPT ERROR / push_error / WARNING)"
+            grep -E "$ERR_PAT" qa-smoke.log
+            exit 1
+          fi
+          echo "qa-smoke passed"
+
+      - name: Upload qa-smoke log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-smoke-log
+          path: qa-smoke.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload qa-smoke log (always)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-smoke-log-always
+          path: qa-smoke.log
+          if-no-files-found: warn
+          retention-days: 14
+
   export-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10

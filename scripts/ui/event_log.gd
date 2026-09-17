@@ -28,7 +28,13 @@ func setup() -> void:
 	panel.offset_bottom = -20.0
 	panel.clip_contents = true
 	add_child(panel)
-	panel.owner = get_tree().current_scene
+	var scene_root: Node = get_tree().current_scene
+	if scene_root == null or not is_instance_valid(scene_root):
+		scene_root = owner
+	if scene_root == null:
+		@warning_ignore("unsafe_cast")
+		scene_root = get_parent() as Node
+	panel.owner = scene_root
 	panel.unique_name_in_owner = true
 
 	_container = VBoxContainer.new()
