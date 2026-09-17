@@ -9,7 +9,7 @@ Workflow guidance and code conventions live in [AGENTS.md](AGENTS.md). Read it b
 3. Implement, test, and follow the conventions in [AGENTS.md](AGENTS.md).
 4. Open a pull request with `Closes #N` in the description.
 
-All PRs run lint (`gdformat --check`, `gdlint`), strict-typing (`Godot --headless --editor --quit` with `debug/gdscript/warnings/* = 2` — fails on `SCRIPT ERROR`), and GUT tests in CI.
+All PRs run lint (`gdformat --check`, `gdlint`), strict-typing (`Godot --headless --editor --quit` with `debug/gdscript/warnings/* = 2` — fails on `SCRIPT ERROR`), and GUT tests in CI. Each PR also gets a playable preview at `https://avantgardian.github.io/godot-space-idle/pr-preview/pr-<N>/` (comment+QR, auto-removed on merge/close); `main` deploys to `https://avantgardian.github.io/godot-space-idle/`.
 
 ## Strict typing
 
