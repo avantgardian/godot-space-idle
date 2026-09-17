@@ -293,7 +293,7 @@ jobs:
           cp project.godot project.godot.bak
           sed -i 's/=2/=1/g' project.godot
           set -o pipefail
-          ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
+          ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|Invalid get index|Condition.*failed|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
           echo "=== gameplay smoke (headless) ==="
           ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://bench/gameplay_smoke.gd 2>&1 | tee qa-smoke.log; EC=${PIPESTATUS[0]}
           mv project.godot.bak project.godot
