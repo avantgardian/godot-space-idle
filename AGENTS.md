@@ -71,6 +71,22 @@ Every feature or fix follows this sequence:
 
 **Branch hygiene:** Keep branches rebased on `main` to avoid merge conflicts. Before creating a PR, run `rtk git rebase main` and resolve any conflicts locally.
 
+## Quality Gate — Mandatory after every feature (#347)
+
+Every PR that touches gameplay code must prove quality **headlessly** so manual editor runs are unnecessary. This is an AI rule — the agent is responsible for enforcing it before `gh pr create`.
+
+**Trigger:** diff touches `scripts/**` or `shaders/**` or `scenes/**` or `project.godot` or `bench/**` or `resources/**`.
+
+**Agent must:**
+
+1. **Risk triage** — classify change (physics / rendering / UI / perf) and list which CI gates apply (`lint` / `typing` / `test` / `qa-smoke` 600 + soak 3000 / `perf` / `export-check` in `ci.yml`).
+2. **Tests** — add or update `tests/test_*.gd` for new behaviour; GUT count must not drop (`ci.yml:132` `TESTS >= 235`). If no test is added, justify in PR body why existing coverage suffices.
+3. **Full parity run** — `bash scripts/qa.sh` locally (preferred) or at minimum the touched gates headlessly (`GODOT_BIN` fallback in `AGENTS.md:15`). `bash scripts/qa.sh` runs `lint` + `typing` + `test` + `qa-smoke` (600 + 3000 soak) + `perf` + `export` with warnings `=2→=1` and `ERR_PAT` identical to CI. Pre-commit `qa-smoke` alone is not sufficient.
+4. **Baselines** — if `trail_component` / `orbital_body` / `star_field` / `camera_controller` changed, re-run `bench/bench.gd` and commit updated `bench/baseline.json` when thresholds intentionally moved.
+5. **PR evidence** — PR body includes `QA notes` section with: which gates ran, new/updated tests, and whether `bench/baseline.json` changed. The autonomous workflow `.github/workflows/quality-gate.yml` (#347) posts a blocking checklist if this is missing.
+
+**Enforcement:** `ci.yml` already blocks on `lint`/`typing`/`test`/`qa-smoke`/`perf`/`export-check`; `quality-gate.yml` additionally fails when gameplay diff lacks a `tests/`/`bench/` update. Treat failures as required — fix before merge.
+
 ## Scripts
 
 | Script                               | Extends               | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
