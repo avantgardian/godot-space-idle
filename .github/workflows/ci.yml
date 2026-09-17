@@ -361,6 +361,39 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Run gameplay fuzz (200 random inputs) — advisory (#344)
+        if: always()
+        continue-on-error: true
+        run: |
+          cp project.godot project.godot.bak
+          sed -i 's/=2/=1/g' project.godot
+          set -o pipefail
+          ERR_PAT="SCRIPT ERROR|SHADER ERROR|Shader compilation failed|push_error|push_warning|WARNING|Invalid get index|Condition.*failed|ERROR.*(Failed|Resource file not found|Parse [Ee]rror|Could not preload|Cannot open file)"
+          echo "=== gameplay fuzz 200 random inputs (advisory, seed 42) ==="
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless -s res://bench/gameplay_smoke.gd -- --fuzz --seed 42 2>&1 | tee qa-fuzz.log; EC=${PIPESTATUS[0]}
+          mv project.godot.bak project.godot
+          echo "qa-fuzz exit: $EC"
+          cat qa-fuzz.log
+          if [ $EC -ne 0 ]; then
+            echo "::warning::qa-fuzz exited $EC (advisory, not blocking)"
+            exit $EC
+          fi
+          if grep -qE "$ERR_PAT" qa-fuzz.log; then
+            echo "::warning::qa-fuzz found debugger errors (advisory)"
+            grep -E "$ERR_PAT" qa-fuzz.log
+            exit 1
+          fi
+          echo "qa-fuzz passed"
+
+      - name: Upload qa-fuzz log (always)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-fuzz-log
+          path: qa-fuzz.log
+          if-no-files-found: warn
+          retention-days: 14
+
   qa-visual:
     runs-on: ubuntu-latest
     timeout-minutes: 10

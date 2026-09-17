@@ -4,12 +4,15 @@ extends SceneTree
 ## that only surface when scenes are instantiated and stepped.
 ## Usage: Godot --headless -s res://bench/gameplay_smoke.gd
 ##   [-- --scene main|progression --frames 600 --seed 42 --with-input]
-##   [-- --visual-hash
+##   [-- --fuzz [--seed 42]] [-- --visual-hash
 ##     [--visual-baseline res://bench/visual_baseline.json]
 ##     [--visual-tolerance 0.01] [--update-visual-baseline]]
 ##   --scene supports both --scene <val> and --scene=<val> forms.
 ## CI runs with no args (both scenes, 600 frames, seed 42, --with-input on).
+## --fuzz runs 200 random inputs (seed 42 deterministic) beyond fixed sim.
 ## Implements #333 (phase 1 core) — extended in #334 (viewport input + errors).
+## Fuzz harness (#344): --fuzz generates random MouseButton/Motion/Key
+## within 1920x1080 via get_root().push_input + _unhandled_input.
 ## Visual regression (#343): --visual-hash captures viewport screenshot
 ## hash after 60 frames deterministic (seed 42) + shader source hash;
 ## compares against bench/visual_baseline.json with <1% pixel tolerance
@@ -26,6 +29,8 @@ const VISUAL_FRAMES: int = 60
 const VISUAL_BASELINE_PATH: String = "res://bench/visual_baseline.json"
 const VISUAL_TOLERANCE: float = 0.01
 const VISUAL_UTILS: GDScript = preload("res://bench/visual_utils.gd")
+const FUZZ_FRAMES: int = 200
+const FUZZ_UTILS: GDScript = preload("res://bench/fuzz_utils.gd")
 
 var _rocket_hit_seen: bool = false
 
@@ -44,8 +49,10 @@ func _init() -> void:
 		args = OS.get_cmdline_args()
 	var scene_filter: String = ""
 	var frames: int = DEFAULT_FRAMES
+	var frames_overridden: bool = false
 	var seed_val: int = DEFAULT_SEED
 	var with_input: bool = true
+	var fuzz: bool = false
 	var visual_hash: bool = false
 	var visual_baseline: String = VISUAL_BASELINE_PATH
 	var visual_tolerance: float = VISUAL_TOLERANCE
@@ -63,6 +70,7 @@ func _init() -> void:
 			continue
 		if arg == "--frames" and idx + 1 < args.size():
 			frames = int(args[idx + 1])
+			frames_overridden = true
 			idx += 2
 			continue
 		if arg == "--seed" and idx + 1 < args.size():
@@ -75,6 +83,10 @@ func _init() -> void:
 			continue
 		if arg == "--without-input":
 			with_input = false
+			idx += 1
+			continue
+		if arg == "--fuzz":
+			fuzz = true
 			idx += 1
 			continue
 		if arg == "--visual-hash":
@@ -102,6 +114,9 @@ func _init() -> void:
 			idx += 1
 			continue
 		idx += 1
+	# Fuzz default is 200 frames unless --frames explicitly overrides.
+	if fuzz and not frames_overridden:
+		frames = FUZZ_FRAMES
 	# Defer so SceneTree root is ready and await works inside.
 	if visual_hash:
 		@warning_ignore("unsafe_call_argument")
@@ -115,14 +130,23 @@ func _init() -> void:
 		)
 	else:
 		@warning_ignore("unsafe_call_argument")
-		call_deferred("_deferred_run", scene_filter, frames, seed_val, with_input)
+		call_deferred("_deferred_run", scene_filter, frames, seed_val, with_input, fuzz)
 
 
-func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input: bool) -> void:
+func _deferred_run(
+	scene_filter: String, frames: int, seed_val: int, with_input: bool, fuzz: bool
+) -> void:
 	var smoke_start: int = Time.get_ticks_usec()
 	var baseline_orphans: int = _get_orphan_count()
 	var baseline_objects: int = _get_object_count()
 	print("[gameplay_smoke] baseline orphans=%d objects=%d" % [baseline_orphans, baseline_objects])
+	if fuzz:
+		print(
+			(
+				"[gameplay_smoke] fuzz mode frames=%d seed=%d with_input=%s"
+				% [frames, seed_val, str(with_input)]
+			)
+		)
 	var targets: Array[String] = []
 	if scene_filter == "main":
 		targets.append(MAIN_SCENE_PATH)
@@ -139,12 +163,12 @@ func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input:
 		var label: String = _scene_label(scene_path)
 		print(
 			(
-				"[gameplay_smoke] running %s frames=%d seed=%d with_input=%s scene=%s"
-				% [label, frames, seed_val, str(with_input), scene_path]
+				"[gameplay_smoke] running %s frames=%d seed=%d with_input=%s fuzz=%s scene=%s"
+				% [label, frames, seed_val, str(with_input), str(fuzz), scene_path]
 			)
 		)
 		seed(seed_val)
-		var ok: bool = await _run_single_scene(scene_path, frames, seed_val, with_input)
+		var ok: bool = await _run_single_scene(scene_path, frames, seed_val, with_input, fuzz)
 		results[label] = ok
 		if not ok:
 			all_passed = false
@@ -152,6 +176,7 @@ func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input:
 	results["frames"] = frames
 	results["seed"] = seed_val
 	results["with_input"] = with_input
+	results["fuzz"] = fuzz
 	var elapsed_us: int = Time.get_ticks_usec() - smoke_start
 	var elapsed_ms: float = float(elapsed_us) / 1000.0
 	results["elapsed_ms"] = elapsed_ms
@@ -359,7 +384,9 @@ func _scene_label(path: String) -> String:
 	return path
 
 
-func _run_single_scene(scene_path: String, frames: int, seed_val: int, with_input: bool) -> bool:
+func _run_single_scene(
+	scene_path: String, frames: int, seed_val: int, with_input: bool, fuzz: bool
+) -> bool:
 	var packed: PackedScene = load(scene_path) as PackedScene
 	if packed == null:
 		printerr("[gameplay_smoke] FAIL load null: %s" % scene_path)
@@ -392,10 +419,14 @@ func _run_single_scene(scene_path: String, frames: int, seed_val: int, with_inpu
 
 	# Track authoritative rocket hit for progression with_input.
 	_rocket_hit_seen = false
-	# Step frames and inject deterministic actions.
+	# Step frames and inject deterministic vs fuzz actions (#344).
 	for frame: int in range(frames):
 		if with_input:
-			_inject_actions(inst, frame, scene_path)
+			if fuzz:
+				@warning_ignore("unsafe_method_access")
+				FUZZ_UTILS.inject_fuzz(self, inst, frame, seed_val)
+			else:
+				_inject_actions(inst, frame, scene_path)
 			if scene_path == PROGRESSION_SCENE_PATH and (frame == 150 or frame == 210):
 				if _verify_rocket_hit(inst):
 					_rocket_hit_seen = true
@@ -422,7 +453,9 @@ func _run_single_scene(scene_path: String, frames: int, seed_val: int, with_inpu
 	if with_input and scene_path == PROGRESSION_SCENE_PATH:
 		print("[gameplay_smoke] rocket_hit=%s" % str(_rocket_hit_seen))
 
-	# Teardown.
+	# Teardown — unpause so queue_free processes even after fuzz ESC spam.
+	if paused:
+		paused = false
 	if is_instance_valid(inst):
 		inst.queue_free()
 		await process_frame
