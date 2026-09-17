@@ -5,6 +5,7 @@ extends SceneTree
 ## Usage: Godot --headless -s res://bench/gameplay_smoke.gd
 ##   [-- --scene main|progression --frames 600 --seed 42]
 ## CI runs with no args (both scenes, 600 frames, seed 42).
+## Implements #333 (phase 1 core) — extended in #334/#335.
 
 const MAIN_SCENE_PATH: String = "res://scenes/main.tscn"
 const PROGRESSION_SCENE_PATH: String = "res://scenes/progression.tscn"
