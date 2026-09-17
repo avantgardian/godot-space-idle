@@ -1,0 +1,79 @@
+name: Quality Gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "shaders/**"
+      - "scenes/**"
+      - "project.godot"
+      - "bench/**"
+      - "resources/**"
+      - "tests/**"
+      - ".github/workflows/quality-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check quality evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
+            BASE="origin/main"
+            HEAD="HEAD"
+          fi
+          echo "Diff base $BASE -> $HEAD"
+          CHANGED=$(git diff --name-only "$BASE"...HEAD 2>/dev/null || git diff --name-only origin/main...HEAD || true)
+          echo "Changed files:"
+          echo "$CHANGED"
+          GAMEPLAY_CHANGED=$(echo "$CHANGED" | grep -E "^(scripts/|shaders/|scenes/|bench/|resources/|project\.godot)" || true)
+          TESTS_CHANGED=$(echo "$CHANGED" | grep -E "^(tests/|bench/)" || true)
+          if [ -z "$GAMEPLAY_CHANGED" ]; then
+            echo "No gameplay paths changed — quality gate passes (docs-only)"
+            exit 0
+          fi
+          echo "Gameplay changed:"
+          echo "$GAMEPLAY_CHANGED"
+          if [ -n "$TESTS_CHANGED" ]; then
+            echo "Tests/bench also changed — passes"
+            echo "$TESTS_CHANGED"
+            exit 0
+          fi
+          # Check PR body for QA notes or explicit justification
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body 2>/dev/null || echo "")
+          if echo "$PR_BODY" | grep -qiE "QA notes|quality gate|tests.*not.*needed|existing coverage"; then
+            echo "PR body contains QA justification — passes (advisory)"
+            exit 0
+          fi
+          echo "::error::Quality gate: gameplay files changed but no tests/bench update. Add tests/test_*.gd or bench/baseline.json, or explain in PR body under 'QA notes' why existing coverage suffices (see AGENTS.md Quality Gate #347)."
+          echo ""
+          echo "Gameplay diff:"
+          echo "$GAMEPLAY_CHANGED"
+          echo ""
+          echo "Expected: at least one change in tests/ or bench/, or a 'QA notes' section in PR body."
+          # Post sticky comment (best-effort, ignore failure if not a PR)
+          gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ **Quality Gate** — gameplay diff detected without \`tests/\`/\`bench/\` update.
+
+          Changed gameplay:
+          \`\`\`
+          $GAMEPLAY_CHANGED
+          \`\`\`
+          Please add \`tests/test_*.gd\` / \`bench/baseline.json\` or add a \`QA notes\` section explaining why existing coverage suffices.
+
+          See \`AGENTS.md#Quality Gate\` (#347). This check is advisory for now but will become required." 2>&1 || true
+          exit 1
