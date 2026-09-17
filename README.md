@@ -27,6 +27,13 @@ godot --headless -s res://bench/gameplay_smoke.gd
 # or filtered: godot --headless -s res://bench/gameplay_smoke.gd -- --scene main --frames 600 --seed 42
 ```
 
+Full CI parity without the editor (lint + typing + GUT + qa-smoke + perf):
+
+```sh
+bash scripts/qa.sh
+# single gate: bash scripts/qa.sh --qa-smoke-only
+```
+
 ## Contributing
 
 Development workflow and conventions are documented in [AGENTS.md](AGENTS.md). See [CONTRIBUTING.md](CONTRIBUTING.md) for the contributor workflow summary.
