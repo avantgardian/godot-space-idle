@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Headless QA wrapper — single-command parity with CI (issue #336).
 # Runs lint + typing + test + qa-smoke + perf headlessly, no editor required.
-# Usage: bash scripts/qa.sh [--lint-only|--typing-only|--test-only|--qa-smoke-only|--perf-only]
+# Usage: bash scripts/qa.sh [--lint-only|--typing-only|--test-only|--qa-smoke-only|--qa-visual-only|--perf-only]
 #   GODOT_BIN override: export GODOT_BIN=/path/to/Godot (default: Steam + PATH fallback)
 set -euo pipefail
 
@@ -106,6 +106,28 @@ run_qa_smoke() {
 	echo "qa-smoke passed"
 }
 
+run_qa_visual() {
+	echo "=== qa: visual regression (relax warnings) ==="
+	if [ "$HAS_GODOT" -eq 0 ]; then
+		echo "::warning::Godot binary not found - skipping qa-visual"
+		if [ "${CI:-}" = "true" ]; then return 1; fi
+		return 0
+	fi
+	cp project.godot /tmp/project.godot.qa.bak
+	sed 's/=2/=1/g' /tmp/project.godot.qa.bak > project.godot
+	trap 'mv /tmp/project.godot.qa.bak project.godot 2>/dev/null || true' RETURN
+	set +e
+	set -o pipefail
+	"$GODOT_BIN" --headless -s res://bench/gameplay_smoke.gd -- --visual-hash 2>&1 | tee /tmp/qa_visual.log; EC=${PIPESTATUS[0]}
+	set -e
+	mv /tmp/project.godot.qa.bak project.godot
+	trap - RETURN
+	echo "qa-visual exit: $EC"
+	cat /tmp/qa_visual.log
+	if [ "$EC" -ne 0 ]; then echo "::error::qa-visual failed — visual drift"; return "$EC"; fi
+	echo "qa-visual passed"
+}
+
 run_perf() {
 	echo "=== qa: perf benches (relax warnings) ==="
 	if [ "$HAS_GODOT" -eq 0 ]; then
@@ -151,7 +173,8 @@ case "$STEP_FILTER" in
 	--typing-only) run_typing ;;
 	--test-only) run_test ;;
 	--qa-smoke-only) run_qa_smoke ;;
+	--qa-visual-only) run_qa_visual ;;
 	--perf-only) run_perf ;;
-	"") run_lint; run_typing; run_test; run_qa_smoke; run_perf; echo "=== qa: ALL GATES PASSED ===" ;;
-	*) echo "Unknown arg: $STEP_FILTER (expected --lint-only|--typing-only|--test-only|--qa-smoke-only|--perf-only)"; exit 1 ;;
+	"") run_lint; run_typing; run_test; run_qa_smoke; run_qa_visual; run_perf; echo "=== qa: ALL GATES PASSED ===" ;;
+	*) echo "Unknown arg: $STEP_FILTER (expected --lint-only|--typing-only|--test-only|--qa-smoke-only|--qa-visual-only|--perf-only)"; exit 1 ;;
 esac

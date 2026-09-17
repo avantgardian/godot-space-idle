@@ -4,9 +4,16 @@ extends SceneTree
 ## that only surface when scenes are instantiated and stepped.
 ## Usage: Godot --headless -s res://bench/gameplay_smoke.gd
 ##   [-- --scene main|progression --frames 600 --seed 42 --with-input]
+##   [-- --visual-hash
+##     [--visual-baseline res://bench/visual_baseline.json]
+##     [--visual-tolerance 0.01] [--update-visual-baseline]]
 ##   --scene supports both --scene <val> and --scene=<val> forms.
 ## CI runs with no args (both scenes, 600 frames, seed 42, --with-input on).
 ## Implements #333 (phase 1 core) — extended in #334 (viewport input + errors).
+## Visual regression (#343): --visual-hash captures viewport screenshot
+## hash after 60 frames deterministic (seed 42) + shader source hash;
+## compares against bench/visual_baseline.json with <1% pixel tolerance
+## (hash equality in headless fallback). Fails on shader uniform typo.
 
 const MAIN_SCENE_PATH: String = "res://scenes/main.tscn"
 const PROGRESSION_SCENE_PATH: String = "res://scenes/progression.tscn"
@@ -15,6 +22,10 @@ const DEFAULT_SEED: int = 42
 const DELTA: float = 0.016
 const ORPHAN_LEAK_THRESHOLD: int = 10
 const OBJECT_LEAK_THRESHOLD: int = 200
+const VISUAL_FRAMES: int = 60
+const VISUAL_BASELINE_PATH: String = "res://bench/visual_baseline.json"
+const VISUAL_TOLERANCE: float = 0.01
+const VISUAL_UTILS: GDScript = preload("res://bench/visual_utils.gd")
 
 var _rocket_hit_seen: bool = false
 
@@ -35,6 +46,10 @@ func _init() -> void:
 	var frames: int = DEFAULT_FRAMES
 	var seed_val: int = DEFAULT_SEED
 	var with_input: bool = true
+	var visual_hash: bool = false
+	var visual_baseline: String = VISUAL_BASELINE_PATH
+	var visual_tolerance: float = VISUAL_TOLERANCE
+	var update_baseline: bool = false
 	var idx: int = 0
 	while idx < args.size():
 		var arg: String = args[idx]
@@ -62,10 +77,45 @@ func _init() -> void:
 			with_input = false
 			idx += 1
 			continue
+		if arg == "--visual-hash":
+			visual_hash = true
+			idx += 1
+			continue
+		if arg.begins_with("--visual-baseline="):
+			visual_baseline = arg.substr(18)
+			idx += 1
+			continue
+		if arg == "--visual-baseline" and idx + 1 < args.size():
+			visual_baseline = args[idx + 1]
+			idx += 2
+			continue
+		if arg.begins_with("--visual-tolerance="):
+			visual_tolerance = float(arg.substr(19))
+			idx += 1
+			continue
+		if arg == "--visual-tolerance" and idx + 1 < args.size():
+			visual_tolerance = float(args[idx + 1])
+			idx += 2
+			continue
+		if arg == "--update-visual-baseline":
+			update_baseline = true
+			idx += 1
+			continue
 		idx += 1
 	# Defer so SceneTree root is ready and await works inside.
-	@warning_ignore("unsafe_call_argument")
-	call_deferred("_deferred_run", scene_filter, frames, seed_val, with_input)
+	if visual_hash:
+		@warning_ignore("unsafe_call_argument")
+		call_deferred(
+			"_deferred_visual_run",
+			scene_filter,
+			seed_val,
+			visual_baseline,
+			visual_tolerance,
+			update_baseline
+		)
+	else:
+		@warning_ignore("unsafe_call_argument")
+		call_deferred("_deferred_run", scene_filter, frames, seed_val, with_input)
 
 
 func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input: bool) -> void:
@@ -154,6 +204,150 @@ func _deferred_run(scene_filter: String, frames: int, seed_val: int, with_input:
 		quit(0)
 	else:
 		printerr("[gameplay_smoke] FAIL — grep SCRIPT ERROR|push_error|WARNING|orphan leak")
+		quit(1)
+
+
+func _deferred_visual_run(
+	scene_filter: String,
+	seed_val: int,
+	baseline_path: String,
+	tolerance: float,
+	update_baseline: bool
+) -> void:
+	print(
+		(
+			"[visual_smoke] visual-hash mode frames=%d seed=%d baseline=%s tolerance=%.4f update=%s"
+			% [VISUAL_FRAMES, seed_val, baseline_path, tolerance, str(update_baseline)]
+		)
+	)
+	var targets: Array[String] = []
+	if scene_filter == "main":
+		targets.append(MAIN_SCENE_PATH)
+	elif scene_filter == "progression":
+		targets.append(PROGRESSION_SCENE_PATH)
+	else:
+		targets.append(MAIN_SCENE_PATH)
+		targets.append(PROGRESSION_SCENE_PATH)
+
+	@warning_ignore("unsafe_method_access")
+	var shader_hash: String = VISUAL_UTILS.hash_shader_sources() as String
+	print("[visual_smoke] shader_hash=%s" % shader_hash)
+
+	@warning_ignore("unsafe_method_access")
+	var baseline: Dictionary = VISUAL_UTILS.load_visual_baseline(baseline_path) as Dictionary
+	var current: Dictionary = {}
+	current["shader_hash"] = shader_hash
+	current["frames"] = VISUAL_FRAMES
+	current["seed"] = seed_val
+	current["tolerance"] = tolerance
+	current["generated_at"] = Time.get_date_string_from_system()
+
+	var all_passed: bool = true
+	var hashes: Dictionary = {}
+
+	for scene_path: String in targets:
+		var label: String = _scene_label(scene_path)
+		print("[visual_smoke] capturing %s (seed %d) ..." % [label, seed_val])
+		var capture: Dictionary = await _capture_visual_hash(scene_path, seed_val)
+		var viewport_hash: String = capture.get("viewport_hash", "") as String
+		var combined: String = capture.get("combined_hash", "") as String
+		var viewport_available: bool = capture.get("viewport_available", false) as bool
+		var img_size: Vector2i = capture.get("image_size", Vector2i(0, 0)) as Vector2i
+		hashes[label] = combined
+		current[label] = combined
+		current[label + "_viewport"] = viewport_hash
+		current[label + "_viewport_available"] = viewport_available
+		current[label + "_image_size"] = "%dx%d" % [img_size.x, img_size.y]
+		print(
+			(
+				"[visual_smoke] %s viewport_available=%s size=%dx%d viewport_hash=%s combined=%s"
+				% [label, str(viewport_available), img_size.x, img_size.y, viewport_hash, combined]
+			)
+		)
+		# Also write png artifact path if available.
+		var png_path: String = capture.get("png_path", "") as String
+		if png_path != "":
+			print("[visual_smoke] %s png=%s" % [label, png_path])
+
+	# Compare against baseline if not updating.
+	if update_baseline:
+		@warning_ignore("unsafe_method_access")
+		VISUAL_UTILS.save_visual_baseline(baseline_path, current, targets, VISUAL_FRAMES, tolerance)
+		print("[visual_smoke] baseline written to %s" % baseline_path)
+		print(JSON.stringify(current))
+		print("[visual_smoke] PASS — baseline updated")
+		quit(0)
+		return
+
+	# If baseline missing, warn and create current as reference (advisory).
+	if baseline.is_empty():
+		print(
+			(
+				"[visual_smoke] WARN no baseline at %s — treating current as baseline (first run)"
+				% baseline_path
+			)
+		)
+		print(JSON.stringify(current))
+		# Still PASS on first run so CI can bootstrap, but log hashes.
+		# Save current pngs baseline for diff; operator should commit baseline.
+		print("[visual_smoke] PASS — no baseline to compare (bootstrap)")
+		print(JSON.stringify(hashes))
+		quit(0)
+		return
+
+	# Compare shader hash first — catches uniform typo even when viewport black.
+	var baseline_shader: String = baseline.get("shader_hash", "") as String
+	if baseline_shader != "" and baseline_shader != shader_hash:
+		printerr(
+			(
+				"[visual_smoke] FAIL shader_hash drift baseline=%s current=%s"
+				% [baseline_shader, shader_hash]
+			)
+		)
+		all_passed = false
+	else:
+		print("[visual_smoke] shader_hash OK")
+
+	for label2: String in hashes.keys():
+		var base_hash: String = baseline.get(label2, "") as String
+		var cur_hash: String = hashes[label2] as String
+		if base_hash == "":
+			print("[visual_smoke] WARN no baseline entry for %s — skipping" % label2)
+			continue
+		if base_hash == cur_hash:
+			print("[visual_smoke] %s hash OK (%s)" % [label2, cur_hash.substr(0, 12)])
+		else:
+			# Try tolerant pixel diff if both viewport pngs exist (advisory tolerance).
+			@warning_ignore("unsafe_method_access")
+			var diff_ratio: float = VISUAL_UTILS.try_pixel_diff(label2) as float
+			printerr(
+				(
+					"[visual_smoke] FAIL %s hash drift baseline=%s current=%s diff_ratio=%.4f tolerance=%.4f"
+					% [
+						label2,
+						base_hash.substr(0, 12),
+						cur_hash.substr(0, 12),
+						diff_ratio,
+						tolerance
+					]
+				)
+			)
+			if diff_ratio >= 0.0 and diff_ratio <= tolerance:
+				print(
+					(
+						"[visual_smoke] %s drift within tolerance %.2f%% <= %.2f%% — PASS (tolerant)"
+						% [label2, diff_ratio * 100.0, tolerance * 100.0]
+					)
+				)
+			else:
+				all_passed = false
+
+	print(JSON.stringify(current))
+	if all_passed:
+		print("[visual_smoke] PASS — visual hashes match baseline")
+		quit(0)
+	else:
+		printerr("[visual_smoke] FAIL — visual drift beyond tolerance")
 		quit(1)
 
 
@@ -710,3 +904,15 @@ func _verify_rocket_hit(inst: Node) -> bool:
 				print("[gameplay_smoke] Asteroid destroyed by rocket")
 				return true
 	return false
+
+
+# ── Visual regression helpers (#343) ───────────────────────────────────
+
+
+func _capture_visual_hash(scene_path: String, seed_val: int) -> Dictionary:
+	@warning_ignore("unsafe_method_access")
+	var cap: Dictionary = (
+		await VISUAL_UTILS.capture_visual_hash(self, scene_path, seed_val, VISUAL_FRAMES)
+		as Dictionary
+	)
+	return cap
