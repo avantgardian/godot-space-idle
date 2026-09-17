@@ -131,8 +131,8 @@ jobs:
           if [ -f gut-junit.xml ]; then
             TESTS=$(grep -o 'tests="[0-9]*"' gut-junit.xml | head -1 | grep -o '[0-9]*' || echo 0)
             echo "JUnit tests: $TESTS"
-            if [ "$TESTS" -lt 229 ]; then
-              echo "::error::Test count $TESTS below expected 229 — possible suite deletion"
+            if [ "$TESTS" -lt 235 ]; then
+              echo "::error::Test count $TESTS below expected 235 — possible suite deletion"
               exit 1
             fi
           else

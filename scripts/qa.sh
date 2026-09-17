@@ -41,10 +41,10 @@ run_typing() {
 	if [ "$EC" -ne 0 ]; then echo "Godot --editor --quit exited $EC"; cat /tmp/godot_typing.log; return "$EC"; fi
 	if grep -qE "$ERR_PAT" /tmp/godot_typing.log; then echo "Strict typing / shader errors"; grep -E "$ERR_PAT" /tmp/godot_typing.log; cat /tmp/godot_typing.log; return 1; fi
 	echo "--- per-file check ---"
-	for f in $(find scripts -name "*.gd"); do
+	while IFS= read -r -d '' f; do
 		"$GODOT_BIN" --headless --check-only --script "res://$f" >> /tmp/godot_typing.log 2>&1; EC=$?
 		if [ "$EC" -ne 0 ]; then echo "check-only $f exited $EC"; fi
-	done
+	done < <(find scripts -name "*.gd" -print0)
 	if grep -qE "$ERR_PAT" /tmp/godot_typing.log; then echo "Resource errors (per-file)"; grep -E "$ERR_PAT" /tmp/godot_typing.log; cat /tmp/godot_typing.log; return 1; fi
 	echo "--- resource smoke ---"
 	"$GODOT_BIN" --headless -s res://bench/resource_smoke.gd 2>&1 | tee -a /tmp/godot_typing.log; EC=${PIPESTATUS[0]}
@@ -63,9 +63,13 @@ run_test() {
 	cp project.godot /tmp/project.godot.qa.bak
 	# Portable sed: macOS needs '' arg, Linux does not. Use cp+trick instead of -i.
 	sed 's/=2/=1/g' /tmp/project.godot.qa.bak > project.godot
+	trap 'mv /tmp/project.godot.qa.bak project.godot 2>/dev/null || true' RETURN
+	set +e
 	set -o pipefail
 	"$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gexit -gmaximize -glog=2 -gjunit_xml_file=gut-junit.xml 2>&1 | tee /tmp/gut.log; EXIT=${PIPESTATUS[0]}
+	set -e
 	mv /tmp/project.godot.qa.bak project.godot
+	trap - RETURN
 	echo "GUT exit: $EXIT"
 	cat /tmp/gut.log | tail -30
 	if [ -f gut-junit.xml ]; then
@@ -88,9 +92,13 @@ run_qa_smoke() {
 	fi
 	cp project.godot /tmp/project.godot.qa.bak
 	sed 's/=2/=1/g' /tmp/project.godot.qa.bak > project.godot
+	trap 'mv /tmp/project.godot.qa.bak project.godot 2>/dev/null || true' RETURN
+	set +e
 	set -o pipefail
 	"$GODOT_BIN" --headless -s res://bench/gameplay_smoke.gd 2>&1 | tee /tmp/qa_smoke.log; EC=${PIPESTATUS[0]}
+	set -e
 	mv /tmp/project.godot.qa.bak project.godot
+	trap - RETURN
 	echo "qa-smoke exit: $EC"
 	cat /tmp/qa_smoke.log
 	if [ "$EC" -ne 0 ]; then echo "::error::qa-smoke exited $EC"; return "$EC"; fi
