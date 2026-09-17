@@ -18,6 +18,17 @@ func test_progression_scene_runs_frames_without_push_error() -> void:
 	add_child(inst)
 	await wait_process_frames(2)
 
+	@warning_ignore("unsafe_property_access")
+	var ship_check: Node = null
+	if "_spaceship" in inst:
+		@warning_ignore("unsafe_property_access", "unsafe_cast")
+		ship_check = inst._spaceship as Node
+	if ship_check == null:
+		ship_check = inst.get_node_or_null("%Spaceship")
+	if ship_check == null:
+		ship_check = inst.get_node_or_null("Spaceship")
+	assert_not_null(ship_check, "Progression should have Spaceship (progression.gd:175)")
+
 	var spawner: Node = inst.get_node_or_null("%AsteroidSpawner")
 	if spawner == null:
 		@warning_ignore("unsafe_property_access")
@@ -25,7 +36,7 @@ func test_progression_scene_runs_frames_without_push_error() -> void:
 			@warning_ignore("unsafe_property_access", "unsafe_cast")
 			spawner = inst._spawner as Node
 
-	for frame: int in range(60):
+	for frame: int in range(300):
 		if frame == 5 and spawner != null and spawner.has_method("spawn"):
 			@warning_ignore("unsafe_method_access")
 			spawner.spawn()
@@ -40,8 +51,8 @@ func test_progression_scene_runs_frames_without_push_error() -> void:
 			inst._toggle_pause()
 		await wait_process_frames(1)
 
-	assert_push_error_count(0, "progression 60 frames should not push_error")
-	assert_push_warning_count(0, "progression 60 frames should not push_warning")
+	assert_push_error_count(0, "progression 300 frames should not push_error")
+	assert_push_warning_count(0, "progression 300 frames should not push_warning")
 
 
 func test_progression_rocket_and_input_without_push_error() -> void:
